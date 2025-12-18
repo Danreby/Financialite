@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Banks extends Model
+class Bank extends Model
 {
     protected $table = 'banks';
 
@@ -14,6 +14,11 @@ class Banks extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'bank_user', 'bank_id', 'user_id');
+        return $this->belongsToMany(User::class, 'bank_user')->withTimestamps();
+    }
+
+    public function bankUsers()
+    {
+        return $this->hasMany(\App\Models\BankUser::class);
     }
 }

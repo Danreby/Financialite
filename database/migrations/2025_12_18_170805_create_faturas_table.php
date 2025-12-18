@@ -25,6 +25,12 @@ return new class extends Migration
             $table->boolean('is_recurring')->default(false);
             $table->unsignedBigInteger('user_id')->nullable();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('bank_user_id')
+                  ->nullable()
+                  ->after('user_id')
+                  ->constrained('bank_user')
+                  ->nullOnDelete();
+            $table->index('bank_user_id');
             $table->timestamps();
             $table->softDeletes();
         });

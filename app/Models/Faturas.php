@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Faturas extends Model
+class Fatura extends Model
 {
     use SoftDeletes;
     protected $table = 'faturas';
@@ -27,5 +27,15 @@ class Faturas extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bankUser()
+    {
+        return $this->belongsTo(BankUser::class, 'bank_user_id');
+    }
+
+    public function bank()
+    {
+        return $this->belongsToThrough(Bank::class, BankUser::class, 'bank_user_id');
     }
 }

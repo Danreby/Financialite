@@ -33,11 +33,16 @@ class User extends Authenticatable
 
     public function banks()
     {
-        return $this->belongsToMany(Banks::class, 'bank_user', 'user_id', 'bank_id');
+        return $this->belongsToMany(Bank::class, 'bank_user', 'user_id', 'bank_id');
     }
     
     public function faturas()
     {
-        return $this->hasMany(Faturas::class);
+        return $this->hasMany(Fatura::class);
+    }
+
+    public function bankUsers()
+    {
+        return $this->hasMany(BankUser::class);
     }
 }
