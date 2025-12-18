@@ -12,7 +12,6 @@ class FaturaController extends Controller
 {
     public function __construct()
     {
-        // somente autenticação — sem roles/permissions
         $this->middleware('auth');
     }
 
@@ -65,7 +64,6 @@ class FaturaController extends Controller
             }
         }
 
-        // força o dono como usuário autenticado (evita spoofing)
         $data['user_id'] = $user->id;
 
         DB::beginTransaction();

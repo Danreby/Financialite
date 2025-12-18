@@ -9,7 +9,6 @@ class BankController extends Controller
 {
     public function __construct()
     {
-        // autenticação básica — sem roles/permissions
         $this->middleware('auth');
     }
 
@@ -51,7 +50,6 @@ class BankController extends Controller
     {
         $bank = Bank::findOrFail($id);
 
-        // se quiser evitar exclusão quando houver pivot/faturas, trate aqui
         $bank->delete();
 
         return response()->json(['message' => 'Banco removido.']);
