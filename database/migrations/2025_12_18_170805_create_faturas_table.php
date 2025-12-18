@@ -23,13 +23,14 @@ return new class extends Migration
             $table->integer('total_installments')->default(1);
             $table->integer('current_installment')->default(1);
             $table->boolean('is_recurring')->default(false);
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('bank_user_id')
-                  ->nullable()
-                  ->after('user_id')
-                  ->constrained('bank_user')
-                  ->nullOnDelete();
+                ->nullable()
+                ->after('user_id')
+                ->constrained('bank_user')
+                ->nullOnDelete();
+
             $table->index('bank_user_id');
             $table->timestamps();
             $table->softDeletes();

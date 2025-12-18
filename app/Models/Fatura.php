@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Fatura extends Model
 {
     use SoftDeletes;
+
     protected $table = 'faturas';
 
     protected $fillable = [
@@ -22,20 +24,28 @@ class Fatura extends Model
         'current_installment',
         'is_recurring',
         'user_id',
+        'bank_user_id',
     ];
 
-    public function user()
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'due_date' => 'date',
+        'paid_date' => 'date',
+        'is_recurring' => 'boolean',
+    ];
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function bankUser()
+    public function bankUser(): BelongsTo
     {
         return $this->belongsTo(BankUser::class, 'bank_user_id');
     }
 
-    public function bank()
+    public function getBankAttribute()
     {
-        return $this->belongsToThrough(Bank::class, BankUser::class, 'bank_user_id');
+        return $this->bankUser?->bank;
     }
 }
