@@ -6,6 +6,7 @@ import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 
 export default function BankForm({ isOpen, onClose, onSuccess }) {
 	const [banks, setBanks] = useState([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -34,6 +35,9 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 	const handleSubmit = (e) => {
 		e.preventDefault();
 
+		if (isSubmitting) return;
+		setIsSubmitting(true);
+
 		const formData = new FormData(e.currentTarget);
 		const bankId = formData.get("bank_id")?.toString().trim();
 		const formElement = e.currentTarget;
@@ -57,11 +61,13 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 					toast.success("Banco vinculado com sucesso.");
 				}
 				e.currentTarget.reset();
+				setIsSubmitting(false);
 				if (onSuccess) onSuccess(payload.bank_user || payload);
 				if (onClose) onClose();
 			})
 			.catch((error) => {
 				toast.dismiss();
+				setIsSubmitting(false);
 				if (error.response && error.response.status === 422) {
 					const data = error.response.data || {};
 					const validationMessage =
@@ -105,7 +111,7 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 					>
 						Cancelar
 					</button>
-					<PrimaryButton type="submit">
+						<PrimaryButton type="submit" disabled={isSubmitting}>
 						Salvar
 					</PrimaryButton>
 				</div>

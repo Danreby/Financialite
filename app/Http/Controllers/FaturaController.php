@@ -7,6 +7,7 @@ use App\Models\BankUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class FaturaController extends Controller
 {
@@ -24,7 +25,24 @@ class FaturaController extends Controller
             ->orderBy('due_date', 'desc')
             ->paginate(15);
 
-        return response()->json($faturas);
+        if ($request->wantsJson()) {
+            return response()->json($faturas);
+        }
+
+        $bankAccounts = BankUser::with('bank')
+            ->where('user_id', $user->id)
+            ->get()
+            ->map(function ($bankUser) {
+                return [
+                    'id' => $bankUser->id,
+                    'name' => $bankUser->bank?->name ?? ('Conta #' . $bankUser->id),
+                ];
+            });
+
+        return Inertia::render('Fatura', [
+            'faturas' => $faturas,
+            'bankAccounts' => $bankAccounts,
+        ]);
     }
 
     public function show(Request $request, $id)
@@ -47,6 +65,7 @@ class FaturaController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric',
+            'due_date' => 'nullable|date',
             'type' => ['required', Rule::in(['credit','debit'])],
             'status' => ['nullable', Rule::in(['paid','unpaid','overdue'])],
             'paid_date' => 'nullable|date',
@@ -64,6 +83,10 @@ class FaturaController extends Controller
         }
 
         $data['user_id'] = $user->id;
+        // Se due_date não vier do formulário, define como hoje
+        if (empty($data['due_date'])) {
+            $data['due_date'] = now()->toDateString();
+        }
         $data['total_installments'] = $data['total_installments'] ?? 1;
         $data['current_installment'] = $data['current_installment'] ?? 1;
         $data['status'] = $data['status'] ?? 'unpaid';

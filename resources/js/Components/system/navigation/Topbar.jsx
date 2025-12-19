@@ -4,7 +4,6 @@ import { Link } from '@inertiajs/react'
 export default function Topbar({ sidebarOpen, setSidebarOpen }) {
   const [isDark, setIsDark] = useState(false)
 
-  // Inicializa tema baseado em localStorage ou preferência do sistema
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -21,7 +20,6 @@ export default function Topbar({ sidebarOpen, setSidebarOpen }) {
     }
   }, [])
 
-  // Aplica/remover classe `dark` e persiste preferência
   useEffect(() => {
     if (typeof window === 'undefined') return
 

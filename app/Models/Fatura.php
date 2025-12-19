@@ -16,6 +16,7 @@ class Fatura extends Model
         'title',
         'description',
         'amount',
+        'due_date',
         'type',
         'status',
         'paid_date',

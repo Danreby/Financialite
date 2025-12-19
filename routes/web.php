@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\FaturaController;
 use App\Models\BankUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;

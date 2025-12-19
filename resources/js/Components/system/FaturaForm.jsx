@@ -1,19 +1,23 @@
 import { useState } from "react";
-import { router } from "@inertiajs/react";
+import axios from "axios";
 import { toast } from "react-toastify";
 import Modal from "../common/Modal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 
 export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = [] }) {
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title")?.toString().trim();
     const amount = formData.get("amount")?.toString().trim();
     const type = formData.get("type")?.toString().trim();
-    const dueDate = formData.get("due_date")?.toString().trim();
     const bankUserId = formData.get("bank_user_id")?.toString().trim();
     const formElement = e.currentTarget;
 
@@ -31,12 +35,6 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
       return;
     }
 
-    if (!dueDate) {
-      toast.error("Informe a data de vencimento.");
-      formElement.elements.namedItem("due_date")?.focus();
-      return;
-    }
-
     if (!type) {
       toast.error("Selecione o tipo: débito ou crédito.");
       const debitRadio = formElement.querySelector('input[name="type"][value="debit"]');
@@ -47,7 +45,6 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
       title,
       description: formData.get("description")?.toString().trim() || "",
       amount,
-      due_date: dueDate,
       type,
       total_installments:
         formData.get("total_installments")?.toString().trim() || 1,
@@ -55,34 +52,63 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
       bank_user_id: bankUserId || null,
     };
 
-    router.post(route("faturas.store"), payload, {
-      onSuccess: () => {
+    axios
+      .post(route("faturas.store"), payload)
+      .then((response) => {
+        toast.dismiss();
         toast.success("Transação criada com sucesso.");
         e.currentTarget.reset();
         setIsRecurring(false);
-        if (onSuccess) onSuccess();
+        setIsSubmitting(false);
+        if (onSuccess) onSuccess(response.data || {});
         if (onClose) onClose();
-      },
-      onError: (errors) => {
-        if (errors.title) {
-          toast.error(errors.title);
-          formElement.elements.namedItem("title")?.focus();
+      })
+      .catch((error) => {
+        toast.dismiss();
+        setIsSubmitting(false);
+
+        if (error.response && error.response.status === 422) {
+          const data = error.response.data || {};
+          const errors = data.errors || {};
+
+          if (errors.title?.[0]) {
+            toast.error(errors.title[0]);
+            formElement.elements.namedItem("title")?.focus();
+            return;
+          }
+
+          if (errors.amount?.[0]) {
+            toast.error(errors.amount[0]);
+            formElement.elements.namedItem("amount")?.focus();
+            return;
+          }
+
+          if (errors.type?.[0]) {
+            toast.error(errors.type[0]);
+            const debitRadio = formElement.querySelector(
+              'input[name="type"][value="debit"]'
+            );
+            debitRadio?.focus();
+            return;
+          }
+
+          if (errors.bank_user_id?.[0]) {
+            toast.error(errors.bank_user_id[0]);
+            formElement.elements.namedItem("bank_user_id")?.focus();
+            return;
+          }
+
+          if (data.message) {
+            toast.error(data.message);
+            return;
+          }
+
+          toast.error("Erro de validação ao criar transação.");
           return;
         }
-        if (errors.amount) {
-          toast.error(errors.amount);
-          formElement.elements.namedItem("amount")?.focus();
-          return;
-        }
-        if (errors.type) {
-          toast.error(errors.type);
-          const debitRadio = formElement.querySelector(
-            'input[name="type"][value="debit"]'
-          );
-          debitRadio?.focus();
-        }
-      },
-    });
+
+        toast.error("Erro ao criar transação.");
+      });
   };
 
   return (
@@ -220,7 +246,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
           >
             Cancelar
           </button>
-          <PrimaryButton type="submit">
+          <PrimaryButton type="submit" disabled={isSubmitting}>
             Salvar
           </PrimaryButton>
         </div>
