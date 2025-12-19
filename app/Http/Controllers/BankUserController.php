@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Bank;
+use App\Models\BankUser;
+use Illuminate\Http\Request;
+
+class BankUserController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Lista associações de bancos do usuário autenticado
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        $bankUsers = BankUser::with('bank')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($bankUsers);
+    }
+
+    /**
+     * Retorna uma associação específica
+     */
+    public function show(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $bankUser = BankUser::with('bank')
+            ->where('user_id', $user->id)
+            ->findOrFail($id);
+
+        return response()->json($bankUser);
+    }
+
+    /**
+     * Associa um banco ao usuário
+     */
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'bank_id' => 'required|exists:banks,id',
+        ]);
+
+        // Verificar se já existe associação
+        $existing = BankUser::where('user_id', $user->id)
+            ->where('bank_id', $data['bank_id'])
+            ->first();
+
+        if ($existing) {
+            return response()->json(['message' => 'Este banco já está associado ao usuário.'], 422);
+        }
+
+        $bankUser = BankUser::create([
+            'user_id' => $user->id,
+            'bank_id' => $data['bank_id'],
+        ]);
+
+        $bankUser->load('bank');
+
+        return response()->json($bankUser, 201);
+    }
+
+    /**
+     * Remove associação de um banco do usuário
+     */
+    public function destroy(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $bankUser = BankUser::where('user_id', $user->id)->findOrFail($id);
+
+        $bankUser->delete();
+
+        return response()->json(['message' => 'Banco desassociado do usuário.']);
+    }
+
+    /**
+     * Retorna estatísticas por banco
+     */
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+
+        $stats = BankUser::with('bank')
+            ->where('user_id', $user->id)
+            ->get()
+            ->map(function ($bankUser) {
+                return [
+                    'bank_user_id' => $bankUser->id,
+                    'bank_id' => $bankUser->bank_id,
+                    'bank_name' => $bankUser->bank->name,
+                    'total_faturas' => $bankUser->faturas()->count(),
+                    'paid_faturas' => $bankUser->faturas()->where('status', 'paid')->count(),
+                    'unpaid_faturas' => $bankUser->faturas()->where('status', 'unpaid')->count(),
+                    'overdue_faturas' => $bankUser->faturas()->where('status', 'overdue')->count(),
+                    'total_amount' => $bankUser->faturas()->sum('amount'),
+                    'income_amount' => $bankUser->faturas()->where('type', 'credit')->sum('amount'),
+                    'expense_amount' => $bankUser->faturas()->where('type', 'debit')->sum('amount'),
+                ];
+            });
+
+        return response()->json($stats);
+    }
+}

@@ -43,6 +43,11 @@ class User extends Authenticatable
 
     public function bankUsers()
     {
-        return $this->hasMany(BankUser::class);
+        return $this->hasMany(BankUser::class, 'user_id');
+    }
+
+    public function getAvailableBanksAttribute()
+    {
+        return $this->banks()->get();
     }
 }

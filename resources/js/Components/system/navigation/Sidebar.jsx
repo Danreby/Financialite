@@ -110,7 +110,7 @@ export default function Sidebar({ open: openProp = true, setOpen: setOpenProp })
 
         <div className="px-3 py-4">
           <div className={`text-xs text-gray-400 ${isOpen ? '' : 'text-center'}`}>
-            © {new Date().getFullYear()} Finanças
+            © {new Date().getFullYear()} Financialite
           </div>
         </div>
       </div>
