@@ -23,7 +23,7 @@ export default function Dashboard() {
         transition={{ duration: 0.35 }}
         className="max-w-[1600px] mx-auto"
       >
-        <h1 className="text-2xl font-semibold text-gray-100 mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-6 dark:text-gray-100">
           Visão geral
         </h1>
 
@@ -39,12 +39,12 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl bg-[#0b0b0b] p-4 shadow-md ring-1 ring-black/30">
+          <div className="lg:col-span-2 rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-100">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 Transações recentes
               </h2>
-              <span className="text-xs text-gray-400">Últimos lançamentos</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Últimos lançamentos</span>
             </div>
 
             <div className="space-y-3">
@@ -77,10 +77,10 @@ export default function Dashboard() {
 
 function Transaction({ title, subtitle, value, negative }) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-900/30">
+    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-900/30">
       <div>
-        <div className="text-sm font-medium text-gray-200">{title}</div>
-        <div className="text-xs text-gray-400">{subtitle}</div>
+        <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{title}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
       </div>
       <div
         className={`text-sm font-semibold ${

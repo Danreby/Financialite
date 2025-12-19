@@ -9,7 +9,7 @@ export default function AuthenticatedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <div className="min-h-screen flex bg-[#070707] text-gray-100">
+    <div className="min-h-screen flex bg-gray-100 text-gray-900 dark:bg-[#070707] dark:text-gray-100">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -19,7 +19,7 @@ export default function AuthenticatedLayout({ children }) {
           setSidebarOpen={setSidebarOpen}
         />
 
-        <main className="flex-1 overflow-y-auto p-6 bg-[#070707]">
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-[#070707]">
           {children}
         </main>
       </div>
