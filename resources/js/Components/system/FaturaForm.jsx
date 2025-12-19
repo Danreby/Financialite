@@ -12,14 +12,26 @@ export default function FaturaForm({ isOpen, onClose }) {
     const title = formData.get("title")?.toString().trim();
     const amount = formData.get("amount")?.toString().trim();
     const type = formData.get("type")?.toString().trim();
+    const formElement = event.currentTarget;
 
-    const errors = [];
-    if (!title) errors.push("Informe o título da transação.");
-    if (!amount) errors.push("Informe o valor da transação.");
-    if (!type) errors.push("Selecione o tipo: débito ou crédito.");
+    toast.dismiss();
 
-    if (errors.length) {
-      errors.forEach((message) => toast.error(message));
+    if (!title) {
+      toast.error("Informe o título da transação.");
+      formElement.elements.namedItem("title")?.focus();
+      return;
+    }
+
+    if (!amount) {
+      toast.error("Informe o valor da transação.");
+      formElement.elements.namedItem("amount")?.focus();
+      return;
+    }
+
+    if (!type) {
+      toast.error("Selecione o tipo: débito ou crédito.");
+      const debitRadio = formElement.querySelector('input[name="type"][value="debit"]');
+      debitRadio?.focus();
       return;
     }
 
@@ -27,7 +39,7 @@ export default function FaturaForm({ isOpen, onClose }) {
   };
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title="Nova transação">
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
