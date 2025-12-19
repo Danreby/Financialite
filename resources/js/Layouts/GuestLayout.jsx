@@ -1,18 +1,26 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Link } from '@inertiajs/react';
+import React from 'react'
+import { Link } from '@inertiajs/react'
+import ApplicationLogo from '@/Components/ApplicationLogo'
 
 export default function GuestLayout({ children }) {
-    return (
-        <div className="flex min-h-screen flex-col items-center bg-gray-100 dark:bg-gray-950 pt-6 sm:justify-center sm:pt-0">
-            <div>
-                <Link href="/">
-                    <ApplicationLogo className="h-20 w-20 fill-current text-gray-500" />
-                </Link>
-            </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#070707] text-gray-100">
+      <div className="absolute inset-0 overflow-hidden -z-10">
+        <div className="absolute -left-32 -top-24 h-96 w-96 rounded-full opacity-10 blur-3xl" style={{ background: '#7b1818' }} />
+        <div className="absolute -right-40 bottom-8 h-80 w-80 rounded-full opacity-8 blur-3xl" style={{ background: '#2a2a2a' }} />
+      </div>
 
-            <div className="mt-6 w-full overflow-hidden bg-white dark:bg-gray-800 px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg">
-                {children}
-            </div>
+      <div className="w-full px-6 sm:px-0">
+        <div className="flex justify-center mb-6">
+          <Link href="/" aria-label="Voltar para home">
+            <ApplicationLogo className="h-16 w-16" />
+          </Link>
         </div>
-    );
+
+        <div className="flex items-center justify-center">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
 }

@@ -1,100 +1,114 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+// FILE: src/Pages/Auth/Login.jsx
+import React from 'react'
+import { Head, Link, useForm } from '@inertiajs/react'
+import { motion } from 'framer-motion'
+import GuestLayout from '@/Layouts/GuestLayout'
+import AuthCard from '@/Components/auth/AuthCard'
+import AuthHeader from '@/Components/auth/AuthHeader'
+import FormField from '@/Components/auth/FormField'
+import PrimaryButton from '@/Components/PrimaryButton'
 
 export default function Login({ status, canResetPassword }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
-        remember: false,
-    });
+  const { data, setData, post, processing, errors, reset } = useForm({
+    email: '',
+    password: '',
+    remember: false,
+  })
 
-    const submit = (e) => {
-        e.preventDefault();
+  const submit = (e) => {
+    e.preventDefault()
+    post(route('login'), { onFinish: () => reset('password') })
+  }
 
-        post(route('login'), {
-            onFinish: () => reset('password'),
-        });
-    };
+  return (
+    <GuestLayout>
+      <Head title="Entrar" />
 
-    return (
-        <GuestLayout>
-            <Head title="Log in" />
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: 'easeOut' }}
+        className="w-full max-w-md mx-auto px-4"
+      >
+        <AuthCard>
+          {/* <div className="mb-2">
+            <AuthHeader
+              title="Bem-vindo de volta"
+              subtitle="Entre com sua conta para continuar"
+            />
+          </div> */}
 
-            {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
+          {status && (
+            <div className="mb-3 text-sm font-medium text-emerald-400">
+              {status}
+            </div>
+          )}
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" className='dark:text-white'/>
+          <motion.form
+            onSubmit={submit}
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05 }}
+          >
+            <FormField
+              id="email"
+              label="E-mail"
+              value={data.email}
+              onChange={(e) => setData('email', e.target.value)}
+              error={errors.email}
+              autoComplete="username"
+              autoFocus
+              type="email"
+            />
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
+            <FormField
+              id="password"
+              label="Senha"
+              value={data.password}
+              onChange={(e) => setData('password', e.target.value)}
+              error={errors.password}
+              autoComplete="current-password"
+              type="password"
+            />
 
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <label className="flex items-center select-none">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  checked={data.remember}
+                  onChange={(e) => setData('remember', e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-600 bg-transparent focus:ring-0 dark:border-gray-500"
+                />
+                <span className="ms-2 text-sm text-gray-300">Lembrar-me</span>
+              </label>
 
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" className='dark:text-white'/>
+              {canResetPassword && (
+                <Link
+                  href={route('password.request')}
+                  className="text-sm underline text-gray-300 hover:text-white self-end"
+                >
+                  Esqueceu a senha?
+                </Link>
+              )}
+            </div>
 
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
+            <div>
+              <PrimaryButton type="submit" disabled={processing} className="w-full">
+                Entrar
+              </PrimaryButton>
+            </div>
+          </motion.form>
 
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) =>
-                                setData('remember', e.target.checked)
-                            }
-                        />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-white">
-                            Remember me
-                        </span>
-                    </label>
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 dark:text-white underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
-    );
+          <div className="mt-6 border-t border-gray-800 pt-4 text-center text-sm text-gray-400">
+            <span>Não tem conta? </span>
+            <Link href={route('register')} className="underline text-gray-200 ml-1">
+              Cadastre-se
+            </Link>
+          </div>
+        </AuthCard>
+      </motion.div>
+    </GuestLayout>
+  )
 }
