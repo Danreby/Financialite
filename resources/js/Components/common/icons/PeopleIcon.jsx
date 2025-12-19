@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PeopleIcon = ({ type = 1, size = 18, color = 'text-vixpar-primary'  }) => {
+const PeopleIcon = ({ type = 1, size = 18, color = 'text-white'  }) => {
     return (
         <>
             {type === 1 && (

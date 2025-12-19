@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Link } from '@inertiajs/react'
+import NavIcon from '@/Components/common/icons/NavIcon'
 
 export default function Sidebar({ open = true, setOpen = () => {} }) {
   return (
@@ -36,14 +37,14 @@ export default function Sidebar({ open = true, setOpen = () => {} }) {
 
         <nav className="mt-3 flex-1 px-2 space-y-1">
           <NavItem open={open} href={route('dashboard')} label="Resumo" />
-          <NavItem open={open} href={route('faturas.index')} label="Fatura" />
-          <NavItem open={open} href={route('accounts.index')} label="Contas" />
+          <NavItem type={4} open={open} href={route('faturas.index')} label="Fatura" />
+          <NavItem type={6} open={open} href={route('accounts.index')} label="Contas" />
           <NavItem open={open} href={route('transactions.index')} label="Transações" />
           <NavItem open={open} href={route('reports.index')} label="Relatórios" />
         </nav>
 
         <nav className='justify-end'>
-          <NavItem open={open} href={route('settings')} label="Configurações" />
+          <NavItem type={1} open={open} href={route('settings')} label="Configurações" />
         </nav>
 
         <div className="px-3 py-4">
@@ -58,16 +59,14 @@ export default function Sidebar({ open = true, setOpen = () => {} }) {
   )
 }
 
-function NavItem({ open, href, label }) {
+function NavItem({ type = 3, size = 16, color, open, href, label }) {
   return (
     <Link
       href={href}
       className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-300 hover:bg-gray-900/30`}
     >
       <div className="h-8 w-8 rounded-md bg-[#0f0f0f] flex items-center justify-center ring-1 ring-black/20" aria-hidden>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M3 12h18" stroke="#7b1818" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
+        <NavIcon type={type} size={size} color={color}/>
       </div>
       {open && <span className="truncate">{label}</span>}
     </Link>

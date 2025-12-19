@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EditIcon = ({ type = 1, size = 18, color = 'text-vixpar-primary' }) => {
+const EditIcon = ({ type = 1, size = 18, color = 'text-white' }) => {
   const iconClasses = `fill-current ${color}`;
 
   return (

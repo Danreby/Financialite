@@ -3,7 +3,7 @@ import React from 'react';
 const RestoreIcon = ({
   type = 1,
   size = 18,
-  color = 'text-vixpar-primary',
+  color = 'text-white',
 }) => {
   return (
     <>

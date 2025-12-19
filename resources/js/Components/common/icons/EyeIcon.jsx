@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EyeIcon = ({ type = 1, size = 18, color = 'text-vixpar-primary' }) => {
+const EyeIcon = ({ type = 1, size = 18, color = 'text-white' }) => {
     return (
         <>
             {type === 1 && (
