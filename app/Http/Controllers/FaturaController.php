@@ -22,6 +22,7 @@ class FaturaController extends Controller
     {
         $user = $request->user();
         $bankUserId = $request->input('bank_user_id');
+        $categoryId = $request->input('category_id');
         $selectedBankUser = null;
 
         if ($request->filled('bank_user_id')) {
@@ -39,6 +40,7 @@ class FaturaController extends Controller
 
         $filters = [
             'bank_user_id' => $bankUserId,
+            'category_id' => $categoryId,
         ];
 
         $baseQuery = Fatura::with(['bankUser.bank', 'user', 'category'])
@@ -83,13 +85,19 @@ class FaturaController extends Controller
                 ];
             });
 
+        $categories = \App\Models\Category::where('user_id', $user->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('Fatura', [
             'monthlyGroups' => $monthlyGroups,
             'bankAccounts' => $bankAccounts,
             'currentMonthKey' => $currentMonthKey,
             'filters' => [
                 'bank_user_id' => $request->input('bank_user_id'),
+                'category_id' => $request->input('category_id'),
             ],
+            'categories' => $categories,
         ]);
     }
 

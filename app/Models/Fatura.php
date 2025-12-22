@@ -78,6 +78,9 @@ class Fatura extends Model
             ->when($filters['amount_max'] ?? null, function (Builder $q, $max) {
                 $q->where('amount', '<=', $max);
             })
+            ->when($filters['category_id'] ?? null, function (Builder $q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            })
             ->when(isset($filters['is_recurring']) && $filters['is_recurring'] !== null, function (Builder $q) use ($filters) {
                 $value = filter_var($filters['is_recurring'], FILTER_VALIDATE_BOOLEAN);
                 $q->where('is_recurring', $value);

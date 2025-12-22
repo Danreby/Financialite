@@ -7,7 +7,71 @@ import FaturaMonthSection from '@/Components/system/fatura/FaturaMonthSection';
 import FaturaMonthCarousel from '@/Components/system/fatura/FaturaMonthCarousel';
 import Modal from '@/Components/common/Modal';
 
-export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters = {}, currentMonthKey = null }) {
+function FaturaFilters({ bankAccounts, categories, filters, onChange }) {
+	const selectedBankId = filters?.bank_user_id ?? '';
+	const selectedCategoryId = filters?.category_id ?? '';
+
+	const handleBankChange = (event) => {
+		const value = event.target.value || undefined;
+		onChange({
+			bank_user_id: value,
+			category_id: selectedCategoryId || undefined,
+		});
+	};
+
+	const handleCategoryChange = (event) => {
+		const value = event.target.value || undefined;
+		onChange({
+			bank_user_id: selectedBankId || undefined,
+			category_id: value,
+		});
+	};
+
+	return (
+		<div className="flex flex-wrap items-center gap-4 text-sm">
+			<div className="flex items-center gap-3">
+				<label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+					Filtrar por banco
+				</label>
+				<select
+					value={selectedBankId || ''}
+					onChange={handleBankChange}
+					className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+				>
+					<option value="">Todos os bancos</option>
+					{bankAccounts.map((account) => (
+						<option key={account.id} value={account.id}>
+							{account.name}
+							{account.due_day
+								? ` - vence todo dia ${account.due_day}`
+								: ''}
+						</option>
+					))}
+				</select>
+			</div>
+
+			<div className="flex items-center gap-3">
+				<label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+					Filtrar por categoria
+				</label>
+				<select
+					value={selectedCategoryId || ''}
+					onChange={handleCategoryChange}
+					className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+				>
+					<option value="">Todas as categorias</option>
+					{categories.map((category) => (
+						<option key={category.id} value={category.id}>
+							{category.name}
+						</option>
+					))}
+				</select>
+			</div>
+		</div>
+	);
+}
+
+export default function Fatura({ monthlyGroups = [], bankAccounts = [], categories = [], filters = {}, currentMonthKey = null }) {
 	const selectedBankId = filters?.bank_user_id ?? '';
 	const [selectedMonthKey, setSelectedMonthKey] = useState(() => {
 		if (currentMonthKey && monthlyGroups && monthlyGroups.length > 0) {
@@ -41,9 +105,8 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 		}
 	}, [monthlyGroups, selectedMonthKey, currentMonthKey]);
 
-	const handleBankChange = (event) => {
-		const value = event.target.value || undefined;
-		router.get(route('faturas.index'), { bank_user_id: value }, {
+	const handleFiltersChange = (nextFilters) => {
+		router.get(route('faturas.index'), nextFilters, {
 			preserveState: true,
 			preserveScroll: true,
 		});
@@ -131,26 +194,12 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 						</p>
 					</div>
 
-					<div className="flex flex-wrap items-center gap-3 text-sm">
-						<label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-							Filtrar por banco
-						</label>
-						<select
-							value={selectedBankId || ''}
-							onChange={handleBankChange}
-							className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
-						>
-							<option value="">Todos os bancos</option>
-							{bankAccounts.map((account) => (
-								<option key={account.id} value={account.id}>
-									{account.name}
-									{account.due_day
-										? ` - vence todo dia ${account.due_day}`
-										: ''}
-								</option>
-							))}
-						</select>
-					</div>
+					<FaturaFilters
+						bankAccounts={bankAccounts}
+						categories={categories}
+						filters={filters}
+						onChange={handleFiltersChange}
+					/>
 
 					{selectedAccount && (
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
