@@ -25,8 +25,8 @@ export default function FaturaMonthSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1 flex justify-center">
-          <div className="inline-flex flex-col items-center rounded-full px-6 py-3">
+        <div className="flex-1 flex justify-start items-center gap-4">
+          <div className="inline-flex flex-col items-start rounded-full px-6 py-3">
             {due_day && (
               <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                 Vencimento do cartão: todo dia <span className="font-semibold">{due_day}</span>
