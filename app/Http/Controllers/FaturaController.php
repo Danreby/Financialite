@@ -290,7 +290,12 @@ class FaturaController extends Controller
             'current_installment' => 'nullable|integer|min:1',
             'is_recurring' => 'sometimes|boolean',
             'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }),
+            ],
         ]);
 
         if (!empty($data['bank_user_id'])) {
@@ -343,7 +348,12 @@ class FaturaController extends Controller
             'current_installment' => 'nullable|integer|min:1',
             'is_recurring' => 'sometimes|boolean',
             'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                }),
+            ],
         ]);
 
         if (array_key_exists('bank_user_id', $data) && !empty($data['bank_user_id'])) {

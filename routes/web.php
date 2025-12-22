@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\FaturaController;
 use App\Models\BankUser;
+use App\Models\Category;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,8 +27,13 @@ Route::get('/dashboard', function () {
             ];
         });
 
+    $categories = Category::where('user_id', $user->id)
+        ->orderBy('name')
+        ->get(['id', 'name']);
+
     return Inertia::render('Dashboard', [
         'bankAccounts' => $bankAccounts,
+        'categories' => $categories,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
