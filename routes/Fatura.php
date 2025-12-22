@@ -11,6 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 		Route::match(['put', 'patch'], '/{id}', [FaturaController::class, 'update'])->name('update');
 		Route::delete('/{id}', [FaturaController::class, 'destroy'])->name('destroy');
 		Route::post('/{id}/restore', [FaturaController::class, 'restore'])->name('restore');
+		Route::post('/pay-month', [FaturaController::class, 'payMonth'])->name('pay_month');
 	});
 });
 

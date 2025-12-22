@@ -57,7 +57,15 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 
 					{monthlyGroups &&
 						monthlyGroups.map((group) => (
-							<FaturaMonthSection key={group.month_key} {...group} />
+							<FaturaMonthSection
+									key={group.month_key}
+									{...group}
+									month_key={group.month_key}
+									bankUserId={selectedBankId || null}
+									onPaid={() => {
+										router.reload({ only: ['monthlyGroups'] });
+									}}
+								/>
 						))}
 				</div>
 			</div>

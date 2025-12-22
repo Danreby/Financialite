@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fatura;
 use App\Models\BankUser;
+use App\Models\Paid;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -27,9 +28,10 @@ class FaturaController extends Controller
         $baseQuery = Fatura::with(['bankUser.bank', 'user'])
             ->where('user_id', $user->id);
 
+        $bankUserId = $request->input('bank_user_id');
+
         // Filtro por conta/banco
         if ($request->filled('bank_user_id')) {
-            $bankUserId = $request->input('bank_user_id');
             $bankUser = BankUser::findOrFail($bankUserId);
 
             if ($bankUser->user_id !== $user->id) {
@@ -39,7 +41,6 @@ class FaturaController extends Controller
 
                 abort(403, 'Não autorizado.');
             }
-
             $baseQuery->where('bank_user_id', $bankUserId);
         }
 
@@ -53,7 +54,22 @@ class FaturaController extends Controller
 
         // Inertia (página web): envia faturas agrupadas por mês
         $allFaturas = $baseQuery->get();
-        $monthlyGroups = $this->groupFaturasByMonth($allFaturas);
+
+        // Buscar registros de pagamento de fatura por mês para este usuário e filtro de banco atual
+        $paidQuery = Paid::where('user_id', $user->id);
+
+        if ($request->has('bank_user_id')) {
+            if (is_null($bankUserId)) {
+                $paidQuery->whereNull('bank_user_id');
+            } else {
+                $paidQuery->where('bank_user_id', $bankUserId);
+            }
+        }
+
+        $paidByMonth = $paidQuery
+            ->pluck('total_paid', 'month_key');
+
+        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
 
         $bankAccounts = BankUser::with('bank')
             ->where('user_id', $user->id)
@@ -74,23 +90,28 @@ class FaturaController extends Controller
         ]);
     }
 
-    protected function groupFaturasByMonth($faturas)
+    protected function groupFaturasByMonth($faturas, $paidByMonth = null)
     {
         $grouped = $faturas->groupBy(function ($fatura) {
             $date = $fatura->due_date ?: $fatura->created_at;
             return Carbon::parse($date)->format('Y-m');
         });
 
-        $result = $grouped->map(function ($items, $yearMonth) {
+        $result = $grouped->map(function ($items, $yearMonth) use ($paidByMonth) {
             $carbon = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
             $label = ucfirst($carbon->translatedFormat('F Y'));
 
             $totalSpent = $items->sum('amount');
+            // Considera o mês "pago" quando existe um registro em paids
+            // para aquele usuário/mês/conta (não depende do status individual das faturas,
+            // permitindo faturas recorrentes que nunca ficarão marcadas como pagas).
+            $isPaid = $paidByMonth ? $paidByMonth->has($yearMonth) : false;
 
             return [
                 'month_key' => $yearMonth,
                 'month_label' => $label,
                 'total_spent' => (float) $totalSpent,
+                'is_paid' => $isPaid,
                 'items' => $items->map(function ($fatura) {
                     return [
                         'id' => $fatura->id,
@@ -308,6 +329,110 @@ class FaturaController extends Controller
         $faturas = $query->orderBy('due_date', 'desc')->paginate(15);
 
         return response()->json($faturas);
+    }
+
+    /**
+     * Marca como pagas as pendências de um mês específico.
+     * - Para faturas sem parcelas (total_installments = 1): marca como paid diretamente.
+     * - Para faturas parceladas: incrementa current_installment em 1; só marca como paid
+     *   quando current_installment atingir total_installments.
+     */
+    public function payMonth(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'bank_user_id' => 'nullable|exists:bank_user,id',
+        ]);
+
+        $bankUserId = $data['bank_user_id'] ?? null;
+
+        if ($bankUserId) {
+            $bankUser = BankUser::findOrFail($bankUserId);
+            if ($bankUser->user_id !== $user->id) {
+                return response()->json(['message' => 'Não autorizado.'], 403);
+            }
+        }
+
+        $startOfMonth = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth();
+        $endOfMonth = (clone $startOfMonth)->endOfMonth();
+
+        $query = Fatura::where('user_id', $user->id)
+            ->whereBetween('due_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->where('status', '!=', 'paid');
+
+        if ($bankUserId) {
+            $query->where('bank_user_id', $bankUserId);
+        }
+
+        $faturas = $query->get();
+
+        if ($faturas->isEmpty()) {
+            return response()->json(['message' => 'Nenhuma fatura pendente para este mês.'], 200);
+        }
+
+        DB::beginTransaction();
+        try {
+            $totalPaidThisRun = 0;
+
+            foreach ($faturas as $fatura) {
+                $totalInstallments = max((int) $fatura->total_installments, 1);
+                $currentInstallment = (int) ($fatura->current_installment ?? 1);
+
+                // Valor de uma parcela (ou total, se sem parcelas)
+                $installmentAmount = (float) $fatura->amount / $totalInstallments;
+
+                if ($totalInstallments <= 1) {
+                    // Fatura sem parcelas: pagar tudo de uma vez
+                    $fatura->status = 'paid';
+                    $fatura->paid_date = now()->toDateString();
+                    $totalPaidThisRun += (float) $fatura->amount;
+                } else {
+                    // Fatura parcelada: paga apenas a próxima parcela
+                    if ($currentInstallment < $totalInstallments) {
+                        $currentInstallment++;
+                        $fatura->current_installment = $currentInstallment;
+                        $totalPaidThisRun += $installmentAmount;
+                    }
+
+                    if ($currentInstallment >= $totalInstallments) {
+                        $fatura->status = 'paid';
+                        $fatura->paid_date = now()->toDateString();
+                    }
+                }
+
+                $fatura->save();
+            }
+
+            // Atualiza/insere registro em paids para este usuário/mês/banco
+            if ($totalPaidThisRun > 0) {
+                $monthKey = $data['month'];
+
+                $paid = Paid::firstOrNew([
+                    'user_id' => $user->id,
+                    'month_key' => $monthKey,
+                    'bank_user_id' => $bankUserId,
+                ]);
+
+                $paid->total_paid = ($paid->total_paid ?? 0) + $totalPaidThisRun;
+                $paid->paid_at = now()->toDateString();
+                $paid->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Pagamentos registrados com sucesso.',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Erro ao registrar pagamentos do mês.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
