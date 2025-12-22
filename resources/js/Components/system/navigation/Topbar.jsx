@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from '@inertiajs/react'
 
-export default function Topbar({ sidebarOpen, setSidebarOpen }) {
+export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
   const [isDark, setIsDark] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -35,6 +35,21 @@ export default function Topbar({ sidebarOpen, setSidebarOpen }) {
 
   const toggleTheme = () => setIsDark((prev) => !prev)
   const toggleUserMenu = () => setUserMenuOpen((prev) => !prev)
+
+  const initials = (() => {
+    if (!user?.name) return 'U'
+
+    const parts = user.name
+      .split(' ')
+      .filter((part) => part.length > 0)
+      .slice(0, 2)
+
+    if (parts.length === 0) return 'U'
+
+    return parts
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('')
+  })()
 
   return (
     <div className="flex items-center justify-between mt-2 p-4 bg-white text-gray-900 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:text-gray-100 dark:ring-black/30">
@@ -73,7 +88,7 @@ export default function Topbar({ sidebarOpen, setSidebarOpen }) {
             aria-haspopup="true"
             aria-expanded={userMenuOpen}
           >
-            BS
+              {initials}
           </button>
 
           {userMenuOpen && (
