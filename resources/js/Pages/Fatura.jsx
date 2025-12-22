@@ -6,6 +6,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FaturaMonthSection from '@/Components/system/fatura/FaturaMonthSection';
 import FaturaMonthCarousel from '@/Components/system/fatura/FaturaMonthCarousel';
 import Modal from '@/Components/common/Modal';
+import FaturaPendingExportButton from '@/Components/system/fatura/FaturaPendingExportButton';
 
 function FaturaFilters({ bankAccounts, categories, filters, onChange }) {
 	const selectedBankId = filters?.bank_user_id ?? '';
@@ -194,12 +195,17 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 						</p>
 					</div>
 
-					<FaturaFilters
-						bankAccounts={bankAccounts}
-						categories={categories}
-						filters={filters}
-						onChange={handleFiltersChange}
-					/>
+					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+						<FaturaFilters
+							bankAccounts={bankAccounts}
+							categories={categories}
+							filters={filters}
+							onChange={handleFiltersChange}
+						/>
+						<div className="flex justify-start md:justify-end">
+							<FaturaPendingExportButton monthlyGroups={monthlyGroups} />
+						</div>
+					</div>
 
 					{selectedAccount && (
 						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
