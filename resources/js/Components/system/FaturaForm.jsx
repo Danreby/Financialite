@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import Modal from "../common/Modal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 
-export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = [] }) {
+export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = [], categories = [] }) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -19,6 +19,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
     const amount = formData.get("amount")?.toString().trim();
     const type = formData.get("type")?.toString().trim();
     const bankUserId = formData.get("bank_user_id")?.toString().trim();
+    const categoryId = formData.get("category_id")?.toString().trim();
     const formElement = e.currentTarget;
 
     toast.dismiss();
@@ -53,6 +54,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
         formData.get("total_installments")?.toString().trim() || 1,
       is_recurring: isRecurring ? 1 : 0,
       bank_user_id: bankUserId || null,
+      category_id: categoryId || null,
     };
 
     axios
@@ -98,6 +100,12 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
           if (errors.bank_user_id?.[0]) {
             toast.error(errors.bank_user_id[0]);
             formElement.elements.namedItem("bank_user_id")?.focus();
+            return;
+          }
+
+          if (errors.category_id?.[0]) {
+            toast.error(errors.category_id[0]);
+            formElement.elements.namedItem("category_id")?.focus();
             return;
           }
 
@@ -221,6 +229,23 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               name="is_recurring"
               value={isRecurring ? 1 : 0}
             />
+          </div>
+          <div className="flex flex-col gap-1 md:col-span-2">
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              Categoria
+            </label>
+            <select
+              name="category_id"
+              className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+              defaultValue=""
+            >
+              <option value="">Selecione uma categoria</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-col gap-1 md:col-span-2">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-200">

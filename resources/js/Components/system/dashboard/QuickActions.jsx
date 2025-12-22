@@ -2,15 +2,22 @@ import React, { useEffect, useState } from 'react';
 import PrimaryButton from '@/Components/common/buttons/PrimaryButton';
 import FaturaForm from '@/Components/system/FaturaForm';
 import BankForm from '@/Components/system/BankForm';
+import CategoryForm from '@/Components/system/CategoryForm';
 
-export default function QuickActions({ bankAccounts = [] }) {
+export default function QuickActions({ bankAccounts = [], categories = [] }) {
   const [showFaturaForm, setShowFaturaForm] = useState(false);
   const [showBankForm, setShowBankForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [localBankAccounts, setLocalBankAccounts] = useState(bankAccounts);
+  const [localCategories, setLocalCategories] = useState(categories);
 
   useEffect(() => {
     setLocalBankAccounts(bankAccounts);
   }, [bankAccounts]);
+
+  useEffect(() => {
+    setLocalCategories(categories);
+  }, [categories]);
 
   return (
     <>
@@ -28,6 +35,13 @@ export default function QuickActions({ bankAccounts = [] }) {
           >
             Adicionar Banco
           </PrimaryButton>
+          <PrimaryButton
+            className="w-full"
+            style={{ background: '#222' }}
+            onClick={() => setShowCategoryForm(true)}
+          >
+            Adicionar Categoria
+          </PrimaryButton>
           <PrimaryButton className="w-full" style={{ background: '#222' }}>Importar CSV</PrimaryButton>
         </div>
       </div>
@@ -36,6 +50,7 @@ export default function QuickActions({ bankAccounts = [] }) {
         isOpen={showFaturaForm}
         onClose={() => setShowFaturaForm(false)}
         bankAccounts={localBankAccounts}
+        categories={localCategories}
       />
 
       <BankForm
@@ -49,6 +64,22 @@ export default function QuickActions({ bankAccounts = [] }) {
               return prev;
             }
             return [...prev, { id: bankUser.id, name }];
+          });
+        }}
+      />
+
+      <CategoryForm
+        isOpen={showCategoryForm}
+        onClose={() => setShowCategoryForm(false)}
+        onSuccess={(category) => {
+          if (!category || !category.id) return;
+          if (!category.name) return;
+
+          setLocalCategories((prev) => {
+            if (prev.some((c) => c.id === category.id)) {
+              return prev;
+            }
+            return [...prev, { id: category.id, name: category.name }];
           });
         }}
       />

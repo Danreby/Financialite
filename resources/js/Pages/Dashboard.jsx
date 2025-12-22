@@ -25,7 +25,7 @@ function formatDateLabel(value) {
   }).format(date)
 }
 
-export default function Dashboard({ bankAccounts = [] }) {
+export default function Dashboard({ bankAccounts = [], categories = [] }) {
   const [currentFilters, setCurrentFilters] = useState({})
   const [page, setPage] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
@@ -140,7 +140,7 @@ export default function Dashboard({ bankAccounts = [] }) {
             </div>
           </div>
 
-          <QuickActions bankAccounts={bankAccounts} />
+          <QuickActions bankAccounts={bankAccounts} categories={categories} />
         </div>
       </motion.div>
     </AuthenticatedLayout>
