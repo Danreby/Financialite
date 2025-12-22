@@ -48,6 +48,7 @@ class BankController extends Controller
         
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:banks,name',
+            'due_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         $bank = Bank::create($data);
@@ -72,6 +73,7 @@ class BankController extends Controller
 
         $data = $request->validate([
             'name' => 'required|string|max:255|unique:banks,name,' . $bank->id,
+            'due_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         $bank->update($data);
@@ -102,12 +104,39 @@ class BankController extends Controller
         return response()->json($banks);
     }
 
+    /**
+     * Atualiza apenas o dia de vencimento (due_day) do banco associado a uma conta do usuário.
+     */
+    public function updateDueDay(Request $request, BankUser $bankUser)
+    {
+        $user = $request->user();
+
+        if ($bankUser->user_id !== $user->id) {
+            return response()->json(['message' => 'Não autorizado.'], 403);
+        }
+
+        $data = $request->validate([
+            'due_day' => 'required|integer|min:1|max:31',
+        ]);
+
+        // Atualiza o dia de vencimento diretamente na associação bank_user
+        $bankUser->due_day = $data['due_day'];
+        $bankUser->save();
+
+        return response()->json([
+            'message' => 'Dia de vencimento atualizado com sucesso.',
+            'bank_user_id' => $bankUser->id,
+            'due_day' => $data['due_day'],
+        ]);
+    }
+
     public function attachToUser(Request $request)
     {
         $user = $request->user();
 
         $data = $request->validate([
             'bank_id' => 'required|exists:banks,id',
+            'due_day' => 'nullable|integer|min:1|max:31',
         ]);
 
         $exists = BankUser::where('user_id', $user->id)
@@ -125,6 +154,7 @@ class BankController extends Controller
         $bankUser = BankUser::create([
             'user_id' => $user->id,
             'bank_id' => $data['bank_id'],
+            'due_day' => $data['due_day'] ?? null,
         ]);
 
         return response()->json($bankUser->load('bank'), 201);

@@ -11,11 +11,9 @@ return new class extends Migration
         Schema::create('bank_user', function (Blueprint $table) {
             $table->id();
 
-            // use foreignId + constrained para convenção e cascades
             $table->foreignId('bank_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-            // evita duplicação do mesmo banco para mesmo usuário
             $table->unique(['bank_id', 'user_id'], 'bank_user_unique');
 
             $table->timestamps();

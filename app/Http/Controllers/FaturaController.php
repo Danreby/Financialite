@@ -78,6 +78,7 @@ class FaturaController extends Controller
                 return [
                     'id' => $bankUser->id,
                     'name' => $bankUser->bank?->name ?? ('Conta #' . $bankUser->id),
+                    'due_day' => $bankUser->due_day,
                 ];
             });
 
@@ -171,14 +172,28 @@ class FaturaController extends Controller
         ]);
 
         if (!empty($data['bank_user_id'])) {
-            $bankUser = BankUser::findOrFail($data['bank_user_id']);
+            $bankUser = BankUser::with('bank')->findOrFail($data['bank_user_id']);
             if ($bankUser->user_id !== $user->id) {
                 return response()->json(['message' => 'A associação banco-usuário não pertence ao usuário autenticado.'], 422);
+            }
+
+            // Se não foi enviada due_date, calcula com base no dia de vencimento do cartão
+            if (empty($data['due_date']) && $bankUser->due_day) {
+                $today = Carbon::today();
+                $dueDay = (int) $bankUser->due_day;
+
+                // Define o próximo vencimento com o dia configurado
+                $candidate = $today->copy()->day(min($dueDay, 28));
+                if ($candidate->lessThanOrEqualTo($today)) {
+                    $candidate->addMonth();
+                }
+
+                $data['due_date'] = $candidate->toDateString();
             }
         }
 
         $data['user_id'] = $user->id;
-        // Se due_date não vier do formulário, define como hoje
+        // Se due_date ainda não foi definida, mantém fallback para hoje
         if (empty($data['due_date'])) {
             $data['due_date'] = now()->toDateString();
         }

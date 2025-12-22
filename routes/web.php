@@ -55,6 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/banks/list', [BankController::class, 'list'])->name('banks.list');
     Route::post('/banks/attach', [BankController::class, 'attachToUser'])->name('banks.attach');
+    Route::patch('/banks/user/{bankUser}/due-day', [BankController::class, 'updateDueDay'])
+        ->name('banks.update-due-day');
 });
 
 require __DIR__.'/Fatura.php';

@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import FaturaMonthSection from '@/Components/system/fatura/FaturaMonthSection';
+import FaturaMonthCarousel from '@/Components/system/fatura/FaturaMonthCarousel';
+import Modal from '@/Components/common/Modal';
 
 export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters = {} }) {
 	const selectedBankId = filters?.bank_user_id ?? '';
+	const [selectedMonthKey, setSelectedMonthKey] = useState(
+		monthlyGroups && monthlyGroups.length > 0 ? monthlyGroups[0].month_key : null,
+	);
+	const [isDueDayModalOpen, setIsDueDayModalOpen] = useState(false);
+	const [dueDayInput, setDueDayInput] = useState('');
+	const [isUpdatingDueDay, setIsUpdatingDueDay] = useState(false);
+
+	useEffect(() => {
+		if (!monthlyGroups || monthlyGroups.length === 0) {
+			setSelectedMonthKey(null);
+			return;
+		}
+
+		// Se o mês selecionado atual não existir mais (por filtro), cai para o primeiro mês disponível
+		const exists = monthlyGroups.some((g) => g.month_key === selectedMonthKey);
+		if (!exists) {
+			setSelectedMonthKey(monthlyGroups[0].month_key);
+		}
+	}, [monthlyGroups, selectedMonthKey]);
 
 	const handleBankChange = (event) => {
 		const value = event.target.value || undefined;
@@ -13,6 +36,75 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 			preserveScroll: true,
 		});
 	};
+
+	const selectedAccount =
+		bankAccounts && bankAccounts.length > 0 && selectedBankId
+			? bankAccounts.find((account) => String(account.id) === String(selectedBankId))
+			: null;
+
+	const handleChangeMonth = (monthKey) => {
+		setSelectedMonthKey(monthKey);
+	};
+
+	const handleOpenDueDayModal = () => {
+		if (!selectedAccount) return;
+		setDueDayInput(selectedAccount.due_day ? String(selectedAccount.due_day) : '');
+		setIsDueDayModalOpen(true);
+	};
+
+	const handleSubmitDueDay = async (event) => {
+		event.preventDefault();
+		if (!selectedAccount || isUpdatingDueDay) return;
+
+		const parsed = parseInt(dueDayInput, 10);
+		if (Number.isNaN(parsed) || parsed < 1 || parsed > 31) {
+			toast.error('Informe um dia de vencimento entre 1 e 31.');
+			return;
+		}
+
+		setIsUpdatingDueDay(true);
+		toast.dismiss();
+
+		try {
+			await axios.patch(route('banks.update-due-day', selectedAccount.id), {
+				due_day: parsed,
+			});
+
+			toast.success('Dia de vencimento atualizado com sucesso.');
+			setIsDueDayModalOpen(false);
+			router.reload({ only: ['bankAccounts'] });
+		} catch (error) {
+			console.error(error);
+			toast.error('Não foi possível atualizar o dia de vencimento.');
+		} finally {
+			setIsUpdatingDueDay(false);
+		}
+	};
+
+	const handlePaidMonth = () => {
+		if (!monthlyGroups || monthlyGroups.length === 0 || !selectedGroup) {
+			router.reload({ only: ['monthlyGroups'] });
+			return;
+		}
+
+		const currentIndex = monthlyGroups.findIndex(
+			(group) => group.month_key === selectedGroup.month_key,
+		);
+
+		// Próximo mês na lista (mais antigo, já que está em ordem desc)
+		const nextGroup =
+			currentIndex >= 0 && currentIndex < monthlyGroups.length - 1
+				? monthlyGroups[currentIndex + 1]
+				: selectedGroup;
+
+		setSelectedMonthKey(nextGroup.month_key);
+		router.reload({ only: ['monthlyGroups'] });
+	};
+
+	const selectedGroup =
+		monthlyGroups && monthlyGroups.length > 0
+			? monthlyGroups.find((g) => g.month_key === selectedMonthKey) || monthlyGroups[0]
+			: null;
 
 	return (
 		<AuthenticatedLayout>
@@ -42,10 +134,31 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 							{bankAccounts.map((account) => (
 								<option key={account.id} value={account.id}>
 									{account.name}
+									{account.due_day
+										? ` - vence todo dia ${account.due_day}`
+										: ''}
 								</option>
 							))}
 						</select>
 					</div>
+
+					{selectedAccount && (
+						<div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+							<span>
+								Dia de vencimento:{' '}
+								{selectedAccount.due_day
+									? `todo dia ${selectedAccount.due_day}`
+									: 'ainda não definido'}
+							</span>
+							<button
+								type="button"
+								onClick={handleOpenDueDayModal}
+								className="rounded-full border border-rose-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
+							>
+								Definir dia de vencimento
+							</button>
+						</div>
+					)}
 				</header>
 
 				<div className="space-y-5 pb-8">
@@ -55,19 +168,67 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], filters 
 						</p>
 					)}
 
-					{monthlyGroups &&
-						monthlyGroups.map((group) => (
-							<FaturaMonthSection
-									key={group.month_key}
-									{...group}
-									month_key={group.month_key}
-									bankUserId={selectedBankId || null}
-									onPaid={() => {
-										router.reload({ only: ['monthlyGroups'] });
-									}}
+					{monthlyGroups && monthlyGroups.length > 0 && (
+						<>
+							<FaturaMonthCarousel
+									months={monthlyGroups}
+									selectedMonthKey={selectedGroup?.month_key}
+									onChangeMonth={handleChangeMonth}
+							/>
+
+							{selectedGroup && (
+								<FaturaMonthSection
+										key={selectedGroup.month_key}
+										{...selectedGroup}
+										month_key={selectedGroup.month_key}
+										bankUserId={selectedBankId || null}
+										due_day={selectedAccount?.due_day ?? null}
+										onPaid={handlePaidMonth}
 								/>
-						))}
+							)}
+						</>
+					)}
 				</div>
+
+				<Modal
+					isOpen={isDueDayModalOpen}
+					onClose={() => !isUpdatingDueDay && setIsDueDayModalOpen(false)}
+					maxWidth="sm"
+					title="Definir dia de vencimento"
+				>
+					<form className="space-y-4" onSubmit={handleSubmitDueDay} noValidate>
+						<div className="flex flex-col gap-1">
+							<label className="text-xs font-medium text-gray-700 dark:text-gray-200">
+								Dia de vencimento do cartão (1 a 31)
+							</label>
+							<input
+								type="number"
+								min={1}
+								max={31}
+								value={dueDayInput}
+								onChange={(e) => setDueDayInput(e.target.value)}
+								className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+							/>
+						</div>
+
+						<div className="flex items-center justify-end gap-3 pt-2 text-xs">
+							<button
+								type="button"
+								onClick={() => !isUpdatingDueDay && setIsDueDayModalOpen(false)}
+								className="rounded-lg px-4 py-2 font-medium text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							>
+								Cancelar
+							</button>
+							<button
+								type="submit"
+								disabled={isUpdatingDueDay}
+								className="rounded-lg bg-rose-600 px-4 py-2 font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed"
+							>
+								{isUpdatingDueDay ? 'Salvando...' : 'Salvar dia'}
+							</button>
+						</div>
+					</form>
+				</Modal>
 			</div>
 		</AuthenticatedLayout>
 	);

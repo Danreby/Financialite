@@ -11,6 +11,11 @@ class BankUser extends Model
     protected $fillable = [
         'bank_id',
         'user_id',
+        'due_day',
+    ];
+
+    protected $casts = [
+        'due_day' => 'integer',
     ];
 
     public function bank()

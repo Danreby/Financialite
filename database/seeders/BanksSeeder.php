@@ -14,20 +14,20 @@ class BanksSeeder extends Seeder
     public function run(): void
     {
         $banks = [
-            "Nubank",
-            "Inter",
-            "C6 Bank",
-            "Banco do Brasil",
-            "Bradesco",
-            "Itaú",
-            "Santander",
-            "PayPal",
-            "PicPay",
-            "Mercado Pago",
+            ['name' => 'Nubank'],
+            ['name' => 'Inter'],
+            ['name' => 'C6 Bank'],
+            ['name' => 'Banco do Brasil'],
+            ['name' => 'Bradesco'],
+            ['name' => 'Itaú'],
+            ['name' => 'Santander'],
+            ['name' => 'PayPal'],
+            ['name' => 'PicPay'],
+            ['name' => 'Mercado Pago'],
         ];
 
-        foreach ($banks as $bankName) {
-            Bank::create(['name' => $bankName]);
+        foreach ($banks as $bankData) {
+            Bank::create($bankData);
         }
     }
 }

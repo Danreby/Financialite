@@ -39,6 +39,7 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 
 		const formData = new FormData(e.currentTarget);
 		const bankId = formData.get("bank_id")?.toString().trim();
+		const dueDayRaw = formData.get("due_day")?.toString().trim();
 		const formElement = e.currentTarget;
 
 		toast.dismiss();
@@ -50,8 +51,20 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 			return;
 		}
 
+		let dueDay = null;
+		if (dueDayRaw) {
+			const parsed = parseInt(dueDayRaw, 10);
+			if (Number.isNaN(parsed) || parsed < 1 || parsed > 31) {
+				toast.error("Informe um dia de vencimento entre 1 e 31.");
+				formElement.elements.namedItem("due_day")?.focus();
+				setIsSubmitting(false);
+				return;
+			}
+			dueDay = parsed;
+		}
+
 		axios
-			.post(route("banks.attach"), { bank_id: bankId })
+			.post(route("banks.attach"), { bank_id: bankId, due_day: dueDay })
 			.then((response) => {
 				toast.dismiss();
 				const payload = response.data || {};
@@ -101,6 +114,20 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 							</option>
 						))}
 					</select>
+				</div>
+
+				<div className="flex flex-col gap-1">
+					<label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+						Dia de vencimento do cartão (1 a 31)
+					</label>
+					<input
+						name="due_day"
+						type="number"
+						min={1}
+						max={31}
+						className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+						placeholder="Opcional. Ex: 10"
+					/>
 				</div>
 
 				<div className="flex items-center justify-end gap-3 pt-2">

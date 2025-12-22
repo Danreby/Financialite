@@ -18,6 +18,7 @@ export default function FaturaMonthSection({
   bankUserId = null,
   onPaid,
   is_paid = false,
+  due_day = null,
 }) {
   const [showPayModal, setShowPayModal] = useState(false);
 
@@ -41,6 +42,11 @@ export default function FaturaMonthSection({
             >
               {month_label}
             </h2>
+            {due_day && (
+              <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                Vencimento do cartão: todo dia <span className="font-semibold">{due_day}</span>
+              </p>
+            )}
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Total de despesas do mês:
               <span className="ml-1 font-semibold text-rose-600 dark:text-rose-400">
