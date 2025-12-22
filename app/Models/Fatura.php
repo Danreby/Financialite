@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 class Fatura extends Model
 {
@@ -48,55 +50,60 @@ class Fatura extends Model
         return $this->bankUser?->bank;
     }
 
-    public static function filter(
-        $title = null, 
-        $description = null, 
-        $amount = null, 
-        $type = null, 
-        $status = null,
-        $paid_date = null, 
-        $is_recurring = null, 
-        $user_id = null, 
-        $bank_user_id = null, 
-        $total_installments = null, 
-        $current_installment = null, 
-    )
+    public function scopeForUser(Builder $query, int $userId): Builder
     {
-        $query = self::query();
+        return $query->where('user_id', $userId);
+    }
 
-        if ($title !== null) {
-            $query->where('title', 'like', '%' . $title . '%');
+    public function scopeFilter(Builder $query, array $filters = []): Builder
+    {
+        return $query
+            ->when($filters['type'] ?? null, function (Builder $q, $type) {
+                $q->where('type', $type);
+            })
+            ->when($filters['status'] ?? null, function (Builder $q, $status) {
+                $q->where('status', $status);
+            })
+            ->when($filters['bank_user_id'] ?? null, function (Builder $q, $bankUserId) {
+                $q->where('bank_user_id', $bankUserId);
+            })
+            ->when($filters['due_date_from'] ?? null, function (Builder $q, $from) {
+                $q->whereDate('due_date', '>=', $from);
+            })
+            ->when($filters['due_date_to'] ?? null, function (Builder $q, $to) {
+                $q->whereDate('due_date', '<=', $to);
+            })
+            ->when($filters['amount_min'] ?? null, function (Builder $q, $min) {
+                $q->where('amount', '>=', $min);
+            })
+            ->when($filters['amount_max'] ?? null, function (Builder $q, $max) {
+                $q->where('amount', '<=', $max);
+            })
+            ->when(isset($filters['is_recurring']) && $filters['is_recurring'] !== null, function (Builder $q) use ($filters) {
+                $value = filter_var($filters['is_recurring'], FILTER_VALIDATE_BOOLEAN);
+                $q->where('is_recurring', $value);
+            });
+    }
+
+    public function scopeBetweenDueDates(Builder $query, $start, $end): Builder
+    {
+        $startDate = $start instanceof Carbon ? $start->toDateString() : $start;
+        $endDate = $end instanceof Carbon ? $end->toDateString() : $end;
+
+        return $query->whereBetween('due_date', [$startDate, $endDate]);
+    }
+
+    public function scopeNotStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('status', '!=', $status);
+    }
+
+    public function scopeForBankUser(Builder $query, ?int $bankUserId): Builder
+    {
+        if ($bankUserId) {
+            $query->where('bank_user_id', $bankUserId);
         }
-        if ($description !== null) {
-            $query->where('description', 'like', '%' . $description . '%');
-        }
-        if ($amount !== null) {
-            $query->where('amount', $amount);
-        }
-        if ($type !== null) {
-            $query->where('type', $type);
-        }
-        if ($status !== null) {
-            $query->where('status', $status);
-        }  
-        if ($paid_date !== null) {
-            $query->where('paid_date', $paid_date);
-        }
-        if ($is_recurring !== null) {
-            $query->where('is_recurring', $is_recurring);
-        }
-        if ($user_id !== null) {
-            $query->where('user_id', $user_id);
-        }
-        if ($bank_user_id !== null) {
-            $query->where('bank_user_id', $bank_user_id);
-        }
-        if ($total_installments !== null) {
-            $query->where('total_installments', $total_installments);
-        }
-        if ($current_installment !== null) {
-            $query->where('current_installment', $current_installment);
-        }
-        return $query->get();
+
+        return $query;
     }
 }

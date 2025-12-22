@@ -21,10 +21,6 @@ class FaturaController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-
-        $baseQuery = Fatura::with(['bankUser.bank', 'user'])
-            ->where('user_id', $user->id);
-
         $bankUserId = $request->input('bank_user_id');
 
         if ($request->filled('bank_user_id')) {
@@ -37,10 +33,16 @@ class FaturaController extends Controller
 
                 abort(403, 'Não autorizado.');
             }
-            $baseQuery->where('bank_user_id', $bankUserId);
         }
 
-        $baseQuery->orderBy('due_date', 'desc');
+        $filters = [
+            'bank_user_id' => $bankUserId,
+        ];
+
+        $baseQuery = Fatura::with(['bankUser.bank', 'user'])
+            ->forUser($user->id)
+            ->filter($filters)
+            ->orderBy('due_date', 'desc');
 
         if ($request->wantsJson()) {
             $paginated = $baseQuery->paginate(15);
@@ -277,53 +279,6 @@ class FaturaController extends Controller
         return response()->json(['message' => 'Fatura não está removida.'], 400);
     }
 
-    public function filter(Request $request)
-    {
-        $user = $request->user();
-
-        $query = Fatura::with(['bankUser.bank', 'user'])->where('user_id', $user->id);
-
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-
-        if ($request->filled('bank_user_id')) {
-            $bankUser = BankUser::findOrFail($request->input('bank_user_id'));
-            if ($bankUser->user_id !== $user->id) {
-                return response()->json(['message' => 'Não autorizado.'], 403);
-            }
-            $query->where('bank_user_id', $request->input('bank_user_id'));
-        }
-
-        if ($request->filled('due_date_from')) {
-            $query->whereDate('due_date', '>=', $request->input('due_date_from'));
-        }
-
-        if ($request->filled('due_date_to')) {
-            $query->whereDate('due_date', '<=', $request->input('due_date_to'));
-        }
-
-        if ($request->filled('amount_min')) {
-            $query->where('amount', '>=', $request->input('amount_min'));
-        }
-
-        if ($request->filled('amount_max')) {
-            $query->where('amount', '<=', $request->input('amount_max'));
-        }
-
-        if ($request->filled('is_recurring')) {
-            $query->where('is_recurring', filter_var($request->input('is_recurring'), FILTER_VALIDATE_BOOLEAN));
-        }
-
-        $faturas = $query->orderBy('due_date', 'desc')->paginate(15);
-
-        return response()->json($faturas);
-    }
-
     public function payMonth(Request $request)
     {
         $user = $request->user();
@@ -345,13 +300,10 @@ class FaturaController extends Controller
         $startOfMonth = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth();
         $endOfMonth = (clone $startOfMonth)->endOfMonth();
 
-        $query = Fatura::where('user_id', $user->id)
-            ->whereBetween('due_date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
-            ->where('status', '!=', 'paid');
-
-        if ($bankUserId) {
-            $query->where('bank_user_id', $bankUserId);
-        }
+        $query = Fatura::forUser($user->id)
+            ->betweenDueDates($startOfMonth, $endOfMonth)
+            ->forBankUser($bankUserId)
+            ->notStatus('paid');
 
         $faturas = $query->get();
 
@@ -422,24 +374,26 @@ class FaturaController extends Controller
     {
         $user = $request->user();
 
+        $base = Fatura::forUser($user->id);
+
         $stats = [
-            'total_income' => Fatura::where('user_id', $user->id)
+            'total_income' => (clone $base)
                 ->where('type', 'credit')
                 ->where('status', 'paid')
                 ->sum('amount'),
-            'total_expenses' => Fatura::where('user_id', $user->id)
+            'total_expenses' => (clone $base)
                 ->where('type', 'debit')
                 ->where('status', 'paid')
                 ->sum('amount'),
-            'pending_income' => Fatura::where('user_id', $user->id)
+            'pending_income' => (clone $base)
                 ->where('type', 'credit')
                 ->where('status', '!=', 'paid')
                 ->sum('amount'),
-            'pending_expenses' => Fatura::where('user_id', $user->id)
+            'pending_expenses' => (clone $base)
                 ->where('type', 'debit')
                 ->where('status', '!=', 'paid')
                 ->sum('amount'),
-            'overdue_count' => Fatura::where('user_id', $user->id)
+            'overdue_count' => (clone $base)
                 ->where('status', 'overdue')
                 ->count(),
         ];

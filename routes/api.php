@@ -15,7 +15,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rotas de Faturas
     Route::apiResource('faturas', FaturaController::class);
-    Route::get('faturas/filter', [FaturaController::class, 'filter'])->name('faturas.filter');
     Route::get('faturas/stats', [FaturaController::class, 'stats'])->name('faturas.stats');
     Route::post('faturas/{id}/restore', [FaturaController::class, 'restore'])->name('faturas.restore');
 });
