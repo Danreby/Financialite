@@ -28,6 +28,7 @@ export default function FaturaItemRow({
   bank_name,
   total_installments,
   current_installment,
+  display_installment,
   is_recurring,
 }) {
   const isCredit = type === "credit";
@@ -51,9 +52,14 @@ export default function FaturaItemRow({
       ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
       : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
 
-  const installmentLabel =
+  const effectiveInstallmentNumber =
     total_installments && total_installments > 1
-      ? `${current_installment || 1}/${total_installments}`
+      ? display_installment || current_installment || 1
+      : null;
+
+  const installmentLabel =
+    total_installments && total_installments > 1 && effectiveInstallmentNumber
+      ? `${effectiveInstallmentNumber}/${total_installments}`
       : null;
 
   return (

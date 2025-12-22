@@ -18,9 +18,6 @@ class FaturaController extends Controller
         $this->middleware('auth');
     }
 
-    /**
-     * Lista faturas do usuário autenticado
-     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -30,7 +27,6 @@ class FaturaController extends Controller
 
         $bankUserId = $request->input('bank_user_id');
 
-        // Filtro por conta/banco
         if ($request->filled('bank_user_id')) {
             $bankUser = BankUser::findOrFail($bankUserId);
 
@@ -46,16 +42,13 @@ class FaturaController extends Controller
 
         $baseQuery->orderBy('due_date', 'desc');
 
-        // API / JSON: mantém paginação padrão
         if ($request->wantsJson()) {
             $paginated = $baseQuery->paginate(15);
             return response()->json($paginated);
         }
 
-        // Inertia (página web): envia faturas agrupadas por mês
         $allFaturas = $baseQuery->get();
 
-        // Buscar registros de pagamento de fatura por mês para este usuário e filtro de banco atual
         $paidQuery = Paid::where('user_id', $user->id);
 
         if ($request->has('bank_user_id')) {
@@ -103,9 +96,6 @@ class FaturaController extends Controller
             $label = ucfirst($carbon->translatedFormat('F Y'));
 
             $totalSpent = $items->sum('amount');
-            // Considera o mês "pago" quando existe um registro em paids
-            // para aquele usuário/mês/conta (não depende do status individual das faturas,
-            // permitindo faturas recorrentes que nunca ficarão marcadas como pagas).
             $isPaid = $paidByMonth ? $paidByMonth->has($yearMonth) : false;
 
             return [
@@ -113,7 +103,16 @@ class FaturaController extends Controller
                 'month_label' => $label,
                 'total_spent' => (float) $totalSpent,
                 'is_paid' => $isPaid,
-                'items' => $items->map(function ($fatura) {
+                'items' => $items->map(function ($fatura) use ($yearMonth) {
+                    $displayInstallment = null;
+                    if ($fatura->total_installments && $fatura->total_installments > 1) {
+                        $firstMonthKey = Carbon::parse($fatura->due_date ?: $fatura->created_at)->format('Y-m');
+                        $first = Carbon::createFromFormat('Y-m', $firstMonthKey)->startOfMonth();
+                        $current = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
+                        $offset = $first->diffInMonths($current);
+                        $displayInstallment = min($offset + 1, (int) $fatura->total_installments);
+                    }
+
                     return [
                         'id' => $fatura->id,
                         'title' => $fatura->title,
@@ -125,6 +124,7 @@ class FaturaController extends Controller
                         'paid_date' => $fatura->paid_date,
                         'total_installments' => $fatura->total_installments,
                         'current_installment' => $fatura->current_installment,
+                        'display_installment' => $displayInstallment,
                         'is_recurring' => (bool) $fatura->is_recurring,
                         'bank_name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
                     ];
@@ -135,9 +135,6 @@ class FaturaController extends Controller
         return $result->sortByDesc('month_key')->values()->all();
     }
 
-    /**
-     * Retorna uma fatura específica
-     */
     public function show(Request $request, $id)
     {
         $user = $request->user();
@@ -150,9 +147,6 @@ class FaturaController extends Controller
         return response()->json($fatura);
     }
 
-    /**
-     * Cria uma nova fatura
-     */
     public function store(Request $request)
     {
         $user = $request->user();
@@ -177,12 +171,10 @@ class FaturaController extends Controller
                 return response()->json(['message' => 'A associação banco-usuário não pertence ao usuário autenticado.'], 422);
             }
 
-            // Se não foi enviada due_date, calcula com base no dia de vencimento do cartão
             if (empty($data['due_date']) && $bankUser->due_day) {
                 $today = Carbon::today();
                 $dueDay = (int) $bankUser->due_day;
 
-                // Define o próximo vencimento com o dia configurado
                 $candidate = $today->copy()->day(min($dueDay, 28));
                 if ($candidate->lessThanOrEqualTo($today)) {
                     $candidate->addMonth();
@@ -193,7 +185,6 @@ class FaturaController extends Controller
         }
 
         $data['user_id'] = $user->id;
-        // Se due_date ainda não foi definida, mantém fallback para hoje
         if (empty($data['due_date'])) {
             $data['due_date'] = now()->toDateString();
         }
@@ -214,9 +205,6 @@ class FaturaController extends Controller
         }
     }
 
-    /**
-     * Atualiza uma fatura
-     */
     public function update(Request $request, $id)
     {
         $user = $request->user();
@@ -240,7 +228,6 @@ class FaturaController extends Controller
             'bank_user_id' => 'nullable|exists:bank_user,id',
         ]);
 
-        // Validar que o bank_user_id pertence ao usuário
         if (array_key_exists('bank_user_id', $data) && !empty($data['bank_user_id'])) {
             $bankUser = BankUser::findOrFail($data['bank_user_id']);
             if ($bankUser->user_id !== $user->id) {
@@ -260,9 +247,6 @@ class FaturaController extends Controller
         }
     }
 
-    /**
-     * Remove uma fatura (soft delete)
-     */
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
@@ -276,9 +260,6 @@ class FaturaController extends Controller
         return response()->json(['message' => 'Fatura removida.']);
     }
 
-    /**
-     * Restaura uma fatura removida
-     */
     public function restore(Request $request, $id)
     {
         $user = $request->user();
@@ -296,9 +277,6 @@ class FaturaController extends Controller
         return response()->json(['message' => 'Fatura não está removida.'], 400);
     }
 
-    /**
-     * Filtra faturas com base nos parâmetros fornecidos
-     */
     public function filter(Request $request)
     {
         $user = $request->user();
@@ -346,12 +324,6 @@ class FaturaController extends Controller
         return response()->json($faturas);
     }
 
-    /**
-     * Marca como pagas as pendências de um mês específico.
-     * - Para faturas sem parcelas (total_installments = 1): marca como paid diretamente.
-     * - Para faturas parceladas: incrementa current_installment em 1; só marca como paid
-     *   quando current_installment atingir total_installments.
-     */
     public function payMonth(Request $request)
     {
         $user = $request->user();
@@ -395,16 +367,13 @@ class FaturaController extends Controller
                 $totalInstallments = max((int) $fatura->total_installments, 1);
                 $currentInstallment = (int) ($fatura->current_installment ?? 1);
 
-                // Valor de uma parcela (ou total, se sem parcelas)
                 $installmentAmount = (float) $fatura->amount / $totalInstallments;
 
                 if ($totalInstallments <= 1) {
-                    // Fatura sem parcelas: pagar tudo de uma vez
                     $fatura->status = 'paid';
                     $fatura->paid_date = now()->toDateString();
                     $totalPaidThisRun += (float) $fatura->amount;
                 } else {
-                    // Fatura parcelada: paga apenas a próxima parcela
                     if ($currentInstallment < $totalInstallments) {
                         $currentInstallment++;
                         $fatura->current_installment = $currentInstallment;
@@ -420,7 +389,6 @@ class FaturaController extends Controller
                 $fatura->save();
             }
 
-            // Atualiza/insere registro em paids para este usuário/mês/banco
             if ($totalPaidThisRun > 0) {
                 $monthKey = $data['month'];
 
@@ -450,9 +418,6 @@ class FaturaController extends Controller
         }
     }
 
-    /**
-     * Retorna estatísticas das faturas
-     */
     public function stats(Request $request)
     {
         $user = $request->user();
