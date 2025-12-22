@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class FaturaController extends Controller
 {
@@ -23,14 +24,36 @@ class FaturaController extends Controller
     {
         $user = $request->user();
 
-        $faturas = Fatura::with(['bankUser.bank', 'user'])
-            ->where('user_id', $user->id)
-            ->orderBy('due_date', 'desc')
-            ->paginate(15);
+        $baseQuery = Fatura::with(['bankUser.bank', 'user'])
+            ->where('user_id', $user->id);
 
-        if ($request->wantsJson()) {
-            return response()->json($faturas);
+        // Filtro por conta/banco
+        if ($request->filled('bank_user_id')) {
+            $bankUserId = $request->input('bank_user_id');
+            $bankUser = BankUser::findOrFail($bankUserId);
+
+            if ($bankUser->user_id !== $user->id) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => 'Não autorizado.'], 403);
+                }
+
+                abort(403, 'Não autorizado.');
+            }
+
+            $baseQuery->where('bank_user_id', $bankUserId);
         }
+
+        $baseQuery->orderBy('due_date', 'desc');
+
+        // API / JSON: mantém paginação padrão
+        if ($request->wantsJson()) {
+            $paginated = $baseQuery->paginate(15);
+            return response()->json($paginated);
+        }
+
+        // Inertia (página web): envia faturas agrupadas por mês
+        $allFaturas = $baseQuery->get();
+        $monthlyGroups = $this->groupFaturasByMonth($allFaturas);
 
         $bankAccounts = BankUser::with('bank')
             ->where('user_id', $user->id)
@@ -43,9 +66,51 @@ class FaturaController extends Controller
             });
 
         return Inertia::render('Fatura', [
-            'faturas' => $faturas,
+            'monthlyGroups' => $monthlyGroups,
             'bankAccounts' => $bankAccounts,
+            'filters' => [
+                'bank_user_id' => $request->input('bank_user_id'),
+            ],
         ]);
+    }
+
+    protected function groupFaturasByMonth($faturas)
+    {
+        $grouped = $faturas->groupBy(function ($fatura) {
+            $date = $fatura->due_date ?: $fatura->created_at;
+            return Carbon::parse($date)->format('Y-m');
+        });
+
+        $result = $grouped->map(function ($items, $yearMonth) {
+            $carbon = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
+            $label = ucfirst($carbon->translatedFormat('F Y'));
+
+            $totalSpent = $items->sum('amount');
+
+            return [
+                'month_key' => $yearMonth,
+                'month_label' => $label,
+                'total_spent' => (float) $totalSpent,
+                'items' => $items->map(function ($fatura) {
+                    return [
+                        'id' => $fatura->id,
+                        'title' => $fatura->title,
+                        'description' => $fatura->description,
+                        'amount' => (float) $fatura->amount,
+                        'type' => $fatura->type,
+                        'status' => $fatura->status,
+                        'due_date' => $fatura->due_date,
+                        'paid_date' => $fatura->paid_date,
+                        'total_installments' => $fatura->total_installments,
+                        'current_installment' => $fatura->current_installment,
+                        'is_recurring' => (bool) $fatura->is_recurring,
+                        'bank_name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
+                    ];
+                })->values()->all(),
+            ];
+        });
+
+        return $result->sortByDesc('month_key')->values()->all();
     }
 
     /**
