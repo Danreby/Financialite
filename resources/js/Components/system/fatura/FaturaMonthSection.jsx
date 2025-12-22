@@ -25,23 +25,8 @@ export default function FaturaMonthSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <div className={`flex-1 flex justify-center`}>
-          <div
-            className={`inline-flex flex-col items-center rounded-full px-6 py-3 shadow-sm ring-1 bg-gradient-to-r dark:bg-gradient-to-r ${
-              is_paid
-                ? "from-emerald-50 via-white to-emerald-50 ring-emerald-200 dark:from-[#052e26] dark:via-[#050505] dark:to-[#052e26] dark:ring-emerald-900/50"
-                : "from-rose-50 via-white to-rose-50 ring-rose-100 dark:from-[#150709] dark:via-[#0b0b0b] dark:to-[#150709] dark:ring-rose-900/40"
-            }`}
-          >
-            <h2
-              className={`mt-1 text-2xl md:text-3xl font-bold tracking-tight ${
-                is_paid
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-gray-900 dark:text-gray-50"
-              }`}
-            >
-              {month_label}
-            </h2>
+        <div className="flex-1 flex justify-center">
+          <div className="inline-flex flex-col items-center rounded-full px-6 py-3">
             {due_day && (
               <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
                 Vencimento do cartão: todo dia <span className="font-semibold">{due_day}</span>

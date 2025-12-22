@@ -14,11 +14,23 @@ function formatCurrency(value) {
   }).format(value || 0)
 }
 
+function formatDateLabel(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+  }).format(date)
+}
+
 export default function Dashboard({ bankAccounts = [] }) {
   const [currentFilters, setCurrentFilters] = useState({})
   const [page, setPage] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
   const [data, setData] = useState(null)
+  const [recentFaturas, setRecentFaturas] = useState([])
 
   const [stats, setStats] = useState([
     { id: 1, title: 'Saldo Disponível', value: formatCurrency(0), delta: '+0%' },
@@ -30,52 +42,38 @@ export default function Dashboard({ bankAccounts = [] }) {
   useEffect(() => {
     (async () => {
       try {
-        const response = await axios.get(route("faturas.index"), { params: { ...currentFilters, page } });
-        const payload = response.data || {}
+        const [faturasResponse, statsResponse] = await Promise.all([
+          axios.get(route('faturas.index'), { params: { ...currentFilters, page } }),
+          axios.get('/api/faturas/stats'),
+        ])
+
+        const payload = faturasResponse.data || {}
         setData(payload)
 
         const faturas = payload.data || []
+        setRecentFaturas(faturas)
 
-        const now = new Date()
-        const currentMonth = now.getMonth()
-        const currentYear = now.getFullYear()
+        const statsPayload = statsResponse.data || {}
 
-        let totalDebit = 0
-        let totalCredit = 0
-        const activeAccounts = new Set()
+        const totalIncome = Number(statsPayload.total_income || 0)
+        const totalExpenses = Number(statsPayload.total_expenses || 0)
+        const pendingIncome = Number(statsPayload.pending_income || 0)
+        const pendingExpenses = Number(statsPayload.pending_expenses || 0)
+        const overdueCount = Number(statsPayload.overdue_count || 0)
 
-        faturas.forEach((fatura) => {
-          if (!fatura.due_date) return
-
-          const due = new Date(fatura.due_date)
-          if (Number.isNaN(due.getTime())) return
-
-          if (due.getMonth() === currentMonth && due.getFullYear() === currentYear) {
-            if (fatura.type === 'debit') {
-              totalDebit += Number(fatura.amount) || 0
-            } else if (fatura.type === 'credit') {
-              totalCredit += Number(fatura.amount) || 0
-            }
-          }
-
-          if (fatura.bank_user && fatura.bank_user.bank) {
-            activeAccounts.add(fatura.bank_user.bank.id ?? fatura.bank_user.id)
-          }
-        })
-
-        const saldoDisponivel = totalCredit - totalDebit
+        const saldoDisponivel = totalIncome - totalExpenses
 
         setStats([
-          { id: 1, title: 'Saldo Disponível', value: formatCurrency(saldoDisponivel), delta: '+0%' },
-          { id: 2, title: 'Gastos do mês', value: formatCurrency(totalDebit), delta: '+0%' },
-          { id: 3, title: 'Receitas do mês', value: formatCurrency(totalCredit), delta: '+0%' },
-          { id: 4, title: 'Contas ativas', value: String(activeAccounts.size), delta: '+0' },
+          { id: 1, title: 'Saldo disponível', value: formatCurrency(saldoDisponivel), delta: '' },
+          { id: 2, title: 'Receitas pagas', value: formatCurrency(totalIncome), delta: '' },
+          { id: 3, title: 'Despesas pagas', value: formatCurrency(totalExpenses), delta: '' },
+          { id: 4, title: 'Faturas vencidas', value: String(overdueCount), delta: '' },
         ])
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
-    })();
-  }, [currentFilters, page, reloadKey]);
+    })()
+  }, [currentFilters, page, reloadKey])
 
   return (
     <AuthenticatedLayout>
@@ -112,23 +110,33 @@ export default function Dashboard({ bankAccounts = [] }) {
             </div>
 
             <div className="space-y-3">
-              <Transaction
-                title="Pagamento Mercado"
-                subtitle="Cartão • 14 Dez"
-                value="- R$ 123,45"
-                negative
-              />
-              <Transaction
-                title="Salário"
-                subtitle="Transferência • 01 Dez"
-                value="+ R$ 5.000,00"
-              />
-              <Transaction
-                title="Assinatura Streaming"
-                subtitle="Débito • 10 Dez"
-                value="- R$ 29,90"
-                negative
-              />
+              {recentFaturas && recentFaturas.length > 0 ? (
+                recentFaturas.slice(0, 5).map((fatura) => {
+                  const isDebit = fatura.type === 'debit'
+                  const sign = isDebit ? '- ' : '+ '
+                  const labelDate = formatDateLabel(fatura.due_date || fatura.created_at)
+                  const bankName = fatura.bank_user?.bank?.name
+                  const typeLabel = isDebit ? 'Débito' : 'Crédito'
+
+                  const subtitleParts = [typeLabel]
+                  if (bankName) subtitleParts.push(bankName)
+                  if (labelDate) subtitleParts.push(labelDate)
+
+                  return (
+                    <Transaction
+                      key={fatura.id}
+                      title={fatura.title}
+                      subtitle={subtitleParts.join(' • ')}
+                      value={`${sign}${formatCurrency(fatura.amount)}`}
+                      negative={isDebit}
+                    />
+                  )
+                })
+              ) : (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Nenhuma transação recente encontrada.
+                </p>
+              )}
             </div>
           </div>
 

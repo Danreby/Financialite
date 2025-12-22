@@ -22,6 +22,7 @@ Route::get('/dashboard', function () {
             return [
                 'id' => $bankUser->id,
                 'name' => $bankUser->bank?->name ?? ('Conta #' . $bankUser->id),
+                'due_day' => $bankUser->due_day,
             ];
         });
 
