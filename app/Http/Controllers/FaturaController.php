@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Fatura;
 use App\Models\BankUser;
 use App\Models\Paid;
+use App\Services\FaturaService;
+use App\Http\Requests\Fatura\FaturaStoreRequest;
+use App\Http\Requests\Fatura\FaturaUpdateRequest;
+use App\Http\Requests\Fatura\PayMonthRequest;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -13,7 +18,7 @@ use Carbon\Carbon;
 
 class FaturaController extends Controller
 {
-    public function __construct()
+    public function __construct(private FaturaService $faturaService)
     {
         $this->middleware('auth');
     }
@@ -68,9 +73,9 @@ class FaturaController extends Controller
         $paidByMonth = $paidQuery
             ->pluck('total_paid', 'month_key');
 
-        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
+        $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
 
-        $currentMonthKey = $this->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
+        $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
         $bankAccounts = BankUser::with('bank')
             ->where('user_id', $user->id)
@@ -83,7 +88,7 @@ class FaturaController extends Controller
                 ];
             });
 
-        $categories = \App\Models\Category::where('user_id', $user->id)
+        $categories = Category::where('user_id', $user->id)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -99,165 +104,9 @@ class FaturaController extends Controller
         ]);
     }
 
-    protected function groupFaturasByMonth($faturas, $paidByMonth = null)
-    {
-        $entries = collect();
-
-        $projectionEnd = Carbon::today()->copy()->addYear()->startOfMonth();
-
-        foreach ($faturas as $fatura) {
-            $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
-            $isRecurring = (bool) $fatura->is_recurring;
-
-            $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
-            $month = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
-
-            $installmentIndex = 1;
-
-            while (true) {
-                if ($month->gt($projectionEnd)) {
-                    break;
-                }
-
-                if (!$isRecurring && $installmentIndex > $totalInstallments) {
-                    break;
-                }
-
-                $monthKey = $month->format('Y-m');
-
-                $entries->push([
-                    'fatura' => $fatura,
-                    'month_key' => $monthKey,
-                    'installment_index' => $installmentIndex,
-                ]);
-
-                $month = $month->copy()->addMonth();
-                $installmentIndex++;
-            }
-        }
-
-        $grouped = $entries->groupBy('month_key');
-
-        $result = $grouped->map(function ($items, $yearMonth) use ($paidByMonth) {
-            $carbon = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
-            $label = ucfirst($carbon->translatedFormat('F Y'));
-
-            $totalSpent = $items->sum(function ($entry) {
-                $fatura = $entry['fatura'];
-                $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
-                return (float) $fatura->amount / $totalInstallments;
-            });
-            $isPaid = $paidByMonth ? $paidByMonth->has($yearMonth) : false;
-
-            return [
-                'month_key' => $yearMonth,
-                'month_label' => $label,
-                'total_spent' => (float) $totalSpent,
-                'is_paid' => $isPaid,
-                'items' => $items->map(function ($entry) {
-                    $fatura = $entry['fatura'];
-                    $installmentIndex = $entry['installment_index'];
-
-                    return [
-                        'id' => $fatura->id . '-' . $installmentIndex,
-                        'fatura_id' => $fatura->id,
-                        'title' => $fatura->title,
-                        'description' => $fatura->description,
-                        'amount' => (float) $fatura->amount,
-                        'type' => $fatura->type,
-                        'status' => $fatura->status,
-                        'created_at' => $fatura->created_at,
-                        'paid_date' => $fatura->paid_date,
-                        'total_installments' => $fatura->total_installments,
-                        'current_installment' => $fatura->current_installment,
-                        'display_installment' => $this->resolveInstallmentNumberForMonth($fatura, $entry['month_key']),
-                        'is_recurring' => (bool) $fatura->is_recurring,
-                        'bank_name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
-                        'category_name' => $fatura->category->name ?? null,
-                    ];
-                })->values()->all(),
-            ];
-        });
-
-        return $result->sortByDesc('month_key')->values()->all();
-    }
-
-    protected function resolveBillingMonthKey(Fatura $fatura): string
-    {
-        $createdAt = $fatura->created_at instanceof Carbon
-            ? $fatura->created_at->copy()
-            : Carbon::parse($fatura->created_at);
-
-        $dueDay = $fatura->bankUser->due_day ?? null;
-
-        if (!$dueDay) {
-            return $createdAt->format('Y-m');
-        }
-
-        $cutoffDay = min((int) $dueDay, 28);
-        $dayOfPurchase = (int) $createdAt->format('d');
-
-        if ($dayOfPurchase <= $cutoffDay) {
-            return $createdAt->format('Y-m');
-        }
-
-        return $createdAt->copy()->addMonth()->format('Y-m');
-    }
-
-    protected function resolveCurrentBillingMonthKey(?BankUser $bankUser = null, $paidByMonth = null): string
-    {
-        $today = Carbon::today();
-
-        if (!$bankUser || !$bankUser->due_day) {
-            $candidate = $today->copy();
-        } else {
-            $cutoffDay = min((int) $bankUser->due_day, 28);
-            $day = (int) $today->format('d');
-
-            $candidate = $day <= $cutoffDay
-                ? $today->copy()
-                : $today->copy()->addMonth();
-        }
-
-        $candidateKey = $candidate->format('Y-m');
-
-        if ($paidByMonth) {
-            for ($i = 0; $i < 24; $i++) {
-                if (!$paidByMonth->has($candidateKey)) {
-                    break;
-                }
-
-                $candidate = $candidate->copy()->addMonth();
-                $candidateKey = $candidate->format('Y-m');
-            }
-        }
-
-        return $candidateKey;
-    }
-
     protected function resolveInstallmentNumberForMonth(Fatura $fatura, string $yearMonth): ?int
     {
-        $totalInstallments = (int) ($fatura->total_installments ?? 1);
-        if ($totalInstallments <= 1) {
-            return null;
-        }
-
-        $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
-        $first = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
-        $current = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
-
-        if ($current->lt($first)) {
-            return null;
-        }
-
-        $offset = $first->diffInMonths($current);
-        $installment = $offset + 1; 
-
-        if ($installment > $totalInstallments) {
-            return $totalInstallments;
-        }
-
-        return $installment;
+        return $this->faturaService->resolveInstallmentNumberForMonth($fatura, $yearMonth);
     }
 
     public function show(Request $request, $id)
@@ -272,11 +121,10 @@ class FaturaController extends Controller
         return response()->json($fatura);
     }
 
-    public function store(Request $request)
+    public function store(FaturaStoreRequest $request)
     {
         $user = $request->user();
-
-        $data = $request->validate($this->storeRulesForUser($user->id));
+        $data = $request->validated();
 
         if (!empty($data['bank_user_id'])) {
             $bankUser = BankUser::with('bank')->findOrFail($data['bank_user_id']);
@@ -285,25 +133,16 @@ class FaturaController extends Controller
             }
         }
 
-        $data['user_id'] = $user->id;
-        $data['total_installments'] = max($data['total_installments'] ?? 1, 1);
-        $data['current_installment'] = 0;
-        $data['status'] = $data['status'] ?? 'unpaid';
-        $data['is_recurring'] = $data['is_recurring'] ?? false;
-
-        DB::beginTransaction();
         try {
-            $fatura = Fatura::create($data);
-            DB::commit();
+            $fatura = $this->faturaService->createForUser($user, $data);
             $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura, 201);
         } catch (\Throwable $e) {
-            DB::rollBack();
             return response()->json(['message' => 'Erro ao criar fatura', 'error' => $e->getMessage()], 500);
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(FaturaUpdateRequest $request, $id)
     {
         $user = $request->user();
         $fatura = Fatura::findOrFail($id);
@@ -312,7 +151,7 @@ class FaturaController extends Controller
             return $response;
         }
 
-        $data = $request->validate($this->updateRulesForUser($user->id));
+        $data = $request->validated();
 
         if (array_key_exists('bank_user_id', $data) && !empty($data['bank_user_id'])) {
             $bankUser = BankUser::findOrFail($data['bank_user_id']);
@@ -321,14 +160,11 @@ class FaturaController extends Controller
             }
         }
 
-        DB::beginTransaction();
         try {
-            $fatura->update($data);
-            DB::commit();
-            $fatura->refresh()->load(['bankUser.bank', 'user']);
+            $fatura = $this->faturaService->updateForUser($fatura, $data);
+            $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura);
         } catch (\Throwable $e) {
-            DB::rollBack();
             return response()->json(['message' => 'Erro ao atualizar fatura', 'error' => $e->getMessage()], 500);
         }
     }
@@ -363,15 +199,10 @@ class FaturaController extends Controller
         return response()->json(['message' => 'Fatura não está removida.'], 400);
     }
 
-    public function payMonth(Request $request)
+    public function payMonth(PayMonthRequest $request)
     {
         $user = $request->user();
-
-        $data = $request->validate([
-            'month' => 'required|date_format:Y-m',
-            'bank_user_id' => 'nullable|exists:bank_user,id',
-        ]);
-
+        $data = $request->validated();
         $bankUserId = $data['bank_user_id'] ?? null;
 
         if ($bankUserId) {
@@ -393,7 +224,7 @@ class FaturaController extends Controller
         $faturas = $allFaturas->filter(function (Fatura $fatura) use ($targetMonth) {
             $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
 
-            $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
+            $firstBillingMonthKey = $this->faturaService->resolveBillingMonthKey($fatura);
             $first = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
             $last = (clone $first)->addMonths($totalInstallments - 1);
 
@@ -480,7 +311,7 @@ class FaturaController extends Controller
         $base = Fatura::forUser($user->id)
             ->forBankUser($bankUserId);
 
-        $stats = $this->calculateBaseStats($base);
+        $stats = $this->faturaService->calculateBaseStats($base);
 
         $allFaturas = Fatura::with('bankUser')
             ->forUser($user->id)
@@ -501,9 +332,9 @@ class FaturaController extends Controller
         $paidByMonth = $paidQuery
             ->pluck('total_paid', 'month_key');
 
-        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
+        $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
 
-        $currentMonthKey = $this->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
+        $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
         $currentGroup = collect($monthlyGroups)->firstWhere('month_key', $currentMonthKey);
 
@@ -514,8 +345,6 @@ class FaturaController extends Controller
             $currentMonthLabel = $currentGroup['month_label'] ?? null;
 
             foreach ($currentGroup['items'] as $item) {
-                // Inclui tanto transações de débito quanto de crédito
-                // e considera transações recorrentes conforme projeção
                 $totalInstallments = max((int) ($item['total_installments'] ?? 1), 1);
                 $amount = (float) ($item['amount'] ?? 0);
                 $currentPendingBill += $amount / $totalInstallments;
@@ -549,73 +378,5 @@ class FaturaController extends Controller
         return null;
     }
 
-    protected function storeRulesForUser(int $userId): array
-    {
-        return [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric',
-            'type' => ['required', Rule::in(['credit','debit'])],
-            'status' => ['nullable', Rule::in(['paid','unpaid','overdue'])],
-            'paid_date' => 'nullable|date',
-            'total_installments' => 'nullable|integer|min:1',
-            'current_installment' => 'nullable|integer|min:1',
-            'is_recurring' => 'sometimes|boolean',
-            'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => [
-                'nullable',
-                Rule::exists('categories', 'id')->where(function ($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                }),
-            ],
-        ];
-    }
-
-    protected function updateRulesForUser(int $userId): array
-    {
-        return [
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'sometimes|required|numeric|min:0.01',
-            'type' => ['sometimes', 'required', Rule::in(['credit', 'debit'])],
-            'status' => ['nullable', Rule::in(['paid', 'unpaid', 'overdue'])],
-            'paid_date' => 'nullable|date',
-            'total_installments' => 'nullable|integer|min:1',
-            'current_installment' => 'nullable|integer|min:1',
-            'is_recurring' => 'sometimes|boolean',
-            'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => [
-                'nullable',
-                Rule::exists('categories', 'id')->where(function ($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                }),
-            ],
-        ];
-    }
-
-    protected function calculateBaseStats($base): array
-    {
-        return [
-            'total_income' => (clone $base)
-                ->where('type', 'credit')
-                ->where('status', 'paid')
-                ->sum('amount'),
-            'total_expenses' => (clone $base)
-                ->where('type', 'debit')
-                ->where('status', 'paid')
-                ->sum('amount'),
-            'pending_income' => (clone $base)
-                ->where('type', 'credit')
-                ->where('status', '!=', 'paid')
-                ->sum('amount'),
-            'pending_expenses' => (clone $base)
-                ->where('type', 'debit')
-                ->where('status', '!=', 'paid')
-                ->sum('amount'),
-            'overdue_count' => (clone $base)
-                ->where('status', 'overdue')
-                ->count(),
-        ];
-    }
 }
 

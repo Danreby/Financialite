@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Bank\AttachBankToUserRequest;
+use App\Http\Requests\Bank\BankStoreRequest;
+use App\Http\Requests\Bank\BankUpdateRequest;
+use App\Http\Requests\Bank\UpdateBankDueDayRequest;
 use App\Models\Bank;
 use App\Models\BankUser;
 use Illuminate\Http\Request;
@@ -13,9 +17,6 @@ class BankController extends Controller
         $this->middleware('auth');
     }
 
-    /**
-     * Lista todos os bancos do usuário autenticado
-     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -27,9 +28,6 @@ class BankController extends Controller
         return response()->json($banks);
     }
 
-    /**
-     * Retorna um banco específico do usuário autenticado
-     */
     public function show(Request $request, $id)
     {
         $user = $request->user();
@@ -39,21 +37,14 @@ class BankController extends Controller
         return response()->json($bank);
     }
 
-    /**
-     * Cria um novo banco e associa ao usuário
-     */
-    public function store(Request $request)
+    public function store(BankStoreRequest $request)
     {
         $user = $request->user();
         
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:banks,name',
-            'due_day' => 'nullable|integer|min:1|max:31',
-        ]);
+        $data = $request->validated();
 
         $bank = Bank::create($data);
         
-        // Associar banco ao usuário
         BankUser::create([
             'bank_id' => $bank->id,
             'user_id' => $user->id,
@@ -62,35 +53,25 @@ class BankController extends Controller
         return response()->json($bank, 201);
     }
 
-    /**
-     * Atualiza um banco do usuário autenticado
-     */
-    public function update(Request $request, $id)
+    public function update(BankUpdateRequest $request, $id)
     {
         $user = $request->user();
         
         $bank = $user->banks()->findOrFail($id);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:banks,name,' . $bank->id,
-            'due_day' => 'nullable|integer|min:1|max:31',
-        ]);
+        $data = $request->validated();
 
         $bank->update($data);
         
         return response()->json($bank);
     }
 
-    /**
-     * Remove um banco e desassocia do usuário
-     */
     public function destroy(Request $request, $id)
     {
         $user = $request->user();
         
         $bank = $user->banks()->findOrFail($id);
         
-        // Remover associação
         BankUser::where('bank_id', $bank->id)
             ->where('user_id', $user->id)
             ->delete();
@@ -104,10 +85,7 @@ class BankController extends Controller
         return response()->json($banks);
     }
 
-    /**
-     * Atualiza apenas o dia de vencimento (due_day) do banco associado a uma conta do usuário.
-     */
-    public function updateDueDay(Request $request, BankUser $bankUser)
+    public function updateDueDay(UpdateBankDueDayRequest $request, BankUser $bankUser)
     {
         $user = $request->user();
 
@@ -115,11 +93,8 @@ class BankController extends Controller
             return response()->json(['message' => 'Não autorizado.'], 403);
         }
 
-        $data = $request->validate([
-            'due_day' => 'required|integer|min:1|max:31',
-        ]);
+        $data = $request->validated();
 
-        // Atualiza o dia de vencimento diretamente na associação bank_user
         $bankUser->due_day = $data['due_day'];
         $bankUser->save();
 
@@ -130,14 +105,11 @@ class BankController extends Controller
         ]);
     }
 
-    public function attachToUser(Request $request)
+    public function attachToUser(AttachBankToUserRequest $request)
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-            'due_day' => 'nullable|integer|min:1|max:31',
-        ]);
+        $data = $request->validated();
 
         $exists = BankUser::where('user_id', $user->id)
             ->where('bank_id', $data['bank_id'])

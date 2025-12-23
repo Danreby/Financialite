@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Category\CategoryStoreRequest;
+use App\Http\Requests\Category\CategoryUpdateRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
 
@@ -18,13 +20,11 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
-    public function store(Request $request)
+    public function store(CategoryStoreRequest $request)
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $data = $request->validated();
 
         $category = Category::create([
             'name' => $data['name'],
@@ -34,7 +34,7 @@ class CategoryController extends Controller
         return response()->json($category, 201);
     }
 
-    public function update(Request $request, Category $category)
+    public function update(CategoryUpdateRequest $request, Category $category)
     {
         $user = $request->user();
 
@@ -42,9 +42,7 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Não autorizado.'], 403);
         }
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
+        $data = $request->validated();
 
         $category->update([
             'name' => $data['name'],

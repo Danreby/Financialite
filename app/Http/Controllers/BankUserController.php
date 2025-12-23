@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BankUser\BankUserStoreRequest;
 use App\Models\Bank;
 use App\Models\BankUser;
 use Illuminate\Http\Request;
@@ -36,13 +37,11 @@ class BankUserController extends Controller
         return response()->json($bankUser);
     }
 
-    public function store(Request $request)
+    public function store(BankUserStoreRequest $request)
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-        ]);
+        $data = $request->validated();
 
         $existing = BankUser::where('user_id', $user->id)
             ->where('bank_id', $data['bank_id'])
