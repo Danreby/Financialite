@@ -45,13 +45,15 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
       setIsSubmitting(false);
       return;
     }
+    const totalInstallmentsRaw = formData.get("total_installments")?.toString().trim();
+    const totalInstallments = isRecurring ? "1" : (totalInstallmentsRaw || "1");
+
     const payload = {
       title,
       description: formData.get("description")?.toString().trim() || "",
       amount,
       type,
-      total_installments:
-        formData.get("total_installments")?.toString().trim() || 1,
+      total_installments: totalInstallments,
       is_recurring: isRecurring ? 1 : 0,
       bank_user_id: bankUserId || null,
       category_id: categoryId || null,
@@ -201,7 +203,8 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               name="total_installments"
               type="number"
               min="1"
-              className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+              className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-400"
+              disabled={isRecurring}
             />
           </div>
 

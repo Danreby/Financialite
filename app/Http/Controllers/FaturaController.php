@@ -526,6 +526,41 @@ class FaturaController extends Controller
                 ->count(),
         ];
 
+        $allFaturas = Fatura::with('bankUser')
+            ->forUser($user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $paidByMonth = Paid::where('user_id', $user->id)
+            ->pluck('total_paid', 'month_key');
+
+        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
+
+        $currentMonthKey = $this->resolveCurrentBillingMonthKey(null, $paidByMonth);
+
+        $currentGroup = collect($monthlyGroups)->firstWhere('month_key', $currentMonthKey);
+
+        $currentPendingBill = 0.0;
+        $currentMonthLabel = null;
+
+        if ($currentGroup && !($currentGroup['is_paid'] ?? false)) {
+            $currentMonthLabel = $currentGroup['month_label'] ?? null;
+
+            foreach ($currentGroup['items'] as $item) {
+                if (($item['type'] ?? null) !== 'debit') {
+                    continue;
+                }
+
+                $totalInstallments = max((int) ($item['total_installments'] ?? 1), 1);
+                $amount = (float) ($item['amount'] ?? 0);
+                $currentPendingBill += $amount / $totalInstallments;
+            }
+        }
+
+        $stats['current_month_key'] = $currentMonthKey;
+        $stats['current_month_label'] = $currentMonthLabel;
+        $stats['current_month_pending_bill'] = (float) $currentPendingBill;
+
         return response()->json($stats);
     }
 }

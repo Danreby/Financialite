@@ -44,7 +44,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
       try {
         const [faturasResponse, statsResponse] = await Promise.all([
           axios.get(route('faturas.index'), { params: { ...currentFilters, page } }),
-          axios.get('/api/faturas/stats'),
+	      axios.get(route('faturas.stats')),
         ])
 
         const payload = faturasResponse.data || {}
@@ -61,13 +61,36 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         const pendingExpenses = Number(statsPayload.pending_expenses || 0)
         const overdueCount = Number(statsPayload.overdue_count || 0)
 
+        const currentMonthPendingBill = Number(statsPayload.current_month_pending_bill || 0)
+        const currentMonthLabel = statsPayload.current_month_label || 'Mês atual'
+
         const saldoDisponivel = totalIncome - totalExpenses
 
         setStats([
-          { id: 1, title: 'Saldo disponível', value: formatCurrency(saldoDisponivel), delta: '' },
-          { id: 2, title: 'Receitas pagas', value: formatCurrency(totalIncome), delta: '' },
-          { id: 3, title: 'Despesas pagas', value: formatCurrency(totalExpenses), delta: '' },
-          { id: 4, title: 'Faturas vencidas', value: String(overdueCount), delta: '' },
+          {
+            id: 1,
+            title: 'Fatura atual pendente',
+            value: formatCurrency(currentMonthPendingBill),
+            delta: currentMonthLabel,
+          },
+          {
+            id: 2,
+            title: 'Despesas pendentes',
+            value: formatCurrency(pendingExpenses),
+            delta: '',
+          },
+          {
+            id: 3,
+            title: 'Receitas pagas',
+            value: formatCurrency(totalIncome),
+            delta: '',
+          },
+          {
+            id: 4,
+            title: 'Faturas vencidas',
+            value: String(overdueCount),
+            delta: '',
+          },
         ])
       } catch (error) {
         console.error(error)
@@ -116,10 +139,12 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                   const sign = isDebit ? '- ' : '+ '
                   const labelDate = formatDateLabel(fatura.created_at)
                   const bankName = fatura.bank_user?.bank?.name
+                  const categoryName = fatura.category?.name
                   const typeLabel = isDebit ? 'Débito' : 'Crédito'
 
                   const subtitleParts = [typeLabel]
                   if (bankName) subtitleParts.push(bankName)
+                  if (categoryName) subtitleParts.push(categoryName)
                   if (labelDate) subtitleParts.push(labelDate)
 
                   return (
