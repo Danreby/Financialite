@@ -34,7 +34,12 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
     created_at,
     bank_name,
     category_name,
+    total_installments,
   } = transaction;
+
+  const totalInstallmentsNumber = Math.max(Number(total_installments || 1), 1);
+  const installmentsLabel =
+    totalInstallmentsNumber > 1 ? `${totalInstallmentsNumber}x` : null;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/60">
@@ -50,7 +55,12 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
           )}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
-          {bank_name && <span>{bank_name}</span>}
+          {bank_name && (
+            <span>
+              {bank_name}
+              {installmentsLabel && ` • ${installmentsLabel}`}
+            </span>
+          )}
           {category_name && <span>• {category_name}</span>}
           {description && <span className="truncate max-w-xs">• {description}</span>}
         </div>
