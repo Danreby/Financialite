@@ -2,6 +2,7 @@ import React from "react";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import DangerButton from "@/Components/common/buttons/DangerButton";
+import Tooltip from "@/Components/common/Tooltip";
 import RemoveIcon from "@/Components/common/icons/RemoveIcon";
 import EditIcon from "@/Components/common/icons/EditIcon";
 
@@ -65,20 +66,24 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
           </span>
         </div>
         <div className="flex flex-col items-end gap-1 text-xs">
-          <SecondaryButton
-            type="button"
-            onClick={() => onEdit && onEdit(transaction)}
-            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide"
-          >
-            <EditIcon type={1} size={20}/>
-          </SecondaryButton>
-          <DangerButton
-            type="button"
-            onClick={() => onDelete && onDelete(transaction)}
-            className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide"
-          >
-            <RemoveIcon type={1} size={20}/>
-          </DangerButton>
+          <Tooltip label="Editar transação">
+            <SecondaryButton
+              type="button"
+              onClick={() => onEdit && onEdit(transaction)}
+              className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide"
+            >
+              <EditIcon type={1} size={20} />
+            </SecondaryButton>
+          </Tooltip>
+          <Tooltip label="Remover transação">
+            <DangerButton
+              type="button"
+              onClick={() => onDelete && onDelete(transaction)}
+              className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide"
+            >
+              <RemoveIcon type={1} size={20} />
+            </DangerButton>
+          </Tooltip>
         </div>
       </div>
     </div>

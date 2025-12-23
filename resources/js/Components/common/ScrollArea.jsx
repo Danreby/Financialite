@@ -8,7 +8,7 @@ export default function ScrollArea({
 }) {
   return (
     <div
-      className={`${maxHeightClassName} overflow-y-auto scrollbar-custom ${className}`}
+      className={`${maxHeightClassName} overflow-y-auto overflow-x-hidden scrollbar-custom ${className}`}
       {...props}
     >
       {children}

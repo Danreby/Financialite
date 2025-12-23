@@ -4,6 +4,7 @@ import FaturaPayModal from "@/Components/system/fatura/FaturaPayModal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import ScrollArea from "@/Components/common/ScrollArea";
 import BareButton from "@/Components/common/buttons/BareButton";
+import Tooltip from "@/Components/common/Tooltip";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("pt-BR", {
@@ -113,20 +114,23 @@ export default function FaturaMonthSection({
                 >
                   Valor
                 </BareButton>
-                <BareButton
-                  type="button"
-                  onClick={() =>
-                    setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"))
-                  }
-                  className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
-                  title={
+                <Tooltip
+                  label={
                     sortDirection === "desc"
                       ? "Do mais recente/mais caro para o mais antigo/mais barato"
                       : "Do mais antigo/mais barato para o mais recente/mais caro"
                   }
                 >
-                  {sortDirection === "desc" ? "▼" : "▲"}
-                </BareButton>
+                  <BareButton
+                    type="button"
+                    onClick={() =>
+                      setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"))
+                    }
+                    className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    {sortDirection === "desc" ? "▼" : "▲"}
+                  </BareButton>
+                </Tooltip>
               </div>
             </div>
             <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
