@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import FaturaItemRow from "@/Components/system/fatura/FaturaItemRow";
 import FaturaPayModal from "@/Components/system/fatura/FaturaPayModal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import ScrollArea from "@/Components/common/ScrollArea";
+import BareButton from "@/Components/common/buttons/BareButton";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("pt-BR", {
@@ -24,6 +25,32 @@ export default function FaturaMonthSection({
   isCurrentPending = false,
 }) {
   const [showPayModal, setShowPayModal] = useState(false);
+  const [sortField, setSortField] = useState("date"); // "date" | "amount"
+  const [sortDirection, setSortDirection] = useState("desc"); // "asc" | "desc"
+
+  const sortedItems = useMemo(() => {
+    const cloned = [...items];
+
+    cloned.sort((a, b) => {
+      if (sortField === "date") {
+        const da = a.created_at ? new Date(a.created_at) : null;
+        const db = b.created_at ? new Date(b.created_at) : null;
+        const va = da && !Number.isNaN(da.getTime()) ? da.getTime() : 0;
+        const vb = db && !Number.isNaN(db.getTime()) ? db.getTime() : 0;
+        return sortDirection === "asc" ? va - vb : vb - va;
+      }
+
+      if (sortField === "amount") {
+        const va = Number(a.amount) || 0;
+        const vb = Number(b.amount) || 0;
+        return sortDirection === "asc" ? va - vb : vb - va;
+      }
+
+      return 0;
+    });
+
+    return cloned;
+  }, [items, sortField, sortDirection]);
 
   return (
     <section className="space-y-3">
@@ -60,11 +87,54 @@ export default function FaturaMonthSection({
             Nenhuma transação neste mês.
           </p>
         ) : (
-          <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
-            {items.map((item) => (
-              <FaturaItemRow key={item.id} {...item} />
-            ))}
-          </ScrollArea>
+          <>
+            <div className="flex items-center justify-between px-3 pt-2 pb-1 text-[11px] text-gray-500 dark:text-gray-400">
+              <span className="font-semibold uppercase tracking-wide">Ordenar</span>
+              <div className="flex items-center gap-2">
+                <BareButton
+                  type="button"
+                  onClick={() => setSortField("date")}
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+                    sortField === "date"
+                      ? "border-[#7b1818] bg-[#7b1818] text-white shadow-sm dark:border-rose-500 dark:bg-rose-500"
+                      : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Data
+                </BareButton>
+                <BareButton
+                  type="button"
+                  onClick={() => setSortField("amount")}
+                  className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium transition ${
+                    sortField === "amount"
+                      ? "border-[#7b1818] bg-[#7b1818] text-white shadow-sm dark:border-rose-500 dark:bg-rose-500"
+                      : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Valor
+                </BareButton>
+                <BareButton
+                  type="button"
+                  onClick={() =>
+                    setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"))
+                  }
+                  className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-1 text-[11px] font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
+                  title={
+                    sortDirection === "desc"
+                      ? "Do mais recente/mais caro para o mais antigo/mais barato"
+                      : "Do mais antigo/mais barato para o mais recente/mais caro"
+                  }
+                >
+                  {sortDirection === "desc" ? "▼" : "▲"}
+                </BareButton>
+              </div>
+            </div>
+            <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
+              {sortedItems.map((item) => (
+                <FaturaItemRow key={item.id} {...item} />
+              ))}
+            </ScrollArea>
+          </>
         )}
       </div>
 
