@@ -36,6 +36,11 @@ export default function FaturaItemRow({
   const amountSign = "-";
   const amountColor = "text-rose-500 dark:text-rose-400";
 
+  const totalInstallmentsNumber = Math.max(Number(total_installments || 1), 1);
+  const rawAmountNumber = Number(amount || 0) || 0;
+  const displayedAmount =
+    totalInstallmentsNumber > 1 ? rawAmountNumber / totalInstallmentsNumber : rawAmountNumber;
+
   const dayLabel = formatDayLabel(created_at);
 
   const statusLabel =
@@ -99,7 +104,7 @@ export default function FaturaItemRow({
       <div className="flex flex-col items-end gap-0.5">
         <span className={`text-sm font-semibold ${amountColor}`}>
           {amountSign}
-          {formatCurrency(amount)}
+          {formatCurrency(displayedAmount)}
         </span>
         <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
           {dayLabel && <span>{dayLabel}</span>}
