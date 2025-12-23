@@ -91,8 +91,6 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 			return;
 		}
 
-		// Se o mês selecionado atual não existir mais (por filtro ou pagamento),
-		// tenta usar o mês de fatura atual vindo do backend; se não houver, cai para o primeiro.
 		const exists = monthlyGroups.some((g) => g.month_key === selectedMonthKey);
 		if (!exists) {
 			if (currentMonthKey) {
@@ -167,7 +165,6 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 			(group) => group.month_key === selectedGroup.month_key,
 		);
 
-		// Próximo mês cronológico (lista está em ordem desc, então índices menores são meses mais recentes / à frente)
 		const previousIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
 		const nextGroup = monthlyGroups[previousIndex] || selectedGroup;
 
@@ -239,6 +236,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 									months={monthlyGroups}
 									selectedMonthKey={selectedGroup?.month_key}
 									onChangeMonth={handleChangeMonth}
+									{...selectedGroup}
 							/>
 
 							{selectedGroup && (

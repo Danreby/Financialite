@@ -39,12 +39,21 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
     { id: 4, title: 'Contas ativas', value: '0', delta: '+0' },
   ])
 
+  const handleBankFilterChange = (event) => {
+    const value = event.target.value || undefined
+    setCurrentFilters((prev) => ({
+      ...prev,
+      bank_user_id: value,
+    }))
+    setPage(1)
+  }
+
   useEffect(() => {
     (async () => {
       try {
         const [faturasResponse, statsResponse] = await Promise.all([
           axios.get(route('faturas.index'), { params: { ...currentFilters, page } }),
-	      axios.get(route('faturas.stats')),
+	      axios.get(route('faturas.stats'), { params: { ...currentFilters } }),
         ])
 
         const payload = faturasResponse.data || {}
@@ -108,9 +117,30 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         transition={{ duration: 0.35 }}
         className="max-w-[1600px] mx-auto"
       >
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6 dark:text-gray-100">
-          Visão geral
-        </h1>
+        <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Visão geral
+          </h1>
+
+          <div className="flex items-center gap-3 text-sm">
+            <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Banco do dashboard
+            </label>
+            <select
+              value={currentFilters.bank_user_id || ''}
+              onChange={handleBankFilterChange}
+              className="min-w-[220px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+            >
+              <option value="">Todos os bancos</option>
+              {bankAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                  {account.due_day ? ` - vence dia ${account.due_day}` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => (
@@ -136,12 +166,10 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
               {recentFaturas && recentFaturas.length > 0 ? (
                 recentFaturas.slice(0, 5).map((fatura) => {
                   const isDebit = fatura.type === 'debit'
-                  const sign = isDebit ? '- ' : '+ '
                   const labelDate = formatDateLabel(fatura.created_at)
                   const bankName = fatura.bank_user?.bank?.name
                   const categoryName = fatura.category?.name
                   const typeLabel = isDebit ? 'Débito' : 'Crédito'
-
                   const subtitleParts = [typeLabel]
                   if (bankName) subtitleParts.push(bankName)
                   if (categoryName) subtitleParts.push(categoryName)
@@ -152,7 +180,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                       key={fatura.id}
                       title={fatura.title}
                       subtitle={subtitleParts.join(' • ')}
-                      value={`${sign}${formatCurrency(fatura.amount)}`}
+                      value={`${formatCurrency(fatura.amount)}`}
                       negative={isDebit}
                     />
                   )
@@ -179,11 +207,7 @@ function Transaction({ title, subtitle, value, negative }) {
         <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{title}</div>
         <div className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
       </div>
-      <div
-        className={`text-sm font-semibold ${
-          negative ? 'text-red-400' : 'text-emerald-400'
-        }`}
-      >
+      <div className="text-sm font-semibold text-red-400">
         {value}
       </div>
     </div>

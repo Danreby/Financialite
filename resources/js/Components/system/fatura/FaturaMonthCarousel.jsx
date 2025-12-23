@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function FaturaMonthCarousel({
   months = [],
+  total_spent,
   selectedMonthKey,
   onChangeMonth,
 }) {
@@ -54,6 +55,14 @@ export default function FaturaMonthCarousel({
     }),
   };
 
+  function formatCurrency(value) {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+    }).format(value || 0);
+  }
+  
   return (
     <div className="flex items-center justify-center gap-4">
       <div className="w-32 flex justify-end">
@@ -98,6 +107,9 @@ export default function FaturaMonthCarousel({
               }`}
             >
               {current.month_label}
+            </span>
+            <span className={`font-semibold text-3xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+              {formatCurrency(total_spent)}
             </span>
           </motion.div>
         </AnimatePresence>

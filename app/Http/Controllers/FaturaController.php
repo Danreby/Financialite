@@ -265,8 +265,8 @@ class FaturaController extends Controller
         $user = $request->user();
         $fatura = Fatura::with(['bankUser.bank', 'user'])->findOrFail($id);
 
-        if ($fatura->user_id !== $user->id) {
-            return response()->json(['message' => 'Não autorizado.'], 403);
+        if ($response = $this->ensureFaturaBelongsToUser($fatura, $user->id)) {
+            return $response;
         }
 
         return response()->json($fatura);
@@ -276,31 +276,13 @@ class FaturaController extends Controller
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric',
-            'type' => ['required', Rule::in(['credit','debit'])],
-            'status' => ['nullable', Rule::in(['paid','unpaid','overdue'])],
-            'paid_date' => 'nullable|date',
-            'total_installments' => 'nullable|integer|min:1',
-            'current_installment' => 'nullable|integer|min:1',
-            'is_recurring' => 'sometimes|boolean',
-            'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => [
-                'nullable',
-                Rule::exists('categories', 'id')->where(function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                }),
-            ],
-        ]);
+        $data = $request->validate($this->storeRulesForUser($user->id));
 
         if (!empty($data['bank_user_id'])) {
             $bankUser = BankUser::with('bank')->findOrFail($data['bank_user_id']);
-            if ($bankUser->user_id !== $user->id) {
-                return response()->json(['message' => 'A associação banco-usuário não pertence ao usuário autenticado.'], 422);
+            if ($response = $this->ensureBankUserBelongsToUser($bankUser, $user->id, 422)) {
+                return $response;
             }
-
         }
 
         $data['user_id'] = $user->id;
@@ -326,33 +308,16 @@ class FaturaController extends Controller
         $user = $request->user();
         $fatura = Fatura::findOrFail($id);
 
-        if ($fatura->user_id !== $user->id) {
-            return response()->json(['message' => 'Não autorizado.'], 403);
+        if ($response = $this->ensureFaturaBelongsToUser($fatura, $user->id)) {
+            return $response;
         }
 
-        $data = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'sometimes|required|numeric|min:0.01',
-            'type' => ['sometimes', 'required', Rule::in(['credit', 'debit'])],
-            'status' => ['nullable', Rule::in(['paid', 'unpaid', 'overdue'])],
-            'paid_date' => 'nullable|date',
-            'total_installments' => 'nullable|integer|min:1',
-            'current_installment' => 'nullable|integer|min:1',
-            'is_recurring' => 'sometimes|boolean',
-            'bank_user_id' => 'nullable|exists:bank_user,id',
-            'category_id' => [
-                'nullable',
-                Rule::exists('categories', 'id')->where(function ($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                }),
-            ],
-        ]);
+        $data = $request->validate($this->updateRulesForUser($user->id));
 
         if (array_key_exists('bank_user_id', $data) && !empty($data['bank_user_id'])) {
             $bankUser = BankUser::findOrFail($data['bank_user_id']);
-            if ($bankUser->user_id !== $user->id) {
-                return response()->json(['message' => 'A associação banco-usuário não pertence ao usuário autenticado.'], 422);
+            if ($response = $this->ensureBankUserBelongsToUser($bankUser, $user->id, 422)) {
+                return $response;
             }
         }
 
@@ -373,8 +338,8 @@ class FaturaController extends Controller
         $user = $request->user();
         $fatura = Fatura::findOrFail($id);
 
-        if ($fatura->user_id !== $user->id) {
-            return response()->json(['message' => 'Não autorizado.'], 403);
+        if ($response = $this->ensureFaturaBelongsToUser($fatura, $user->id)) {
+            return $response;
         }
 
         $fatura->delete();
@@ -386,8 +351,8 @@ class FaturaController extends Controller
         $user = $request->user();
         $fatura = Fatura::withTrashed()->findOrFail($id);
 
-        if ($fatura->user_id !== $user->id) {
-            return response()->json(['message' => 'Não autorizado.'], 403);
+        if ($response = $this->ensureFaturaBelongsToUser($fatura, $user->id)) {
+            return $response;
         }
 
         if ($fatura->trashed()) {
@@ -411,8 +376,8 @@ class FaturaController extends Controller
 
         if ($bankUserId) {
             $bankUser = BankUser::findOrFail($bankUserId);
-            if ($bankUser->user_id !== $user->id) {
-                return response()->json(['message' => 'Não autorizado.'], 403);
+            if ($response = $this->ensureBankUserBelongsToUser($bankUser, $user->id, 403)) {
+                return $response;
             }
         }
 
@@ -501,42 +466,44 @@ class FaturaController extends Controller
     public function stats(Request $request)
     {
         $user = $request->user();
+        $bankUserId = $request->input('bank_user_id');
+        $selectedBankUser = null;
 
-        $base = Fatura::forUser($user->id);
+        if ($request->filled('bank_user_id')) {
+            $selectedBankUser = BankUser::findOrFail($bankUserId);
 
-        $stats = [
-            'total_income' => (clone $base)
-                ->where('type', 'credit')
-                ->where('status', 'paid')
-                ->sum('amount'),
-            'total_expenses' => (clone $base)
-                ->where('type', 'debit')
-                ->where('status', 'paid')
-                ->sum('amount'),
-            'pending_income' => (clone $base)
-                ->where('type', 'credit')
-                ->where('status', '!=', 'paid')
-                ->sum('amount'),
-            'pending_expenses' => (clone $base)
-                ->where('type', 'debit')
-                ->where('status', '!=', 'paid')
-                ->sum('amount'),
-            'overdue_count' => (clone $base)
-                ->where('status', 'overdue')
-                ->count(),
-        ];
+            if ($response = $this->ensureBankUserBelongsToUser($selectedBankUser, $user->id, 403)) {
+                return $response;
+            }
+        }
+
+        $base = Fatura::forUser($user->id)
+            ->forBankUser($bankUserId);
+
+        $stats = $this->calculateBaseStats($base);
 
         $allFaturas = Fatura::with('bankUser')
             ->forUser($user->id)
+            ->forBankUser($bankUserId)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $paidByMonth = Paid::where('user_id', $user->id)
+        $paidQuery = Paid::where('user_id', $user->id);
+
+        if ($request->has('bank_user_id')) {
+            if (is_null($bankUserId)) {
+                $paidQuery->whereNull('bank_user_id');
+            } else {
+                $paidQuery->where('bank_user_id', $bankUserId);
+            }
+        }
+
+        $paidByMonth = $paidQuery
             ->pluck('total_paid', 'month_key');
 
         $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
 
-        $currentMonthKey = $this->resolveCurrentBillingMonthKey(null, $paidByMonth);
+        $currentMonthKey = $this->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
         $currentGroup = collect($monthlyGroups)->firstWhere('month_key', $currentMonthKey);
 
@@ -562,6 +529,95 @@ class FaturaController extends Controller
         $stats['current_month_pending_bill'] = (float) $currentPendingBill;
 
         return response()->json($stats);
+    }
+
+    protected function ensureFaturaBelongsToUser(Fatura $fatura, int $userId)
+    {
+        if ($fatura->user_id !== $userId) {
+            return response()->json(['message' => 'Não autorizado.'], 403);
+        }
+
+        return null;
+    }
+
+    protected function ensureBankUserBelongsToUser(BankUser $bankUser, int $userId, int $statusCode = 403)
+    {
+        if ($bankUser->user_id !== $userId) {
+            return response()->json([
+                'message' => 'A associação banco-usuário não pertence ao usuário autenticado.',
+            ], $statusCode);
+        }
+
+        return null;
+    }
+
+    protected function storeRulesForUser(int $userId): array
+    {
+        return [
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'amount' => 'required|numeric',
+            'type' => ['required', Rule::in(['credit','debit'])],
+            'status' => ['nullable', Rule::in(['paid','unpaid','overdue'])],
+            'paid_date' => 'nullable|date',
+            'total_installments' => 'nullable|integer|min:1',
+            'current_installment' => 'nullable|integer|min:1',
+            'is_recurring' => 'sometimes|boolean',
+            'bank_user_id' => 'nullable|exists:bank_user,id',
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                }),
+            ],
+        ];
+    }
+
+    protected function updateRulesForUser(int $userId): array
+    {
+        return [
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'amount' => 'sometimes|required|numeric|min:0.01',
+            'type' => ['sometimes', 'required', Rule::in(['credit', 'debit'])],
+            'status' => ['nullable', Rule::in(['paid', 'unpaid', 'overdue'])],
+            'paid_date' => 'nullable|date',
+            'total_installments' => 'nullable|integer|min:1',
+            'current_installment' => 'nullable|integer|min:1',
+            'is_recurring' => 'sometimes|boolean',
+            'bank_user_id' => 'nullable|exists:bank_user,id',
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                }),
+            ],
+        ];
+    }
+
+    protected function calculateBaseStats($base): array
+    {
+        return [
+            'total_income' => (clone $base)
+                ->where('type', 'credit')
+                ->where('status', 'paid')
+                ->sum('amount'),
+            'total_expenses' => (clone $base)
+                ->where('type', 'debit')
+                ->where('status', 'paid')
+                ->sum('amount'),
+            'pending_income' => (clone $base)
+                ->where('type', 'credit')
+                ->where('status', '!=', 'paid')
+                ->sum('amount'),
+            'pending_expenses' => (clone $base)
+                ->where('type', 'debit')
+                ->where('status', '!=', 'paid')
+                ->sum('amount'),
+            'overdue_count' => (clone $base)
+                ->where('status', 'overdue')
+                ->count(),
+        ];
     }
 }
 
