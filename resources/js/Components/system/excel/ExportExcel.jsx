@@ -100,7 +100,23 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
       ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: 0, c: range.e.c } })
     };
 
-    //Estilo da Borda
+    const CurrencyStyle = {
+      numFmt: "R$ #,##0.00"
+    };
+
+    for (let r = 1; r <= range.e.r; r++) {
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellAddress = XLSX.utils.encode_cell({ r, c });
+        const cell = worksheet[cellAddress];
+        if (cell && cell.t === 'n') {
+          cell.s = {
+            ...(cell.s || {}),
+            ...CurrencyStyle,
+          };
+        }
+      }
+    }
+
     const BorderStyle = {
       top: { style: "thin", color: { rgb: "000000" } },
       bottom: { style: "thin", color: { rgb: "000000" } },
@@ -108,7 +124,13 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
       right: { style: "thin", color: { rgb: "000000" } }
     };
 
-    //Estilo do Header
+    const StrongBorderStyle = {
+      top: { style: "medium", color: { rgb: "000000" } },
+      bottom: { style: "medium", color: { rgb: "000000" } },
+      left: { style: "medium", color: { rgb: "000000" } },
+      right: { style: "medium", color: { rgb: "000000" } }
+    };
+
     const headerStyle = {
       fill: {
         patternType: "solid",
@@ -133,7 +155,6 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
         fgColor: { rgb: "eeece1" }
       }
     };
-    //zebrado no excel -> ele pula a linha e coloca uma linha colorida
     for (let r = 1; r <= range.e.r; r++) {
       if (r % 2 === 0) {
         for (let c = range.s.c; c <= range.e.c; c++) {
@@ -147,7 +168,6 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
         }
       }
     }
-    // ele coloca bordar nas colunas
     for (let r = 1; r <= range.e.r; r++) {
       for (let c = range.s.c; c <= range.e.c; c++) {
         const cellAddress = XLSX.utils.encode_cell({ r, c });
@@ -159,7 +179,31 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
         }
       }
     }
-    //exportação
+
+    const lastRow = range.e.r;
+    const lastCol = range.e.c;
+
+    for (let c = range.s.c; c <= lastCol; c++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: lastRow, c });
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
+          ...worksheet[cellAddress].s,
+          font: { bold: true, color: { rgb: "000000" } },
+          border: StrongBorderStyle
+        };
+      }
+    }
+
+    for (let r = 0; r <= lastRow; r++) {
+      const cellAddress = XLSX.utils.encode_cell({ r, c: lastCol });
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
+          ...worksheet[cellAddress].s,
+          font: { bold: true, color: { rgb: "000000" } },
+          border: StrongBorderStyle
+        };
+      }
+    }
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
 
