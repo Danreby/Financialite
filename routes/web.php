@@ -78,7 +78,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('reports.index');
 
     Route::get('/settings', function () {
-        return Inertia::render('Settings/Index');
+        return Inertia::render('Config');
     })->name('settings');
 
     Route::get('/banks/list', [BankController::class, 'list'])->name('banks.list');
