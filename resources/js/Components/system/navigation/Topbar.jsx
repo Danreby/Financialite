@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
 import BareButton from '@/Components/common/buttons/BareButton'
 
 export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
   const [isDark, setIsDark] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -34,6 +35,23 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
     }
   }, [isDark])
 
+  useEffect(() => {
+    if (!userMenuOpen) return
+
+    const handleClickOutside = (event) => {
+      if (!userMenuRef.current) return
+      if (!userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [userMenuOpen])
+
   const toggleTheme = () => setIsDark((prev) => !prev)
   const toggleUserMenu = () => setUserMenuOpen((prev) => !prev)
 
@@ -55,7 +73,7 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
   return (
     <div className="flex items-center justify-between mt-2 px-3 py-3 sm:px-4 sm:py-4 bg-white text-gray-900 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:text-gray-100 dark:ring-black/30">
       <div className="flex items-center gap-3">
-        <BareButton
+        {/* <BareButton
           type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-white dark:text-gray-300 dark:hover:bg-gray-900/40 dark:focus:ring-offset-[#0b0b0b] md:hidden"
@@ -64,7 +82,7 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
           <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
             <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </BareButton>
+        </BareButton> */}
       </div>
 
       <div className="flex items-center gap-3">
@@ -79,7 +97,7 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
           {isDark ? 'Light' : 'Dark'}
         </BareButton>
 
-        <div className="relative">
+        <div className="relative" ref={userMenuRef}>
           <BareButton
             type="button"
             onClick={toggleUserMenu}
