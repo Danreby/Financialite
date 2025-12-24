@@ -42,10 +42,10 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
     totalInstallmentsNumber > 1 ? `${totalInstallmentsNumber}x` : null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/60 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-lg px-3 lg:px-4 py-2 lg:py-3 hover:bg-gray-50 dark:hover:bg-gray-900/60 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+          <p className="truncate text-sm lg:text-base font-medium text-gray-900 dark:text-gray-100">
             {title}
           </p>
           {status && (
@@ -54,7 +54,7 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
             </span>
           )}
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] lg:text-xs text-gray-500 dark:text-gray-400">
           {bank_name && (
             <span>
               {bank_name}
@@ -68,7 +68,7 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
 
       <div className="mt-1 flex items-center justify-between gap-3 sm:mt-0 sm:gap-4">
         <div className="flex flex-col items-end text-right">
-          <span className="text-sm font-semibold text-rose-500 dark:text-rose-400">
+          <span className="text-sm lg:text-base font-semibold text-rose-500 dark:text-rose-400">
             -{formatCurrency(amount)}
           </span>
           <span className="text-[11px] text-gray-500 dark:text-gray-400">

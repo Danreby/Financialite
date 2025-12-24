@@ -118,7 +118,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         className="max-w-[1600px] mx-auto"
       >
         <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
             Visão geral
           </h1>
 

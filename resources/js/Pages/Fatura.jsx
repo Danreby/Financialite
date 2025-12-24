@@ -33,13 +33,13 @@ function FaturaFilters({ bankAccounts, categories, filters, onChange }) {
 	return (
 		<div className="flex flex-wrap items-center gap-4 text-sm">
 			<div className="flex items-center gap-3">
-				<label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+				<label className="text-xs lg:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
 					Filtrar por banco
 				</label>
 				<select
 					value={selectedBankId || ''}
 					onChange={handleBankChange}
-					className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+					className="min-w-[200px] lg:min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs lg:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 				>
 					<option value="">Todos os bancos</option>
 					{bankAccounts.map((account) => (
@@ -54,13 +54,13 @@ function FaturaFilters({ bankAccounts, categories, filters, onChange }) {
 			</div>
 
 			<div className="flex items-center gap-3">
-				<label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+				<label className="text-xs lg:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
 					Filtrar por categoria
 				</label>
 				<select
 					value={selectedCategoryId || ''}
 					onChange={handleCategoryChange}
-					className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+					className="min-w-[200px] lg:min-w-[240px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs lg:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 				>
 					<option value="">Todas as categorias</option>
 					{categories.map((category) => (

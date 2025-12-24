@@ -68,9 +68,9 @@ export default function FaturaItemRow({
       : null;
 
   return (
-    <div className="flex items-center justify-between gap-3 px-2 sm:px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/60 transition">
+    <div className="flex items-center justify-between gap-3 px-2 sm:px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/60 transition">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <div className="h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+        <div className="h-8 w-8 lg:h-9 lg:w-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <span
             className={`h-2 w-2 rounded-full ${
               isDebit || isCredit
@@ -81,7 +81,7 @@ export default function FaturaItemRow({
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+            <p className="truncate text-sm lg:text-base font-medium text-gray-900 dark:text-gray-100">
               {title}
             </p>
             {installmentLabel && (
@@ -95,18 +95,18 @@ export default function FaturaItemRow({
               </span>
             )}
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] lg:text-xs text-gray-500 dark:text-gray-400">
             {bank_name && <span>{bank_name}</span>}
             {description && <span className="truncate max-w-xs">• {description}</span>}
           </div>
         </div>
       </div>
       <div className="flex flex-col items-end gap-0.5">
-        <span className={`text-sm font-semibold ${amountColor}`}>
+        <span className={`text-sm lg:text-base font-semibold ${amountColor}`}>
           {amountSign}
           {formatCurrency(displayedAmount)}
         </span>
-          <div className="flex items-center gap-2 text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-[11px] lg:text-xs text-gray-500 dark:text-gray-400">
           {dayLabel && <span>{dayLabel}</span>}
           <span className={`rounded-full px-2 py-0.5 text-[10px] ${statusColor}`}>
             {statusLabel}

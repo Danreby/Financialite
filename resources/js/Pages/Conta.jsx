@@ -151,15 +151,15 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 
 			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
 				<header className="space-y-1">
-					<h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl">Minhas contas</h1>
-					<p className="text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
+					<h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">Minhas contas</h1>
+					<p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
 						Gerencie as contas bancárias vinculadas e as categorias usadas nas suas transações.
 					</p>
 				</header>
 
-				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4">
+				<section className="rounded-2xl bg-white p-3 sm:p-4 lg:p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
 					<div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-						<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+						<h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100">
 							Contas / bancos vinculados
 						</h2>
 						{saving && (

@@ -101,7 +101,7 @@ export default function FaturaMonthCarousel({
               <div />
             )}
             <span
-              className={`mt-1 text-xl sm:text-2xl md:text-3xl font-bold tracking-tight ${
+              className={`mt-1 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight ${
                 isPaid
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-gray-900 dark:text-gray-50"
@@ -109,7 +109,7 @@ export default function FaturaMonthCarousel({
             >
               {current.month_label}
             </span>
-            <span className={`font-semibold text-2xl sm:text-3xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+            <span className={`font-semibold text-2xl sm:text-3xl lg:text-4xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
               {formatCurrency(total_spent)}
             </span>
           </motion.div>

@@ -93,10 +93,10 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 
 			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-5 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
 				<header className="space-y-2 pt-1 sm:pt-2">
-					<h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl">
+					<h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
 						Transações pendentes
 					</h1>
-					<p className="text-xs text-gray-600 dark:text-gray-300 sm:text-sm">
+					<p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
 						Visualize, edite ou remova transações que ainda não foram pagas.
 					</p>
 				</header>
