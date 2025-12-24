@@ -65,7 +65,7 @@ export default function FaturaMonthCarousel({
   }
   
   return (
-    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
+  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:gap-6">
       <div className="flex justify-between sm:w-32 sm:justify-end">
         {prev && (
           <SecondaryButton
@@ -87,7 +87,7 @@ export default function FaturaMonthCarousel({
             initial="enter"
             animate="center"
             exit="exit"
-            className={`inline-flex flex-col items-center rounded-full px-6 py-3 shadow-sm ring-1 bg-gradient-to-r dark:bg-gradient-to-r ${
+            className={`inline-flex flex-col items-center rounded-full px-6 py-3 sm:px-8 sm:py-3 lg:px-10 lg:py-4 shadow-sm ring-1 bg-gradient-to-r dark:bg-gradient-to-r ${
               isPaid
                 ? "from-emerald-50 via-white to-emerald-50 ring-emerald-200 dark:from-[#052e26] dark:via-[#050505] dark:to-[#052e26] dark:ring-emerald-900/50"
                 : "from-rose-50 via-white to-rose-50 ring-rose-100 dark:from-[#150709] dark:via-[#0b0b0b] dark:to-[#150709] dark:ring-rose-900/40"

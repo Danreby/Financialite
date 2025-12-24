@@ -149,7 +149,7 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 		<AuthenticatedLayout>
 			<Head title="Contas" />
 
-				<div className="w-full max-w-5xl mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
 				<header className="space-y-1">
 					<h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl">Minhas contas</h1>
 					<p className="text-xs text-gray-600 dark:text-gray-300 sm:text-sm">

@@ -91,7 +91,7 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 		<AuthenticatedLayout>
 			<Head title="Transações" />
 
-				<div className="w-full max-w-5xl mx-auto px-3 py-4 space-y-5 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-5 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
 				<header className="space-y-2 pt-1 sm:pt-2">
 					<h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 sm:text-2xl">
 						Transações pendentes

@@ -54,7 +54,7 @@ export default function FaturaMonthSection({
   }, [items, sortField, sortDirection]);
 
   return (
-    <section className="space-y-3">
+	<section className="space-y-3 sm:space-y-4 lg:space-y-5">
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1 flex justify-start items-center gap-3 sm:gap-4">
           <div className="inline-flex flex-col items-start rounded-2xl sm:rounded-full px-4 py-2 sm:px-6 sm:py-3 bg-transparent">
@@ -82,7 +82,7 @@ export default function FaturaMonthSection({
         )}
       </div>
 
-      <div className="rounded-2xl bg-white px-2 py-1 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
+      <div className="rounded-2xl bg-white px-2 py-1 sm:px-3 sm:py-2 lg:px-4 lg:py-3 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
         {items.length === 0 ? (
           <p className="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">
             Nenhuma transação neste mês.

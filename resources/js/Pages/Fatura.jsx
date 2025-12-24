@@ -209,7 +209,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 		<AuthenticatedLayout>
 			<Head title="Faturas" />
 
-			<div className="w-full max-w-5xl mx-auto space-y-5 sm:space-y-6">
+			<div className="w-full max-w-[1600px] mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
 				<header className="pt-1 sm:pt-2 space-y-3 sm:space-y-4">
 					<div>
 						<h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 dark:text-gray-100">
