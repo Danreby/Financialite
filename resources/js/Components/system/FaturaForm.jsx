@@ -11,6 +11,44 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState("");
 
+  const handleIntegerKeyDown = (event) => {
+    const allowedKeys = [
+      "Backspace",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Delete",
+      "Home",
+      "End",
+    ];
+
+    if (allowedKeys.includes(event.key)) return;
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const handleDecimalKeyDown = (event) => {
+    const allowedKeys = [
+      "Backspace",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Delete",
+      "Home",
+      "End",
+    ];
+
+    if (allowedKeys.includes(event.key)) return;
+
+    if (event.key === "," || event.key === ".") return;
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -144,6 +182,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
             <input
               name="title"
               type="text"
+              maxLength={120}
               className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
               placeholder="Título da transação"
             />
@@ -156,6 +195,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
             <input
               name="description"
               type="text"
+              maxLength={255}
               className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
               placeholder="Descrição da transação"
             />
@@ -172,6 +212,10 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               <input
                 name="amount"
                 type="number"
+                inputMode="decimal"
+                min="0.01"
+                step="0.01"
+                onKeyDown={handleDecimalKeyDown}
                 className="flex-1 border-0 bg-transparent p-2 text-sm outline-none focus:ring-0 dark:text-gray-100"
                 placeholder="Valor da transação"
               />
@@ -216,6 +260,9 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               name="total_installments"
               type="number"
               min="1"
+              max="360"
+              inputMode="numeric"
+              onKeyDown={handleIntegerKeyDown}
               className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-400"
               disabled={isRecurring || type === "debit"}
             />

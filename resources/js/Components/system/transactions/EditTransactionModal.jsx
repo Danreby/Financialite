@@ -24,6 +24,44 @@ export default function EditTransactionModal({
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleIntegerKeyDown = (event) => {
+    const allowedKeys = [
+      "Backspace",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Delete",
+      "Home",
+      "End",
+    ];
+
+    if (allowedKeys.includes(event.key)) return;
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
+  const handleDecimalKeyDown = (event) => {
+    const allowedKeys = [
+      "Backspace",
+      "Tab",
+      "ArrowLeft",
+      "ArrowRight",
+      "Delete",
+      "Home",
+      "End",
+    ];
+
+    if (allowedKeys.includes(event.key)) return;
+
+    if (event.key === "," || event.key === ".") return;
+
+    if (!/^[0-9]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  };
+
   useEffect(() => {
     if (!transaction) return;
     setTitle(transaction.title || "");
@@ -106,6 +144,7 @@ export default function EditTransactionModal({
             <input
               type="text"
               value={title}
+              maxLength={120}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
             />
@@ -123,6 +162,10 @@ export default function EditTransactionModal({
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                inputMode="decimal"
+                min="0.01"
+                step="0.01"
+                onKeyDown={handleDecimalKeyDown}
                 className="flex-1 border-0 bg-transparent p-2 text-sm outline-none focus:ring-0 dark:text-gray-100"
                 min="0.01"
                 step="0.01"
@@ -167,8 +210,11 @@ export default function EditTransactionModal({
             <input
               type="number"
               min="1"
+              max="360"
               value={totalInstallments}
               onChange={(e) => setTotalInstallments(e.target.value)}
+              inputMode="numeric"
+              onKeyDown={handleIntegerKeyDown}
               className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-400"
               disabled={isRecurring || type === "debit"}
             />
@@ -181,6 +227,7 @@ export default function EditTransactionModal({
             <input
               type="text"
               value={description}
+              maxLength={255}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
             />

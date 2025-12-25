@@ -69,6 +69,24 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 		}
 	};
 
+	const handleIntegerKeyDown = (event) => {
+		const allowedKeys = [
+			"Backspace",
+			"Tab",
+			"ArrowLeft",
+			"ArrowRight",
+			"Delete",
+			"Home",
+			"End",
+		];
+
+		if (allowedKeys.includes(event.key)) return;
+
+		if (!/^[0-9]$/.test(event.key)) {
+			event.preventDefault();
+		}
+	};
+
 	const openEditCategoryModal = (category) => {
 		setCategoryBeingEdited(category);
 		setCategoryNameInput(category.name || '');
@@ -278,6 +296,8 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 							type="number"
 							min={1}
 							max={31}
+							inputMode="numeric"
+							onKeyDown={handleIntegerKeyDown}
 							value={bankDueDayInput}
 							onChange={(e) => setBankDueDayInput(e.target.value)}
 							className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"

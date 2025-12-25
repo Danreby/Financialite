@@ -117,6 +117,24 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 	const [dueDayInput, setDueDayInput] = useState('');
 	const [isUpdatingDueDay, setIsUpdatingDueDay] = useState(false);
 
+	const handleIntegerKeyDown = (event) => {
+		const allowedKeys = [
+			"Backspace",
+			"Tab",
+			"ArrowLeft",
+			"ArrowRight",
+			"Delete",
+			"Home",
+			"End",
+		];
+
+		if (allowedKeys.includes(event.key)) return;
+
+		if (!/^[0-9]$/.test(event.key)) {
+			event.preventDefault();
+		}
+	};
+
 	useEffect(() => {
 		if (!monthlyGroups || monthlyGroups.length === 0) {
 			setSelectedMonthKey(null);
@@ -301,6 +319,8 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 								type="number"
 								min={1}
 								max={31}
+								inputMode="numeric"
+								onKeyDown={handleIntegerKeyDown}
 								value={dueDayInput}
 								onChange={(e) => setDueDayInput(e.target.value)}
 								className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"

@@ -65,6 +65,7 @@ export default function CategoryForm({ isOpen, onClose, onSuccess }) {
 					<input
 						name="name"
 						type="text"
+						maxLength={120}
 						className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 						placeholder="Ex: Mercado, Lazer, Shopping"
 					/>
