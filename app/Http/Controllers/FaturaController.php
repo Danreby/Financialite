@@ -79,6 +79,38 @@ class FaturaController extends Controller
 
         $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
+        $groupsCollection = collect($monthlyGroups);
+
+        $effectiveGroup = $groupsCollection->firstWhere('month_key', $currentMonthKey);
+
+        if (!$effectiveGroup || ($effectiveGroup['is_paid'] ?? false)) {
+            $targetMonth = null;
+            try {
+                $targetMonth = Carbon::createFromFormat('Y-m', $currentMonthKey)->startOfMonth();
+            } catch (\Throwable $e) {
+                $targetMonth = Carbon::today()->startOfMonth();
+            }
+
+            $unpaidGroups = $groupsCollection->filter(function ($group) {
+                return !($group['is_paid'] ?? false);
+            });
+
+            if ($unpaidGroups->isNotEmpty()) {
+                $effectiveGroup = $unpaidGroups->sortBy(function ($group) use ($targetMonth) {
+                    $groupMonth = Carbon::createFromFormat('Y-m', $group['month_key'])->startOfMonth();
+                    return $targetMonth->diffInMonths($groupMonth);
+                })->first();
+            } else {
+                $effectiveGroup = null;
+            }
+        }
+
+        $effectiveMonthKey = $currentMonthKey;
+
+        if ($effectiveGroup && !($effectiveGroup['is_paid'] ?? false)) {
+            $effectiveMonthKey = $effectiveGroup['month_key'] ?? $currentMonthKey;
+        }
+
         $bankAccounts = BankUser::with('bank')
             ->where('user_id', $user->id)
             ->get()
@@ -97,7 +129,7 @@ class FaturaController extends Controller
         return Inertia::render('Fatura', [
             'monthlyGroups' => $monthlyGroups,
             'bankAccounts' => $bankAccounts,
-            'currentMonthKey' => $currentMonthKey,
+            'currentMonthKey' => $effectiveMonthKey,
             'filters' => [
                 'bank_user_id' => $request->input('bank_user_id'),
                 'category_id' => $request->input('category_id'),
