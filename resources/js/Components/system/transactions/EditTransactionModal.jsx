@@ -23,6 +23,7 @@ export default function EditTransactionModal({
   const [type, setType] = useState("debit");
   const [totalInstallments, setTotalInstallments] = useState("1");
   const [isRecurring, setIsRecurring] = useState(false);
+  const [status, setStatus] = useState("unpaid");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleIntegerKeyDown = (event) => {
@@ -104,6 +105,7 @@ export default function EditTransactionModal({
       transaction.total_installments ? String(transaction.total_installments) : "1"
     );
     setIsRecurring(Boolean(transaction.is_recurring));
+    setStatus(transaction.status || "unpaid");
   }, [transaction]);
 
   const handleSubmit = async (e) => {
@@ -143,6 +145,14 @@ export default function EditTransactionModal({
         bank_user_id: bankUserId || null,
         category_id: categoryId || null,
       };
+
+      if (status === "paid") {
+        payload.status = "paid";
+        payload.paid_date = new Date().toISOString().slice(0, 10);
+      } else {
+        payload.status = "unpaid";
+        payload.paid_date = null;
+      }
 
       const response = await axios.put(route("faturas.update", transaction.id), payload);
 
@@ -284,6 +294,29 @@ export default function EditTransactionModal({
               <span
                 className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
                   isRecurring ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </BareButton>
+          </div>
+
+          <div className="flex items-center justify-between md:col-span-2">
+            <span className="text-sm md:text-base font-medium text-gray-700 dark:text-gray-200">
+              Marcar como pago
+            </span>
+            <BareButton
+              type="button"
+              onClick={() => {
+                setStatus((prev) => (prev === "paid" ? "unpaid" : "paid"));
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 ${
+                status === "paid"
+                  ? "bg-emerald-600 shadow-lg shadow-emerald-600/40"
+                  : "bg-gray-300 dark:bg-gray-700"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition ${
+                  status === "paid" ? "translate-x-5" : "translate-x-1"
                 }`}
               />
             </BareButton>

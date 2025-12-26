@@ -16,6 +16,8 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 	const [localTransactions, setLocalTransactions] = useState(transactions);
 	const [selectedBankId, setSelectedBankId] = useState("");
 	const [selectedCategoryId, setSelectedCategoryId] = useState("");
+	const [selectedType, setSelectedType] = useState("");
+	const [recurringFilter, setRecurringFilter] = useState("");
 	const [searchTerm, setSearchTerm] = useState("");
 	const [editingTransaction, setEditingTransaction] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -32,12 +34,21 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 			if (selectedCategoryId && String(tx.category_id) !== String(selectedCategoryId)) {
 				return false;
 			}
+			if (selectedType && tx.type !== selectedType) {
+				return false;
+			}
+			if (recurringFilter === "recurring" && !tx.is_recurring) {
+				return false;
+			}
+			if (recurringFilter === "non_recurring" && tx.is_recurring) {
+				return false;
+			}
 			if (term && !(tx.title || "").toLowerCase().includes(term)) {
 				return false;
 			}
 			return true;
 		});
-	}, [localTransactions, selectedBankId, selectedCategoryId, searchTerm]);
+	}, [localTransactions, selectedBankId, selectedCategoryId, selectedType, recurringFilter, searchTerm]);
 
 	const handleEdit = (tx) => {
 		setEditingTransaction(tx);
@@ -45,8 +56,13 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 	};
 
 	const handleUpdated = (updated) => {
-		setLocalTransactions((prev) =>
-			prev.map((tx) => {
+		setLocalTransactions((prev) => {
+			// Se a transação foi marcada como paga, removemos da lista de pendentes
+			if (updated.status === "paid") {
+				return prev.filter((tx) => tx.id !== updated.id);
+			}
+
+			return prev.map((tx) => {
 				if (tx.id !== updated.id) return tx;
 				return {
 					...tx,
@@ -54,8 +70,8 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 					bank_name: updated.bank_user?.bank?.name ?? tx.bank_name ?? null,
 					category_name: updated.category?.name ?? tx.category_name ?? null,
 				};
-			})
-		);
+			});
+		});
 	};
 
 	const handleDelete = async (tx) => {
@@ -105,9 +121,6 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4">
 					<div className="mb-4 flex flex-col gap-3 text-xs sm:flex-wrap sm:flex-row sm:items-center sm:justify-between">
 						<div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 sm:w-auto w-full">
-							<span className="font-medium text-gray-600 dark:text-gray-300">
-								Buscar
-							</span>
 							<input
 								type="text"
 								value={searchTerm}
@@ -118,9 +131,6 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 						</div>
 
 						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<span className="font-medium text-gray-600 dark:text-gray-300">
-								Banco
-							</span>
 							<select
 								value={selectedBankId}
 								onChange={(e) => setSelectedBankId(e.target.value)}
@@ -136,9 +146,30 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 						</div>
 
 						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<span className="font-medium text-gray-600 dark:text-gray-300">
-								Categoria
-							</span>
+							<select
+								value={selectedType}
+								onChange={(e) => setSelectedType(e.target.value)}
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[160px]"
+							>
+								<option value="">Débito e crédito</option>
+								<option value="debit">Apenas débito</option>
+								<option value="credit">Apenas crédito</option>
+							</select>
+						</div>
+
+						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
+							<select
+								value={recurringFilter}
+								onChange={(e) => setRecurringFilter(e.target.value)}
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[160px]"
+							>
+								<option value="">Todas</option>
+								<option value="recurring">Somente recorrentes</option>
+								<option value="non_recurring">Somente não recorrentes</option>
+							</select>
+						</div>
+
+						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
 							<select
 								value={selectedCategoryId}
 								onChange={(e) => setSelectedCategoryId(e.target.value)}
@@ -158,6 +189,8 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 							onClick={() => {
 								setSelectedBankId("");
 								setSelectedCategoryId("");
+								setSelectedType("");
+								setRecurringFilter("");
 								setSearchTerm("");
 							}}
 							className="w-full justify-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 sm:w-auto"
@@ -165,7 +198,6 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 							Limpar filtros
 						</SecondaryButton>
 					</div>
-					{/* Removed TransactionsExportButton */}
 
 					<TransactionsList
 						transactions={filteredTransactions}

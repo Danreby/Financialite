@@ -110,6 +110,7 @@ class FaturaController extends Controller
 
         $allFaturas = (clone $baseQuery)
             ->where('type', 'credit')
+            ->notStatus('paid')
             ->get();
 
         $paidQuery = Paid::where('user_id', $user->id);
@@ -394,6 +395,7 @@ class FaturaController extends Controller
                 $q->where('category_id', $categoryId);
             })
             ->where('type', 'credit')
+            ->notStatus('paid')
             ->orderBy('created_at', 'desc')
             ->get();
 
