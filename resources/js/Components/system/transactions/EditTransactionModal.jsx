@@ -63,6 +63,35 @@ export default function EditTransactionModal({
     }
   };
 
+  const MAX_AMOUNT = 1_000_000_000;
+
+  const handleAmountInputLimit = (event) => {
+    const rawValue = event.target.value;
+    if (!rawValue) return;
+
+    const normalized = rawValue.replace(",", ".");
+    const numeric = parseFloat(normalized);
+
+    if (Number.isNaN(numeric)) return;
+
+    if (numeric > MAX_AMOUNT) {
+      event.target.value = String(MAX_AMOUNT);
+    }
+  };
+
+  const handleInstallmentsInputLimit = (event) => {
+    const rawValue = event.target.value;
+    if (!rawValue) return;
+
+    const numeric = parseInt(rawValue, 10);
+
+    if (Number.isNaN(numeric)) return;
+
+    if (numeric > 360) {
+      event.target.value = "360";
+    }
+  };
+
   useEffect(() => {
     if (!transaction) return;
     setTitle(transaction.title || "");
@@ -135,13 +164,14 @@ export default function EditTransactionModal({
   if (!transaction) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="lg" title="Editar transação">
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl" title="Editar transação">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4 md:space-y-6"
+        noValidate
+      >
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Título
-            </label>
             <FloatLabelField
               id="edit_title"
               name="edit_title"
@@ -155,33 +185,27 @@ export default function EditTransactionModal({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Valor
-            </label>
-            <div className="flex items-center rounded-md border border-gray-300 bg-white text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f]">
-              <span className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                R$
-              </span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                inputMode="decimal"
-                min="0.01"
-                step="0.01"
-                onKeyDown={handleDecimalKeyDown}
-                className="flex-1 border-0 bg-transparent p-2 text-sm outline-none focus:ring-0 dark:text-gray-100"
-                min="0.01"
-                step="0.01"
-              />
-            </div>
-          </div>
+          <FloatLabelField
+            id="edit_amount"
+            name="amount"
+            type="number"
+            label="Valor (R$)"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            isRequired
+            containerClassName="flex flex-col"
+            inputProps={{
+              inputMode: "decimal",
+              min: "0.01",
+              step: "0.01",
+              onKeyDown: handleDecimalKeyDown,
+              placeholder: "Valor da transação",
+              maxLength: 12,
+              onInput: handleAmountInputLimit,
+            }}
+          />
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Tipo
-            </label>
             <div className="inline-flex items-center gap-2 rounded-full p-1 text-xs font-medium">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1 text-gray-700 transition hover:bg-white hover:shadow-sm dark:text-gray-200 dark:hover:bg-gray-800">
                 <input
@@ -208,27 +232,27 @@ export default function EditTransactionModal({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Parcelas
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="360"
-              value={totalInstallments}
-              onChange={(e) => setTotalInstallments(e.target.value)}
-              inputMode="numeric"
-              onKeyDown={handleIntegerKeyDown}
-              className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 disabled:bg-gray-100 disabled:dark:bg-gray-800 disabled:text-gray-500 disabled:dark:text-gray-400"
-              disabled={isRecurring || type === "debit"}
-            />
-          </div>
+          <FloatLabelField
+            id="edit_total_installments"
+            name="total_installments"
+            type="number"
+            label="Parcelas"
+            value={totalInstallments}
+            onChange={(e) => setTotalInstallments(e.target.value)}
+            containerClassName="flex flex-col"
+            isDisabled={isRecurring || type === "debit"}
+            inputProps={{
+              min: "1",
+              max: "360",
+              inputMode: "numeric",
+              onKeyDown: handleIntegerKeyDown,
+              placeholder: "Quantidade de parcelas",
+              maxLength: 3,
+              onInput: handleInstallmentsInputLimit,
+            }}
+          />
 
           <div className="flex flex-col gap-1 md:col-span-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              Descrição
-            </label>
             <FloatLabelField
               id="edit_description"
               name="edit_description"
@@ -242,7 +266,7 @@ export default function EditTransactionModal({
           </div>
 
           <div className="flex items-center justify-between md:col-span-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            <span className="text-sm md:text-base font-medium text-gray-700 dark:text-gray-200">
               Transação recorrente
             </span>
             <BareButton
@@ -266,13 +290,13 @@ export default function EditTransactionModal({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {/* <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
               Categoria
-            </label>
+            </label> */}
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm md:text-base shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
             >
               <option value="">Sem categoria</option>
               {categories.map((category) => (
@@ -284,13 +308,13 @@ export default function EditTransactionModal({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {/* <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
               Conta / Banco
-            </label>
+            </label> */}
             <select
               value={bankUserId}
               onChange={(e) => setBankUserId(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm md:text-base shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
             >
               <option value="">Sem conta vinculada</option>
               {bankAccounts.map((account) => (
@@ -302,11 +326,11 @@ export default function EditTransactionModal({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-end gap-3">
+        <div className="mt-5 md:mt-6 flex items-center justify-end gap-4">
           <SecondaryButton
             type="button"
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-lg px-4 md:px-5 py-2 md:py-2.5 text-sm md:text-base font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Cancelar
           </SecondaryButton>

@@ -278,18 +278,18 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 					setIsEditBankModalOpen(false);
 					setBankBeingEdited(null);
 				}}
-				maxWidth="sm"
+				maxWidth="lg"
 				title="Editar vencimento da conta"
 			>
 				<form className="space-y-4" onSubmit={handleSubmitEditBank} noValidate>
-					<p className="text-sm text-gray-600 dark:text-gray-300">
+					<p className="text-lg text-gray-600 dark:text-gray-300">
 						Conta:{' '}
 						<span className="font-medium text-gray-900 dark:text-gray-100">
 							{bankBeingEdited?.name || ''}
 						</span>
 					</p>
 					<div className="flex flex-col gap-1">
-						<label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+						<label className="text-lg font-medium text-gray-700 dark:text-gray-200">
 							Dia de vencimento (1 a 31)
 						</label>
 						<input
@@ -300,7 +300,7 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 							onKeyDown={handleIntegerKeyDown}
 							value={bankDueDayInput}
 							onChange={(e) => setBankDueDayInput(e.target.value)}
-							className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+							className="w-full rounded-md border border-gray-300 bg-white p-2 text-md shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							placeholder="Ex: 10"
 						/>
 					</div>
@@ -331,19 +331,19 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 					setIsEditCategoryModalOpen(false);
 					setCategoryBeingEdited(null);
 				}}
-				maxWidth="sm"
+				maxWidth="lg"
 				title="Editar categoria"
 			>
 				<form className="space-y-4" onSubmit={handleSubmitEditCategory} noValidate>
 					<div className="flex flex-col gap-1">
-						<label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+						<label className="text-lg font-medium text-gray-700 dark:text-gray-200">
 							Nome da categoria
 						</label>
 						<input
 							type="text"
 							value={categoryNameInput}
 							onChange={(e) => setCategoryNameInput(e.target.value)}
-							className="w-full rounded-md border border-gray-300 p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+							className="w-full rounded-md border border-gray-300 p-2 text-md shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							placeholder="Ex: Mercado, Lazer, Shopping"
 						/>
 					</div>

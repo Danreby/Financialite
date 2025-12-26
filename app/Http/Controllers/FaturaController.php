@@ -320,6 +320,16 @@ class FaturaController extends Controller
 
         $stats = $this->faturaService->calculateBaseStats($base);
 
+        $today = Carbon::today();
+        $monthStart = $today->copy()->startOfMonth();
+        $monthEnd = $today->copy()->endOfMonth();
+
+        $currentMonthDebitTotal = Fatura::forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->where('type', 'debit')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('amount');
+
         $allFaturas = Fatura::with('bankUser')
             ->forUser($user->id)
             ->forBankUser($bankUserId)
@@ -388,6 +398,7 @@ class FaturaController extends Controller
         $stats['current_month_key'] = $effectiveMonthKey;
         $stats['current_month_label'] = $currentMonthLabel;
         $stats['current_month_pending_bill'] = (float) $currentPendingBill;
+        $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
 
         return response()->json($stats);
     }

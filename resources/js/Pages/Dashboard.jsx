@@ -68,6 +68,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         const totalExpenses = Number(statsPayload.total_expenses || 0)
         const pendingIncome = Number(statsPayload.pending_income || 0)
         const pendingExpenses = Number(statsPayload.pending_expenses || 0)
+        const currentMonthDebitTotal = Number(statsPayload.current_month_debit_total || 0)
         const overdueCount = Number(statsPayload.overdue_count || 0)
 
         const currentMonthPendingBill = Number(statsPayload.current_month_pending_bill || 0)
@@ -85,7 +86,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           {
             id: 2,
             title: 'Transações no débito',
-            value: formatCurrency(pendingExpenses),
+            value: formatCurrency(currentMonthDebitTotal),
             delta: '',
           },
           {
