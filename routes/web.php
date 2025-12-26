@@ -18,7 +18,7 @@ Route::get('/dashboard', function () {
     $user = request()->user();
 
     $bankAccounts = BankUser::with('bank')
-        ->where('user_id', $user->id)
+        ->forUser($user->id)
         ->get()
         ->map(function ($bankUser) {
             return [
@@ -28,7 +28,7 @@ Route::get('/dashboard', function () {
             ];
         });
 
-    $categories = Category::where('user_id', $user->id)
+    $categories = Category::forUser($user->id)
         ->orderBy('name')
         ->get(['id', 'name']);
 
@@ -49,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $user = request()->user();
 
             $bankAccounts = BankUser::with('bank')
-                ->where('user_id', $user->id)
+                ->forUser($user->id)
                 ->get()
                 ->map(function ($bankUser) {
                     return [
@@ -60,7 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ];
                 });
 
-            $categories = Category::where('user_id', $user->id)
+            $categories = Category::forUser($user->id)
                 ->orderBy('name')
                 ->get(['id', 'name']);
 
@@ -122,7 +122,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $user = request()->user();
 
         $bankAccounts = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->get()
             ->map(function ($bankUser) {
                 return [
@@ -131,7 +131,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ];
             });
 
-        $categories = Category::where('user_id', $user->id)
+        $categories = Category::forUser($user->id)
             ->orderBy('name')
             ->get(['id', 'name']);
 

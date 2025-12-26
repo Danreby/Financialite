@@ -13,7 +13,7 @@ class CategoryController extends Controller
     {
         $user = $request->user();
 
-        $categories = Category::where('user_id', $user->id)
+        $categories = Category::forUser($user->id)
             ->orderBy('name')
             ->get(['id', 'name']);
 

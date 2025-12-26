@@ -24,4 +24,9 @@ class Category extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
 }

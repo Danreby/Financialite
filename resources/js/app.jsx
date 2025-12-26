@@ -7,8 +7,6 @@ import { createRoot } from 'react-dom/client';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Inicializa o tema (light/dark) logo no carregamento da aplicação,
-// para que telas como Login/Register já respeitem a preferência salva.
 if (typeof window !== 'undefined') {
     try {
         const stored = window.localStorage.getItem('theme');
@@ -24,7 +22,7 @@ if (typeof window !== 'undefined') {
             document.documentElement.classList.remove('dark');
         }
     } catch (error) {
-        // Fallback silencioso se localStorage ou matchMedia não estiverem disponíveis
+        // 
     }
 }
 

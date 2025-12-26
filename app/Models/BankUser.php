@@ -32,4 +32,9 @@ class BankUser extends Model
     {
         return $this->hasMany(Fatura::class, 'bank_user_id');
     }
+
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
 }

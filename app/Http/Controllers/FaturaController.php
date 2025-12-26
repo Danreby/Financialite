@@ -162,7 +162,7 @@ class FaturaController extends Controller
         }
 
         $bankAccounts = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->get()
             ->map(function ($bankUser) {
                 return [
@@ -172,7 +172,7 @@ class FaturaController extends Controller
                 ];
             });
 
-        $categories = Category::where('user_id', $user->id)
+        $categories = Category::forUser($user->id)
             ->orderBy('name')
             ->get(['id', 'name']);
 

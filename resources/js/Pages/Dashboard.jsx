@@ -5,14 +5,7 @@ import { motion } from 'framer-motion'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import StatCard from '@/Components/system/dashboard/StatCard'
 import QuickActions from '@/Components/system/dashboard/QuickActions'
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }).format(value || 0)
-}
+import { formatCurrencyBRL } from '@/Lib/formatters'
 
 function formatDateLabel(value) {
   if (!value) return ''
@@ -33,9 +26,9 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
   const [recentFaturas, setRecentFaturas] = useState([])
 
   const [stats, setStats] = useState([
-    { id: 1, title: 'Saldo Disponível', value: formatCurrency(0), delta: '+0%' },
-    { id: 2, title: 'Gastos do mês', value: formatCurrency(0), delta: '+0%' },
-    { id: 3, title: 'Receitas do mês', value: formatCurrency(0), delta: '+0%' },
+    { id: 1, title: 'Saldo Disponível', value: formatCurrencyBRL(0), delta: '+0%' },
+    { id: 2, title: 'Gastos do mês', value: formatCurrencyBRL(0), delta: '+0%' },
+    { id: 3, title: 'Receitas do mês', value: formatCurrencyBRL(0), delta: '+0%' },
     { id: 4, title: 'Contas ativas', value: '0', delta: '+0' },
   ])
 
@@ -74,25 +67,23 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         const currentMonthPendingBill = Number(statsPayload.current_month_pending_bill || 0)
         const currentMonthLabel = statsPayload.current_month_label || 'Mês atual'
 
-        const saldoDisponivel = totalIncome - totalExpenses
-
         setStats([
           {
             id: 1,
             title: 'Fatura atual pendente',
-            value: formatCurrency(currentMonthPendingBill),
+            value: formatCurrencyBRL(currentMonthPendingBill),
             delta: currentMonthLabel,
           },
           {
             id: 2,
             title: 'Transações no débito',
-            value: formatCurrency(currentMonthDebitTotal),
+            value: formatCurrencyBRL(currentMonthDebitTotal),
             delta: '',
           },
           {
             id: 3,
             title: 'Receitas pagas',
-            value: formatCurrency(totalIncome),
+            value: formatCurrencyBRL(totalIncome),
             delta: '',
           },
           {
@@ -181,7 +172,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                       key={fatura.id}
                       title={fatura.title}
                       subtitle={subtitleParts.join(' • ')}
-                      value={`${formatCurrency(fatura.amount)}`}
+                      value={`${formatCurrencyBRL(fatura.amount)}`}
                       negative={isDebit}
                     />
                   )
