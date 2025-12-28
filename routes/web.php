@@ -78,8 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->forUser($user->id)
             ->notStatus('paid')
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function (Fatura $fatura) {
+            ->paginate(15, ['*'], 'transactions_page')
+            ->through(function (Fatura $fatura) {
                 return [
                     'id' => $fatura->id,
                     'title' => $fatura->title,

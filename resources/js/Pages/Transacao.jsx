@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Head } from "@inertiajs/react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -11,9 +11,16 @@ import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import DangerButton from "@/Components/common/buttons/DangerButton";
 import Modal from "@/Components/common/Modal";
+import Pagination from "@/Components/common/Pagination";
 
-export default function Transacao({ transactions = [], bankAccounts = [], categories = [] }) {
-	const [localTransactions, setLocalTransactions] = useState(transactions);
+export default function Transacao({ transactions, bankAccounts = [], categories = [] }) {
+	const initialTransactions = Array.isArray(transactions?.data)
+		? transactions.data
+		: Array.isArray(transactions)
+			? transactions
+			: [];
+
+	const [localTransactions, setLocalTransactions] = useState(initialTransactions);
 	const [selectedBankId, setSelectedBankId] = useState("");
 	const [selectedCategoryId, setSelectedCategoryId] = useState("");
 	const [selectedType, setSelectedType] = useState("");
@@ -24,6 +31,15 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 	const [isDeletingId, setIsDeletingId] = useState(null);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
+
+	useEffect(() => {
+		const nextTransactions = Array.isArray(transactions?.data)
+			? transactions.data
+			: Array.isArray(transactions)
+				? transactions
+				: [];
+		setLocalTransactions(nextTransactions);
+	}, [transactions]);
 
 	const filteredTransactions = useMemo(() => {
 		const term = searchTerm.trim().toLowerCase();
@@ -204,6 +220,8 @@ export default function Transacao({ transactions = [], bankAccounts = [], catego
 						onEdit={handleEdit}
 						onDelete={handleDelete}
 					/>
+
+					<Pagination links={transactions?.links || []} />
 				</section>
 			</div>
 
