@@ -73,6 +73,103 @@ class FaturaController extends Controller
         return response()->json($faturas);
     }
 
+    public function import(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'rows' => ['required', 'array', 'min:1'],
+            'rows.*.title' => ['required', 'string', 'max:255'],
+            'rows.*.description' => ['nullable', 'string'],
+            'rows.*.amount' => ['required', 'numeric', 'min:0'],
+            'rows.*.type' => ['required', 'string', Rule::in(['credit', 'debit'])],
+            'rows.*.status' => ['nullable', 'string', Rule::in(['unpaid', 'paid', 'overdue'])],
+            'rows.*.total_installments' => ['nullable', 'integer', 'min:1', 'max:360'],
+            'rows.*.current_installment' => ['nullable', 'integer', 'min:0', 'max:360'],
+            'rows.*.is_recurring' => ['nullable'],
+            'rows.*.bank_user_name' => ['nullable', 'string', 'max:255'],
+            'rows.*.category_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $rows = $validated['rows'] ?? [];
+
+        DB::beginTransaction();
+
+        try {
+            $importedCount = 0;
+
+            foreach ($rows as $index => $row) {
+                $bankUserId = null;
+                $categoryId = null;
+
+                if (!empty($row['bank_user_name'])) {
+                    $bankUser = BankUser::with('bank')
+                        ->forUser($user->id)
+                        ->whereHas('bank', function ($q) use ($row) {
+                            $q->where('name', $row['bank_user_name']);
+                        })
+                        ->first();
+
+                    if (!$bankUser) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
+                        ], 422);
+                    }
+
+                    $bankUserId = $bankUser->id;
+                }
+
+                if (!empty($row['category_name'])) {
+                    $category = Category::forUser($user->id)
+                        ->where('name', $row['category_name'])
+                        ->first();
+
+                    if (!$category) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
+                        ], 422);
+                    }
+
+                    $categoryId = $category->id;
+                }
+
+                $data = [
+                    'title' => $row['title'],
+                    'description' => $row['description'] ?? null,
+                    'amount' => $row['amount'],
+                    'type' => $row['type'],
+                    'status' => $row['status'] ?? null,
+                    'total_installments' => $row['total_installments'] ?? null,
+                    'current_installment' => $row['current_installment'] ?? null,
+                    'is_recurring' => filter_var($row['is_recurring'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'bank_user_id' => $bankUserId,
+                    'category_id' => $categoryId,
+                ];
+
+                $this->faturaService->createForUser($user, $data);
+                $importedCount++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Importação concluída.',
+                'imported_count' => $importedCount,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Erro ao importar faturas.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
