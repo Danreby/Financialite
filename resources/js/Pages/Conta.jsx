@@ -8,15 +8,28 @@ import PrimaryButton from '@/Components/common/buttons/PrimaryButton';
 import SecondaryButton from '@/Components/common/buttons/SecondaryButton';
 import DangerButton from '@/Components/common/buttons/DangerButton';
 import ScrollArea from '@/Components/common/ScrollArea';
+import Pagination from '@/Components/common/Pagination';
 
 function formatDueDay(dueDay) {
 	if (!dueDay) return 'Não definido';
 	return `Todo dia ${dueDay}`;
 }
 
-export default function Conta({ bankAccounts = [], categories = [] }) {
-	const [localBankAccounts, setLocalBankAccounts] = useState(bankAccounts);
-	const [localCategories, setLocalCategories] = useState(categories);
+export default function Conta({ bankAccounts, categories }) {
+	const initialBankAccounts = Array.isArray(bankAccounts?.data)
+		? bankAccounts.data
+		: Array.isArray(bankAccounts)
+			? bankAccounts
+			: [];
+
+	const [localBankAccounts, setLocalBankAccounts] = useState(initialBankAccounts);
+	const initialCategories = Array.isArray(categories?.data)
+		? categories.data
+		: Array.isArray(categories)
+			? categories
+			: [];
+
+	const [localCategories, setLocalCategories] = useState(initialCategories);
 	const [saving, setSaving] = useState(false);
 	const [isEditBankModalOpen, setIsEditBankModalOpen] = useState(false);
 	const [bankBeingEdited, setBankBeingEdited] = useState(null);
@@ -28,11 +41,21 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 	const [confirmTarget, setConfirmTarget] = useState({ type: null, id: null, name: '' });
 
 	useEffect(() => {
-		setLocalBankAccounts(bankAccounts);
+		const nextBankAccounts = Array.isArray(bankAccounts?.data)
+			? bankAccounts.data
+			: Array.isArray(bankAccounts)
+				? bankAccounts
+				: [];
+		setLocalBankAccounts(nextBankAccounts);
 	}, [bankAccounts]);
 
 	useEffect(() => {
-		setLocalCategories(categories);
+		const nextCategories = Array.isArray(categories?.data)
+			? categories.data
+			: Array.isArray(categories)
+				? categories
+				: [];
+		setLocalCategories(nextCategories);
 	}, [categories]);
 
 	const openEditBankModal = (account) => {
@@ -186,8 +209,9 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 					</div>
 
 					{localBankAccounts && localBankAccounts.length > 0 ? (
-						<ScrollArea className="space-y-2">
-							{localBankAccounts.map((account) => (
+						<>
+							<ScrollArea className="space-y-2">
+								{localBankAccounts.map((account) => (
 								<div
 									key={account.id}
 									className="flex flex-col gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm dark:border-gray-800 dark:bg-black sm:flex-row sm:items-center sm:justify-between sm:py-2.5"
@@ -216,7 +240,9 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 									</div>
 								</div>
 							))}
-						</ScrollArea>
+							</ScrollArea>
+							<Pagination links={bankAccounts?.links || []} />
+						</>
 					) : (
 						<p className="text-xs text-gray-500 dark:text-gray-400">
 							Nenhuma conta vinculada. Use o Dashboard ou as ações rápidas para adicionar um banco.
@@ -235,9 +261,10 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 					</div>
 
 					{localCategories && localCategories.length > 0 ? (
-						<ScrollArea>
-							<ul className="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
-								{localCategories.map((category) => (
+						<>
+							<ScrollArea>
+								<ul className="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
+									{localCategories.map((category) => (
 									<li
 										key={category.id}
 										className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between"
@@ -262,7 +289,9 @@ export default function Conta({ bankAccounts = [], categories = [] }) {
 									</li>
 								))}
 							</ul>
-						</ScrollArea>
+							</ScrollArea>
+							<Pagination links={categories?.links || []} />
+						</>
 					) : (
 						<p className="text-xs text-gray-500 dark:text-gray-400">
 							Nenhuma categoria cadastrada. Use as ações rápidas para criar novas categorias.

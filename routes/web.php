@@ -50,8 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $bankAccounts = BankUser::with('bank')
                 ->forUser($user->id)
-                ->get()
-                ->map(function ($bankUser) {
+                ->orderBy('id')
+                ->paginate(10, ['*'], 'accounts_page')
+                ->through(function ($bankUser) {
                     return [
                         'id' => $bankUser->id,
                         'bank_id' => $bankUser->bank_id,
@@ -62,7 +63,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             $categories = Category::forUser($user->id)
                 ->orderBy('name')
-                ->get(['id', 'name']);
+                ->paginate(5, ['id', 'name'], 'categories_page');
 
             return Inertia::render('Conta', [
                 'bankAccounts' => $bankAccounts,
