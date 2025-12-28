@@ -4,7 +4,7 @@ import PrimaryButton from '@/Components/common/buttons/PrimaryButton';
 import FaturaForm from '@/Components/system/FaturaForm';
 import BankForm from '@/Components/system/BankForm';
 import CategoryForm from '@/Components/system/CategoryForm';
-import FaturaImportModal from '@/Components/system/fatura/FaturaImportModal';
+import FaturaImportModal from '@/Components/system/fatura/import/FaturaImportModal';
 
 export default function QuickActions({ bankAccounts = [], categories = [] }) {
   const [showFaturaForm, setShowFaturaForm] = useState(false);
