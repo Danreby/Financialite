@@ -50,9 +50,8 @@ export default function TransactionsExportButton({ filters = {} }) {
 
   const header = useMemo(
     () => ({
-      year_month: { name: "Ano-Mês" },
       month_label: { name: "Mês/Ano" },
-      id: { name: "ID" },
+      // id: { name: "ID" },
       created_at_formatted: { name: "Data" },
       type: { name: "Tipo" },
       status: { name: "Status" },
@@ -73,6 +72,7 @@ export default function TransactionsExportButton({ filters = {} }) {
       data={exportData}
       header={header}
       name="transacoes_faturas"
+      currencyColumns={["Valor"]}
     />
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import BareButton from '@/Components/common/buttons/BareButton';
 import Tooltip from '@/Components/common/Tooltip';
 
-export default function ExportExcel({ data, header, all = false, get, filters, name }) {
+export default function ExportExcel({ data, header, all = false, get, filters, name, currencyColumns }) {
     const [novoObjeto, setNovoObjeto] = useState([]);
   //   const [data, setData] = useState([]);
 
@@ -106,15 +106,41 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
       numFmt: "R$ #,##0.00"
     };
 
-    for (let r = 1; r <= range.e.r; r++) {
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        const cellAddress = XLSX.utils.encode_cell({ r, c });
-        const cell = worksheet[cellAddress];
-        if (cell && cell.t === 'n') {
-          cell.s = {
-            ...(cell.s || {}),
-            ...CurrencyStyle,
-          };
+    if (all || !header) {
+      // Modo "all" ou sem header definido: mantém comportamento antigo
+      for (let r = 1; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddress = XLSX.utils.encode_cell({ r, c });
+          const cell = worksheet[cellAddress];
+          if (cell && cell.t === 'n') {
+            cell.s = {
+              ...(cell.s || {}),
+              ...CurrencyStyle,
+            };
+          }
+        }
+      }
+    } else {
+      const headerEntries = Object.entries(header || {});
+      const headerNames = headerEntries.map(([, config]) => config?.name ?? '');
+      const currencySet = Array.isArray(currencyColumns) && currencyColumns.length > 0
+        ? new Set(currencyColumns)
+        : null;
+
+      for (let r = 1; r <= range.e.r; r++) {
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cellAddress = XLSX.utils.encode_cell({ r, c });
+          const cell = worksheet[cellAddress];
+          if (!cell || cell.t !== 'n') continue;
+
+          const headerName = headerNames[c - range.s.c] || '';
+
+          if (!currencySet || currencySet.has(headerName)) {
+            cell.s = {
+              ...(cell.s || {}),
+              ...CurrencyStyle,
+            };
+          }
         }
       }
     }
