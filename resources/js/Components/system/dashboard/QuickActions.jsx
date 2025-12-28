@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/common/buttons/PrimaryButton';
 import FaturaForm from '@/Components/system/FaturaForm';
 import BankForm from '@/Components/system/BankForm';
 import CategoryForm from '@/Components/system/CategoryForm';
+import FaturaImportModal from '@/Components/system/fatura/FaturaImportModal';
 
 export default function QuickActions({ bankAccounts = [], categories = [] }) {
   const [showFaturaForm, setShowFaturaForm] = useState(false);
   const [showBankForm, setShowBankForm] = useState(false);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [localBankAccounts, setLocalBankAccounts] = useState(bankAccounts);
   const [localCategories, setLocalCategories] = useState(categories);
 
@@ -42,7 +45,34 @@ export default function QuickActions({ bankAccounts = [], categories = [] }) {
           >
             Adicionar Categoria
           </PrimaryButton>
-          {/* <PrimaryButton className="w-full" style={{ background: '#222' }}>Importar CSV</PrimaryButton> */}
+          <PrimaryButton
+            className="w-full"
+            style={{ background: '#111827' }}
+            onClick={() => router.visit(route('transactions.index'))}
+          >
+            Ver Transações Pendentes
+          </PrimaryButton>
+          <PrimaryButton
+            className="w-full"
+            style={{ background: '#0f766e' }}
+            onClick={() => router.visit(route('reports.index'))}
+          >
+            Ir para Relatórios
+          </PrimaryButton>
+          <PrimaryButton
+            className="w-full"
+            style={{ background: '#1d4ed8' }}
+            onClick={() => router.visit(route('faturas.index'))}
+          >
+            Ver Faturas do Cartão
+          </PrimaryButton>
+          <PrimaryButton
+            className="w-full"
+            style={{ background: '#4b5563' }}
+            onClick={() => setShowImportModal(true)}
+          >
+            Importar Faturas via Excel
+          </PrimaryButton>
         </div>
       </div>
 
@@ -81,6 +111,14 @@ export default function QuickActions({ bankAccounts = [], categories = [] }) {
             }
             return [...prev, { id: category.id, name: category.name }];
           });
+        }}
+      />
+
+      <FaturaImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => {
+          // Poderíamos disparar um refresh do dashboard se necessário
         }}
       />
     </>

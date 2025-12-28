@@ -1,10 +1,10 @@
 import DangerButton from '@/Components/common/buttons/DangerButton';
 import InputError from '@/Components/InputError';
-import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/common/buttons/SecondaryButton';
 import FloatLabelField from '@/Components/common/inputs/FloatLabelField';
 import { useForm } from '@inertiajs/react';
 import { useRef, useState } from 'react';
+import Modal from '@/Components/common/Modal';
 
 export default function DeleteUserForm({ className = '' }) {
     const [confirmingUserDeletion, setConfirmingUserDeletion] = useState(false);
