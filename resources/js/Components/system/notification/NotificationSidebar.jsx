@@ -28,6 +28,26 @@ export default function NotificationSidebar({ open, onClose }) {
     }
   }, [open])
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      await axios.post(route('notifications.mark-all-as-read'))
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, is_read: true, read_at: n.read_at ?? new Date().toISOString() })),
+      )
+    } catch (error) {
+      console.error('Erro ao marcar todas como lidas', error)
+    }
+  }
+
+  const handleClearAll = async () => {
+    try {
+      await axios.delete(route('notifications.clear-all'))
+      setNotifications([])
+    } catch (error) {
+      console.error('Erro ao limpar notificações', error)
+    }
+  }
+
   return (
     <div
       className={`fixed inset-0 z-40 flex justify-end transition-pointer-events ${
@@ -50,14 +70,32 @@ export default function NotificationSidebar({ open, onClose }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificações</h2>
 
-          <BareButton
-            type="button"
-            onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            aria-label="Fechar notificações"
-          >
-            <span className="text-lg leading-none">×</span>
-          </BareButton>
+          <div className="flex items-center gap-2">
+            <BareButton
+              type="button"
+              onClick={handleMarkAllAsRead}
+              className="hidden sm:inline-flex px-2 py-1 rounded-md text-[0.68rem] font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300/50 dark:hover:text-gray-300 dark:hover:bg-gray-800 border border-transparent"
+            >
+              Marcar como lidas
+            </BareButton>
+
+            <BareButton
+              type="button"
+              onClick={handleClearAll}
+              className="hidden sm:inline-flex px-2 py-1 rounded-md text-[0.68rem] font-medium text-red-600 hover:bg-red-50 dark:text-red-400/50 dark:hover:text-red-400 dark:hover:bg-red-900/30 border border-transparent"
+            >
+              Limpar
+            </BareButton>
+
+            <BareButton
+              type="button"
+              onClick={onClose}
+              className="h-8 w-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              aria-label="Fechar notificações"
+            >
+              <span className="text-lg leading-none">x</span>
+            </BareButton>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 text-sm text-gray-800 dark:text-gray-100">

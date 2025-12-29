@@ -162,6 +162,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('notifications.mark-as-read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
         ->name('notifications.mark-all-as-read');
+    Route::delete('/notifications', [NotificationController::class, 'clearAll'])
+        ->name('notifications.clear-all');
 });
 
 require __DIR__.'/Fatura.php';

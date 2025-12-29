@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Fatura;
 use App\Models\BankUser;
 use App\Models\Paid;
+use App\Models\Notification;
 use App\Services\FaturaService;
 use App\Http\Requests\Fatura\FaturaStoreRequest;
 use App\Http\Requests\Fatura\FaturaUpdateRequest;
@@ -113,6 +114,13 @@ class FaturaController extends Controller
                     if (!$bankUser) {
                         DB::rollBack();
 
+                        Notification::create([
+                            'user_id' => $user->id,
+                            'title' => 'Erro na importação de faturas',
+                            'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
+                            'type' => 'error',
+                        ]);
+
                         return response()->json([
                             'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
                         ], 422);
@@ -128,6 +136,13 @@ class FaturaController extends Controller
 
                     if (!$category) {
                         DB::rollBack();
+
+                        Notification::create([
+                            'user_id' => $user->id,
+                            'title' => 'Erro na importação de faturas',
+                            'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
+                            'type' => 'error',
+                        ]);
 
                         return response()->json([
                             'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
@@ -162,6 +177,13 @@ class FaturaController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Erro ao importar faturas',
+                'message' => 'Ocorreu um erro inesperado ao importar faturas.',
+                'type' => 'error',
+            ]);
 
             return response()->json([
                 'message' => 'Erro ao importar faturas.',
@@ -321,6 +343,13 @@ class FaturaController extends Controller
             $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura, 201);
         } catch (\Throwable $e) {
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Erro ao criar fatura',
+                'message' => 'Ocorreu um erro inesperado ao criar uma fatura.',
+                'type' => 'error',
+            ]);
+
             return response()->json(['message' => 'Erro ao criar fatura', 'error' => $e->getMessage()], 500);
         }
     }
@@ -348,6 +377,13 @@ class FaturaController extends Controller
             $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura);
         } catch (\Throwable $e) {
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Erro ao atualizar fatura',
+                'message' => 'Ocorreu um erro inesperado ao atualizar uma fatura.',
+                'type' => 'error',
+            ]);
+
             return response()->json(['message' => 'Erro ao atualizar fatura', 'error' => $e->getMessage()], 500);
         }
     }
@@ -442,6 +478,13 @@ class FaturaController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
+
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Erro ao registrar pagamentos',
+                'message' => 'Ocorreu um erro inesperado ao registrar os pagamentos do mês.',
+                'type' => 'error',
+            ]);
 
             return response()->json([
                 'message' => 'Erro ao registrar pagamentos do mês.',

@@ -44,4 +44,13 @@ class NotificationController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    public function clearAll(Request $request)
+    {
+        $user = Auth::user();
+
+        Notification::where('user_id', $user->id)->delete();
+
+        return response()->json(['status' => 'ok']);
+    }
 }
