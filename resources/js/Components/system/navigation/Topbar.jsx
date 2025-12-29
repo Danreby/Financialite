@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
 import BareButton from '@/Components/common/buttons/BareButton'
 import BellIcon from '@/Components/common/icons/BellIcon'
+import SunIcon from '@/Components/common/icons/SunIcon'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export default function Topbar({ user, sidebarOpen, setSidebarOpen, onToggleNotifications }) {
   const [isDark, setIsDark] = useState(false)
@@ -87,7 +89,7 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen, onToggleNoti
       </div>
 
       <div className="flex items-center gap-3">
-        <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Ajuda</Link>
+        {/* <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Ajuda</Link> */}
 
         <BareButton
           type="button"
@@ -104,7 +106,18 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen, onToggleNoti
           className="h-8 px-3 rounded-full text-xs font-medium border border-gray-300 bg-white text-gray-800 shadow-sm hover:bg-gray-100 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
           aria-label="Alternar tema claro/escuro"
         >
-          {isDark ? 'Light' : 'Dark'}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={isDark ? 'dark' : 'light'}
+              initial={{ y: 8, opacity: 0, rotate: -10, scale: 0.9 }}
+              animate={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
+              exit={{ y: -8, opacity: 0, rotate: 10, scale: 0.9 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="inline-flex items-center justify-center"
+            >
+              {isDark ? <SunIcon type={2} /> : <SunIcon type={1} />}
+            </motion.span>
+          </AnimatePresence>
         </BareButton>
 
         <div className="relative" ref={userMenuRef}>
