@@ -9,13 +9,10 @@ export default function FaturaImportIntro({ templateRows, templateHeader }) {
           Importe várias faturas de uma só vez usando um arquivo
           Excel. Primeiro, baixe o modelo com as colunas corretas ou
           utilize um arquivo que já contenha um cabeçalho na primeira
-          linha com os seguintes nomes (em inglês, exatamente como
-          abaixo):
+          linha com os seguintes nomes:
         </p>
         <p className="rounded-md bg-gray-50 px-3 py-2 text-xs font-mono text-gray-700 dark:bg-gray-900 dark:text-gray-200">
-          title, description, amount, type, status,
-          total_installments, current_installment, is_recurring,
-          bank_user_name, category_name
+          Titulo, Descrição, Valor, Tipo, Status, Parcelas Totais, Parcela Atual, Recorrente, Nome do banco, Nome da categoria
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Campos de conta e categoria são opcionais, mas quando
