@@ -473,6 +473,13 @@ class FaturaController extends Controller
 
             DB::commit();
 
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Pagamentos do mês',
+                'message' => 'Pagamentos registrados com sucesso para o mês selecionado.',
+                'type' => 'info',
+            ]);
+
             return response()->json([
                 'message' => 'Pagamentos registrados com sucesso.',
             ]);

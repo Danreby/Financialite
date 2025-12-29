@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Category\CategoryStoreRequest;
 use App\Http\Requests\Category\CategoryUpdateRequest;
 use App\Models\Category;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -31,6 +32,13 @@ class CategoryController extends Controller
             'user_id' => $user->id,
         ]);
 
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Categoria criada',
+            'message' => 'Uma nova categoria foi adicionada.',
+            'type' => 'info',
+        ]);
+
         return response()->json($category, 201);
     }
 
@@ -48,6 +56,13 @@ class CategoryController extends Controller
             'name' => $data['name'],
         ]);
 
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Categoria atualizada',
+            'message' => 'Uma categoria foi atualizada.',
+            'type' => 'info',
+        ]);
+
         return response()->json($category);
     }
 
@@ -60,6 +75,13 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Categoria removida',
+            'message' => 'Uma categoria foi removida.',
+            'type' => 'info',
+        ]);
 
         return response()->json(['message' => 'Categoria removida.']);
     }

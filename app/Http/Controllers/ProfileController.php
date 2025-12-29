@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Notification;
 
 class ProfileController extends Controller
 {
@@ -37,6 +38,13 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        Notification::create([
+            'user_id' => $request->user()->id,
+            'title' => 'Perfil atualizado',
+            'message' => 'Suas informações de perfil foram atualizadas.',
+            'type' => 'info',
+        ]);
+
         return Redirect::route('profile.edit');
     }
 
@@ -52,6 +60,13 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Conta excluída',
+            'message' => 'Sua conta foi removida do Financialite.',
+            'type' => 'warning',
+        ]);
 
         $user->delete();
 

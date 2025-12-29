@@ -8,6 +8,7 @@ use App\Http\Requests\Bank\BankUpdateRequest;
 use App\Http\Requests\Bank\UpdateBankDueDayRequest;
 use App\Models\Bank;
 use App\Models\BankUser;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class BankController extends Controller
@@ -44,12 +45,19 @@ class BankController extends Controller
         $data = $this->normalizeInsertData($request->validated());
 
         $bank = Bank::create($data);
-        
+
         BankUser::create([
             'bank_id' => $bank->id,
             'user_id' => $user->id,
         ]);
-        
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Banco adicionado',
+            'message' => 'Um novo banco foi vinculado à sua conta.',
+            'type' => 'info',
+        ]);
+
         return response()->json($bank, 201);
     }
 
@@ -62,7 +70,14 @@ class BankController extends Controller
         $data = $request->validated();
 
         $bank->update($data);
-        
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Banco atualizado',
+            'message' => 'As informações do banco foram atualizadas.',
+            'type' => 'info',
+        ]);
+
         return response()->json($bank);
     }
 
@@ -75,6 +90,13 @@ class BankController extends Controller
         BankUser::where('bank_id', $bank->id)
             ->where('user_id', $user->id)
             ->delete();
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Banco removido',
+            'message' => 'Um banco foi desvinculado da sua conta.',
+            'type' => 'info',
+        ]);
 
         return response()->json(['message' => 'Banco removido.']);
     }
@@ -98,6 +120,13 @@ class BankController extends Controller
         $bankUser->due_day = $data['due_day'];
         $bankUser->save();
 
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Vencimento atualizado',
+            'message' => 'O dia de vencimento da fatura foi atualizado.',
+            'type' => 'info',
+        ]);
+
         return response()->json([
             'message' => 'Dia de vencimento atualizado com sucesso.',
             'bank_user_id' => $bankUser->id,
@@ -116,6 +145,13 @@ class BankController extends Controller
             ->first();
 
         if ($exists) {
+            Notification::create([
+                'user_id' => $user->id,
+                'title' => 'Banco já vinculado',
+                'message' => 'Tentativa de vincular um banco que já está associado à sua conta.',
+                'type' => 'warning',
+            ]);
+
             return response()->json([
                 'already_attached' => true,
                 'message' => 'Este banco já está vinculado ao usuário.',
@@ -127,6 +163,13 @@ class BankController extends Controller
             'user_id' => $user->id,
             'bank_id' => $data['bank_id'],
             'due_day' => $data['due_day'] ?? null,
+        ]);
+
+        Notification::create([
+            'user_id' => $user->id,
+            'title' => 'Conta vinculada',
+            'message' => 'Uma conta de banco foi vinculada com sucesso.',
+            'type' => 'info',
         ]);
 
         return response()->json($bankUser->load('bank'), 201);
