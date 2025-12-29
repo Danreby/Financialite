@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { Head } from '@inertiajs/react'
+import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import StatCard from '@/Components/system/dashboard/StatCard'
@@ -126,6 +127,11 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         setTopSpendingCategories(normalizedTopSpending)
       } catch (error) {
         console.error(error)
+        if (error.response?.data?.message) {
+          toast.error(error.response.data.message)
+        } else {
+          toast.error('Não foi possível carregar os dados do dashboard.')
+        }
       }
     })()
   }, [currentFilters, page, reloadKey])

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 import BareButton from '@/Components/common/buttons/BareButton'
 
 export default function NotificationSidebar({ open, onClose }) {
@@ -18,6 +19,7 @@ export default function NotificationSidebar({ open, onClose }) {
         }
       } catch (error) {
         console.error('Erro ao carregar notificações', error)
+        toast.error('Não foi possível carregar as notificações.')
       }
     }
 
@@ -36,6 +38,7 @@ export default function NotificationSidebar({ open, onClose }) {
       )
     } catch (error) {
       console.error('Erro ao marcar todas como lidas', error)
+      toast.error('Não foi possível marcar as notificações como lidas.')
     }
   }
 
@@ -45,6 +48,7 @@ export default function NotificationSidebar({ open, onClose }) {
       setNotifications([])
     } catch (error) {
       console.error('Erro ao limpar notificações', error)
+      toast.error('Não foi possível limpar as notificações.')
     }
   }
 
