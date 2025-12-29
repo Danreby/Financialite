@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
 import BareButton from '@/Components/common/buttons/BareButton'
+import BellIcon from '@/Components/common/icons/BellIcon'
 
-export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
+export default function Topbar({ user, sidebarOpen, setSidebarOpen, onToggleNotifications }) {
   const [isDark, setIsDark] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef(null)
@@ -87,6 +88,15 @@ export default function Topbar({ user, sidebarOpen, setSidebarOpen }) {
 
       <div className="flex items-center gap-3">
         <Link href="#" className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Ajuda</Link>
+
+        <BareButton
+          type="button"
+          onClick={onToggleNotifications}
+          className="h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 shadow-sm hover:bg-gray-100 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+          aria-label="Abrir notificações"
+        >
+          <BellIcon type={1} />
+        </BareButton>
 
         <BareButton
           type="button"

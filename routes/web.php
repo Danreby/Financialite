@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\FaturaController;
+use App\Http\Controllers\NotificationController;
 use App\Models\BankUser;
 use App\Models\Category;
 use App\Models\Fatura;
@@ -154,6 +155,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/banks/attach', [BankController::class, 'attachToUser'])->name('banks.attach');
     Route::patch('/banks/user/{bankUser}/due-day', [BankController::class, 'updateDueDay'])
         ->name('banks.update-due-day');
+
+    // ============ Notifications ============
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.mark-as-read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.mark-all-as-read');
 });
 
 require __DIR__.'/Fatura.php';
