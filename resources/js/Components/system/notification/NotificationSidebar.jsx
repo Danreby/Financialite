@@ -67,18 +67,18 @@ export default function NotificationSidebar({ open, onClose }) {
       />
 
       <aside
-        className={`relative h-full w-full max-w-sm bg-white dark:bg-[#0b0b0b] shadow-xl ring-1 ring-black/10 dark:ring-black/40 transform transition-transform duration-300 ease-out ${
+        className={`relative h-full w-full max-w-lg bg-white dark:bg-[#0b0b0b] shadow-xl ring-1 ring-black/10 dark:ring-black/40 transform transition-transform duration-300 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificações</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Notificações</h2>
 
           <div className="flex items-center gap-2">
             <BareButton
               type="button"
               onClick={handleMarkAllAsRead}
-              className="hidden sm:inline-flex px-2 py-1 rounded-md text-[0.68rem] font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300/50 dark:hover:text-gray-300 dark:hover:bg-gray-800 border border-transparent"
+              className="hidden sm:inline-flex px-2 py-1 rounded-md text-md font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300/50 dark:hover:text-gray-300 dark:hover:bg-gray-800 border border-transparent"
             >
               Marcar como lidas
             </BareButton>
@@ -86,7 +86,7 @@ export default function NotificationSidebar({ open, onClose }) {
             <BareButton
               type="button"
               onClick={handleClearAll}
-              className="hidden sm:inline-flex px-2 py-1 rounded-md text-[0.68rem] font-medium text-red-600 hover:bg-red-50 dark:text-red-400/50 dark:hover:text-red-400 dark:hover:bg-red-900/30 border border-transparent"
+              className="hidden sm:inline-flex px-2 py-1 rounded-md text-md font-medium text-red-600 hover:bg-red-50 dark:text-red-400/50 dark:hover:text-red-400 dark:hover:bg-red-900/30 border border-transparent"
             >
               Limpar
             </BareButton>
@@ -102,9 +102,9 @@ export default function NotificationSidebar({ open, onClose }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 text-sm text-gray-800 dark:text-gray-100">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 text-lg text-gray-800 dark:text-gray-100">
           {(!notifications || notifications.length === 0) && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">Nenhuma notificação por enquanto.</p>
+            <p className="text-lg text-gray-500 dark:text-gray-400">Nenhuma notificação por enquanto.</p>
           )}
 
           {notifications && notifications.length > 0 && (

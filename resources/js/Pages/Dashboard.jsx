@@ -63,9 +63,6 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         const statsPayload = statsResponse.data || {}
 
         const totalIncome = Number(statsPayload.total_income || 0)
-        const totalExpenses = Number(statsPayload.total_expenses || 0)
-        const pendingIncome = Number(statsPayload.pending_income || 0)
-        const pendingExpenses = Number(statsPayload.pending_expenses || 0)
         const currentMonthDebitTotal = Number(statsPayload.current_month_debit_total || 0)
         const overdueCount = Number(statsPayload.overdue_count || 0)
 
