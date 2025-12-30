@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/react'
 import Sidebar from '@/Components/system/navigation/Sidebar'
 import Topbar from '@/Components/system/navigation/Topbar'
 import NotificationSidebar from '@/Components/system/notification/NotificationSidebar'
+import MobileNavOverlay from '@/Components/system/navigation/MobileNavOverlay'
 
 export default function AuthenticatedLayout({ children }) {
   const user = usePage().props.auth.user
@@ -13,10 +14,13 @@ export default function AuthenticatedLayout({ children }) {
   })
 
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
 	<div className="h-screen flex overflow-hidden bg-gray-100 text-gray-900 dark:bg-[#070707] dark:text-gray-100">
+    <div className="hidden lg:block">
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+    </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Topbar
@@ -24,6 +28,7 @@ export default function AuthenticatedLayout({ children }) {
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           onToggleNotifications={() => setNotificationsOpen((prev) => !prev)}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 lg:px-6 bg-gray-50 dark:bg-[#070707]">
@@ -35,6 +40,12 @@ export default function AuthenticatedLayout({ children }) {
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
       />
+
+	    <MobileNavOverlay
+	      isOpen={mobileNavOpen}
+	      onClose={() => setMobileNavOpen(false)}
+	      user={user}
+	    />
     </div>
   )
 }
