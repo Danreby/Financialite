@@ -30,6 +30,8 @@ export default function FaturaItemRow({
   current_installment,
   display_installment,
   is_recurring,
+  category_name,
+  onClick,
 }) {
   const isCredit = type === "credit";
   const isDebit = type === "debit";
@@ -68,7 +70,12 @@ export default function FaturaItemRow({
       : null;
 
   return (
-    <div className="flex items-center justify-between gap-3 px-2 sm:px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/60 transition">
+    <div
+      className="flex items-center justify-between gap-3 px-2 sm:px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900/60 transition cursor-pointer"
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <div className="h-8 w-8 lg:h-9 lg:w-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <span
@@ -97,6 +104,11 @@ export default function FaturaItemRow({
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] lg:text-xs text-gray-500 dark:text-gray-400">
             {bank_name && <span>{bank_name}</span>}
+            {category_name && (
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-200">
+                {category_name}
+              </span>
+            )}
             {description && <span className="truncate max-w-xs">• {description}</span>}
           </div>
         </div>

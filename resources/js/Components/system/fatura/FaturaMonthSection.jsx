@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import FaturaItemRow from "@/Components/system/fatura/FaturaItemRow";
 import FaturaPayModal from "@/Components/system/fatura/FaturaPayModal";
+import FaturaDetailModal from "@/Components/system/fatura/FaturaDetailModal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import ScrollArea from "@/Components/common/ScrollArea";
 import BareButton from "@/Components/common/buttons/BareButton";
@@ -26,8 +27,9 @@ export default function FaturaMonthSection({
   isCurrentPending = false,
 }) {
   const [showPayModal, setShowPayModal] = useState(false);
-  const [sortField, setSortField] = useState("date"); // "date" | "amount"
-  const [sortDirection, setSortDirection] = useState("desc"); // "asc" | "desc"
+  const [sortField, setSortField] = useState("date"); 
+  const [sortDirection, setSortDirection] = useState("desc"); 
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const sortedItems = useMemo(() => {
     const cloned = [...items];
@@ -64,7 +66,7 @@ export default function FaturaMonthSection({
               </p>
             )}
             <p className="mt-1 text-[11px] sm:text-xs lg:text-sm text-gray-500 dark:text-gray-400">
-              Total de despesas do mês:
+              Total de despesas do mês{}:
               <span className="ml-1 font-semibold text-rose-600 dark:text-rose-400">
                 {formatCurrency(total_spent)}
               </span>
@@ -135,7 +137,11 @@ export default function FaturaMonthSection({
             </div>
             <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
               {sortedItems.map((item) => (
-                <FaturaItemRow key={item.id} {...item} />
+                <FaturaItemRow
+                  key={item.id}
+                  {...item}
+                  onClick={() => setSelectedItem(item)}
+                />
               ))}
             </ScrollArea>
           </>
@@ -150,6 +156,11 @@ export default function FaturaMonthSection({
         items={items}
         bankUserId={bankUserId}
         onPaid={onPaid}
+      />
+      <FaturaDetailModal
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        item={selectedItem}
       />
     </section>
   );
