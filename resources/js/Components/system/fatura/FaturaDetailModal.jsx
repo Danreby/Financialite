@@ -53,10 +53,10 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
 
   const statusLabel =
     status === "paid"
-      ? "Pago"
+      ? "Pago ✔️"
       : status === "overdue"
-      ? "Vencido"
-      : "Em aberto";
+      ? "Vencido ❌"
+      : "Em aberto ⌛";
 
   const typeLabel = type === "credit" ? "Crédito" : type === "debit" ? "Débito" : "-";
 
@@ -95,9 +95,9 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
             </p>
           </div>
 
-          <div className="space-y-1">
+          <div className="space -y-1">
             <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              Valor considerado no mês
+              Valor do mês
             </p>
             <p className="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400">
               {formatCurrency(installmentAmount)}

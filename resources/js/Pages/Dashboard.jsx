@@ -9,6 +9,7 @@ import QuickActions from '@/Components/system/dashboard/QuickActions'
 import MonthlySummaryChart from '@/Components/system/dashboard/MonthlySummaryChart'
 import TopSpendingCategories from '@/Components/system/dashboard/TopSpendingCategories'
 import { formatCurrencyBRL } from '@/Lib/formatters'
+import FaturaDetailModal from '@/Components/system/fatura/FaturaDetailModal'
 
 function formatDateLabel(value) {
   if (!value) return ''
@@ -29,6 +30,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
   const [recentFaturas, setRecentFaturas] = useState([])
   const [monthlySummary, setMonthlySummary] = useState([])
   const [topSpendingCategories, setTopSpendingCategories] = useState([])
+  const [selectedFaturaItem, setSelectedFaturaItem] = useState(null)
 
   const [stats, setStats] = useState([
     { id: 1, title: 'Saldo Disponível', value: formatCurrencyBRL(0), delta: '+0%' },
@@ -201,6 +203,24 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                   if (categoryName) subtitleParts.push(categoryName)
                   if (labelDate) subtitleParts.push(labelDate)
 
+                  const handleClick = () => {
+                    setSelectedFaturaItem({
+                      title: fatura.title,
+                      description: fatura.description,
+                      amount: fatura.amount,
+                      type: fatura.type,
+                      status: fatura.status,
+                      created_at: fatura.created_at,
+                      paid_date: fatura.paid_date,
+                      total_installments: fatura.total_installments,
+                      current_installment: fatura.current_installment,
+                      display_installment: null,
+                      is_recurring: fatura.is_recurring,
+                      bank_name: bankName,
+                      category_name: categoryName,
+                    })
+                  }
+
                   return (
                     <Transaction
                       key={fatura.id}
@@ -208,6 +228,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                       subtitle={subtitleParts.join(' • ')}
                       value={`${formatCurrencyBRL(fatura.amount)}`}
                       negative={isDebit}
+                      onClick={handleClick}
                     />
                   )
                 })
@@ -229,14 +250,25 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
 
           <TopSpendingCategories data={topSpendingCategories} />
         </div>
+
+        <FaturaDetailModal
+          isOpen={!!selectedFaturaItem}
+          onClose={() => setSelectedFaturaItem(null)}
+          item={selectedFaturaItem}
+        />
       </motion.div>
     </AuthenticatedLayout>
   )
 }
 
-function Transaction({ title, subtitle, value, negative }) {
+function Transaction({ title, subtitle, value, negative, onClick }) {
   return (
-    <div className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-900/30">
+    <div
+      className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-900/30 cursor-pointer"
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <div>
         <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{title}</div>
         <div className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
