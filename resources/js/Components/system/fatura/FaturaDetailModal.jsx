@@ -65,29 +65,24 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
       ? display_installment || current_installment || 1
       : null;
 
-  const installmentLabel =
-    total_installments && total_installments > 1 && effectiveInstallmentNumber
-      ? `${effectiveInstallmentNumber}/${total_installments}`
-      : null;
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="md" title="Detalhes da transação">
-      <div className="space-y-5 text-base sm:text-lg text-gray-700 dark:text-gray-200">
+      <div className="space-y-5 text-base sm:text-lg text-gray-800 dark:text-gray-200">
         <div>
-          <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
             Título
           </p>
           <p className="mt-1 text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
             {title}
           </p>
           {description && (
-            <p className="mt-1 text-sm sm:text-base text-gray-500 dark:text-gray-400">{description}</p>
+            <p className="mt-1 text-sm sm:text-base text-gray-700 dark:text-gray-400">{description}</p>
           )}
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Valor total
             </p>
             <p className="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400">
@@ -96,7 +91,7 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
           </div>
 
           <div className="space -y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Valor do mês
             </p>
             <p className="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400">
@@ -105,28 +100,28 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Tipo
             </p>
             <p className="text-base sm:text-lg">{typeLabel}</p>
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Status
             </p>
             <p className="text-base sm:text-lg">{statusLabel}</p>
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Banco
             </p>
             <p className="text-base sm:text-lg">{bank_name || "-"}</p>
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Categoria
             </p>
             <p className="text-base sm:text-lg">{category_name || "-"}</p>
@@ -135,14 +130,14 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Data da compra
             </p>
             <p className="text-base sm:text-lg">{formatFullDate(created_at)}</p>
           </div>
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Data de pagamento
             </p>
             <p className="text-base sm:text-lg">{formatFullDate(paid_date)}</p>
@@ -150,7 +145,7 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
         </div>
 
         <div className="space-y-1">
-          <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
             Parcelamento / recorrência
           </p>
           {is_recurring ? (
@@ -160,7 +155,7 @@ export default function FaturaDetailModal({ isOpen, onClose, item }) {
               <p className="text-base sm:text-lg">
                 {`Valor por parcela: ${formatCurrency(installmentAmount)}`}
               </p>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mt-1">
                 {effectiveInstallmentNumber && (
                   <span className="mr-3">
                     Parcelas: <span className="font-semibold">{effectiveInstallmentNumber}/{totalInstallmentsNumber}</span>

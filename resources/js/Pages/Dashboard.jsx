@@ -145,19 +145,19 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         transition={{ duration: 0.35 }}
         className="max-w-[1600px] mx-auto"
       >
-        <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
-          <h1 className="text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-gray-100">
             Visão geral
           </h1>
 
-          <div className="flex items-center gap-3 text-sm">
-            <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3 text-base">
+            <label className="text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Banco do dashboard
             </label>
             <select
               value={currentFilters.bank_user_id || ''}
               onChange={handleBankFilterChange}
-              className="min-w-[220px] rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+              className="min-w-[260px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
             >
               <option value="">Todos os bancos</option>
               {bankAccounts.map((account) => (
@@ -170,7 +170,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
           {stats.map((stat) => (
             <StatCard
               key={stat.id}
@@ -181,16 +181,16 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           ))}
         </div>
 
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
+          <div className="lg:col-span-2 rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Transações recentes
               </h2>
-              <span className="text-xs text-gray-500 dark:text-gray-400">Últimos lançamentos</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Últimos lançamentos</span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recentFaturas && recentFaturas.length > 0 ? (
                 recentFaturas.slice(0, 5).map((fatura) => {
                   const isDebit = fatura.type === 'debit'
@@ -233,7 +233,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                   )
                 })
               ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Nenhuma transação recente encontrada.
                 </p>
               )}
@@ -243,7 +243,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           <QuickActions bankAccounts={bankAccounts} categories={categories} />
         </div>
 
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
           <div className="lg:col-span-2">
             <MonthlySummaryChart data={monthlySummary} />
           </div>
@@ -264,16 +264,16 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
 function Transaction({ title, subtitle, value, negative, onClick }) {
   return (
     <div
-      className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-900/30 cursor-pointer"
+      className="flex items-center justify-between rounded-xl px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-900/30 cursor-pointer"
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
       <div>
-        <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{title}</div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
+        <div className="text-base lg:text-lg font-medium text-gray-900 dark:text-gray-200">{title}</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</div>
       </div>
-      <div className="text-sm font-semibold text-red-400">
+      <div className="text-base lg:text-lg font-semibold text-red-400">
         {value}
       </div>
     </div>
