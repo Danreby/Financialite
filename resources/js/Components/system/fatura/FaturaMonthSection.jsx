@@ -84,7 +84,7 @@ export default function FaturaMonthSection({
         )}
       </div>
 
-      <div className="rounded-2xl bg-white px-2 py-2 sm:px-3 sm:py-3 lg:px-5 lg:py-4 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
+      <div className="rounded-2xl bg-white border border-gray-50/90 dark:border-red-950/50 px-2 py-2 sm:px-3 sm:py-3 lg:px-5 lg:py-4 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
         {items.length === 0 ? (
           <p className="px-3 py-3 text-sm sm:text-base text-gray-500 dark:text-gray-400">
             Nenhuma transação neste mês.

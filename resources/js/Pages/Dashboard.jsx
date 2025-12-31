@@ -182,7 +182,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         </div>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
-          <div className="lg:col-span-2 rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+          <div className="lg:col-span-2 border dark:border-red-950/50 border-gray-50/90 rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Transações recentes
@@ -244,7 +244,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         </div>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 border rounded-2xl dark:border-red-950/50 border-gray-50/90">
             <MonthlySummaryChart data={monthlySummary} />
           </div>
 

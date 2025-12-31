@@ -3,7 +3,7 @@ import { formatCurrencyBRL } from '@/Lib/formatters'
 
 export default function TopSpendingCategories({ data = [] }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+    <div className="rounded-2xl border dark:border-red-950/50 border-gray-50/90 bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
       <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
         Maiores categorias de gasto (mês)
       </h2>
