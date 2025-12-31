@@ -11,21 +11,21 @@ function formatCurrency(value) {
 export default function ReportsMonthlySummary({ items = [] }) {
   if (!items || items.length === 0) {
     return (
-      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
         Nenhuma transação encontrada para os filtros atuais.
       </p>
     );
   }
 
   return (
-    <div className="mt-4 rounded-2xl bg-white p-3 sm:p-4 lg:p-5 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5">
-      <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+    <div className="mt-4 rounded-2xl bg-white p-3 sm:p-4 lg:p-6 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5">
+      <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
         Resumo por mês / ano
       </h2>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-xs sm:text-sm">
+        <table className="min-w-full text-sm sm:text-base">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] sm:text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <tr className="border-b border-gray-200 dark:border-gray-800 text-xs sm:text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">
               <th className="py-2 pr-3 text-left">Mês / Ano</th>
               <th className="py-2 px-3 text-right">Total geral</th>
               <th className="py-2 px-3 text-right">Total crédito</th>

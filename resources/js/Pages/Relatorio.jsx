@@ -109,25 +109,25 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 		<AuthenticatedLayout>
 			<Head title="Relatórios" />
 
-			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
 				<header className="space-y-2 pt-1 sm:pt-2">
-					<h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+					<h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-gray-100">
 						Relatórios
 					</h1>
-					<p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+					<p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300">
 						Acompanhe todas as suas transações em faturas, veja um resumo financeiro por período,
 						filtre por conta e categoria e exporte um arquivo Excel completo organizado por mês/ano.
 					</p>
 				</header>
 
 				<section className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-5 lg:p-6 space-y-4">
-					<div className="flex flex-col gap-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
 						<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
 							<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
 								<select
 									value={selectedBankId}
 									onChange={(e) => setSelectedBankId(e.target.value)}
-									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[220px]"
+									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[240px]"
 								>
 									<option value="">Todos</option>
 									{bankAccounts.map((account) => (
@@ -142,7 +142,7 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 								<select
 									value={selectedCategoryId}
 									onChange={(e) => setSelectedCategoryId(e.target.value)}
-									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[220px]"
+									className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[240px]"
 								>
 									<option value="">Todas</option>
 									{categories.map((category) => (
@@ -165,7 +165,7 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 					</div>
 				</section>
 
-				<section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				<section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					<StatCard title="Receitas pagas" value={formatCurrencyBRL(stats.total_income)} />
 					<StatCard title="Despesas pagas" value={formatCurrencyBRL(stats.total_expenses)} />
 					<StatCard title="Receitas pendentes" value={formatCurrencyBRL(stats.pending_income)} />
@@ -177,13 +177,13 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 					<StatCard title="Faturas vencidas" value={stats.overdue_count} />
 				</section>
 
-				<section className="space-y-2">
+				<section className="space-y-3">
 					<div className="flex items-center justify-between gap-2">
-						<h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
+						<h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
 							Resumo por mês / ano
 						</h2>
 						{isLoading && (
-							<span className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+							<span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
 								Carregando dados...
 							</span>
 						)}

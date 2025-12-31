@@ -89,7 +89,7 @@ export default function About() {
 		<AuthenticatedLayout>
 			<Head title="Sobre" />
 			<motion.div
-				className="w-full max-w-5xl mx-auto space-y-12 sm:space-y-14"
+				className="w-full max-w-6xl mx-auto space-y-12 sm:space-y-14 px-3 sm:px-4 lg:px-6"
 				variants={containerVariants}
 				initial="hidden"
 				animate="visible"
@@ -105,13 +105,13 @@ export default function About() {
 							💰
 						</span>
 					</motion.div>
-					<h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-gray-100">
+					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-gray-100">
 						Financialite
 					</h1>
-					<p className="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-2xl">
+					<p className="mt-1 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
 						Seu gerenciador financeiro pessoal inteligente e moderno
 					</p>
-					<p className="mt-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 max-w-3xl leading-relaxed">
+					<p className="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-3xl leading-relaxed">
 						Desenvolvido por{' '}
 						<a
 							href="https://danreby.github.io/danreby-portifolio/"
@@ -127,7 +127,7 @@ export default function About() {
 				</motion.header>
 
 				<motion.section className="mb-4" variants={itemVariants}>
-					<h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+					<h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 						Recursos Disponíveis
 					</h2>
 					<motion.div
@@ -149,24 +149,24 @@ export default function About() {
 				</motion.section>
 
 				<motion.section
-					className="mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-3xl p-6 sm:p-8 ring-1 ring-blue-200/50 dark:ring-blue-800/30"
+					className="mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-3xl p-6 sm:p-8 lg:p-10 ring-1 ring-blue-200/50 dark:ring-blue-800/30"
 					variants={itemVariants}
 				>
-					<h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+					<h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 						Sobre o Projeto
 					</h2>
 					<div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-						<p className="text-sm sm:text-base">
+						<p className="text-base sm:text-lg">
 							Financialite é uma aplicação em constante evolução, desenvolvida com as tecnologias
 							mais modernas para garantir uma experiência de usuário excepcional. Novos recursos são
 							adicionados regularmente, refinando fluxos conforme o uso diário.
 						</p>
-						<p className="text-sm sm:text-base">
+						<p className="text-base sm:text-lg">
 							<span className="font-semibold text-blue-600 dark:text-blue-400">100% Pessoal:</span>{' '}
 							Este projeto não será monetizado, não contém anúncios e seus dados estão seguros. É
 							desenvolvido puramente para fins pessoais e não comerciais.
 						</p>
-						<p className="text-sm sm:text-base">
+						<p className="text-base sm:text-lg">
 							<span className="font-semibold text-green-600 dark:text-green-400">Código Aberto:</span>{' '}
 							Sinta-se à vontade para explorar o repositório, contribuir com sugestões ou reportar
 							bugs através do GitHub.
@@ -175,7 +175,7 @@ export default function About() {
 				</motion.section>
 
 				<motion.section className="mb-4" variants={itemVariants}>
-					<h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+					<h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 						Conecte-se Comigo
 					</h2>
 					<motion.div
@@ -197,10 +197,10 @@ export default function About() {
 				</motion.section>
 
 				<motion.section
-					className="bg-white dark:bg-[#0b0b0b] rounded-2xl p-6 sm:p-8 shadow-md ring-1 ring-black/5 dark:ring-white/10"
+					className="bg-white dark:bg-[#0b0b0b] rounded-2xl p-6 sm:p-8 lg:p-10 shadow-md ring-1 ring-black/5 dark:ring-white/10"
 					variants={itemVariants}
 				>
-					<h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+					<h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
 						Tecnologias Utilizadas
 					</h2>
 					<motion.div

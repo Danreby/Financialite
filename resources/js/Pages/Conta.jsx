@@ -190,50 +190,50 @@ export default function Conta({ bankAccounts, categories }) {
 		<AuthenticatedLayout>
 			<Head title="Contas" />
 
-			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
 				<header className="space-y-1">
-					<h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">Minhas contas</h1>
-					<p className="text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-300">
+					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-gray-100">Minhas contas</h1>
+					<p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300">
 						Gerencie as contas bancárias vinculadas e as categorias usadas nas suas transações.
 					</p>
 				</header>
 
-				<section className="rounded-2xl bg-white p-3 sm:p-4 lg:p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+				<section className="rounded-2xl bg-white p-3 sm:p-4 lg:p-6 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
 					<div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-						<h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100">
+						<h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100">
 							Contas / bancos vinculados
 						</h2>
 						{saving && (
-							<span className="text-xs text-gray-500 dark:text-gray-400">Salvando...</span>
+							<span className="text-sm text-gray-500 dark:text-gray-400">Salvando...</span>
 						)}
 					</div>
 
 					{localBankAccounts && localBankAccounts.length > 0 ? (
 						<>
-							<ScrollArea className="space-y-2">
+							<ScrollArea className="space-y-3">
 								{localBankAccounts.map((account) => (
 								<div
 									key={account.id}
-									className="flex flex-col gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm shadow-sm dark:border-gray-800 dark:bg-black sm:flex-row sm:items-center sm:justify-between sm:py-2.5"
+									className="flex flex-col gap-3 rounded-lg border border-gray-200 px-3 py-3 text-base sm:text-lg lg:text-xl shadow-sm dark:border-gray-800 dark:bg-black sm:flex-row sm:items-center sm:justify-between sm:py-4"
 								>
 									<div>
 										<div className="font-medium text-gray-900 dark:text-gray-100">{account.name}</div>
-										<div className="text-xs text-gray-500 dark:text-gray-400">
+										<div className="text-sm sm:text-base lg:text-lg text-gray-500 dark:text-gray-400">
 											{formatDueDay(account.due_day)}
 										</div>
 									</div>
-									<div className="flex flex-wrap items-center justify-end gap-2 text-xs sm:flex-nowrap">
+									<div className="flex flex-wrap items-center justify-end gap-3 text-sm sm:text-base lg:text-lg sm:flex-nowrap">
 										<SecondaryButton
 											type="button"
 											onClick={() => openEditBankModal(account)}
-											className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
+											className="rounded-full px-5 py-2 text-xs sm:text-sm lg:text-base font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
 										>
 											Alterar vencimento
 										</SecondaryButton>
 										<DangerButton
 											type="button"
 											onClick={() => openConfirmDelete('bank', { bankId: account.bank_id, name: account.name })}
-											className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+											className="rounded-full px-5 py-2 text-xs sm:text-sm lg:text-base font-semibold uppercase tracking-wide"
 										>
 											Remover
 										</DangerButton>
@@ -244,44 +244,44 @@ export default function Conta({ bankAccounts, categories }) {
 							<Pagination links={bankAccounts?.links || []} />
 						</>
 					) : (
-						<p className="text-xs text-gray-500 dark:text-gray-400">
+						<p className="text-sm sm:text-base lg:text-lg text-gray-500 dark:text-gray-400">
 							Nenhuma conta vinculada. Use o Dashboard ou as ações rápidas para adicionar um banco.
 						</p>
 					)}
 				</section>
 
-				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4">
+				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4 lg:p-6">
 					<div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-						<h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+						<h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100">
 							Categorias
 						</h2>
 						{saving && (
-							<span className="text-xs text-gray-500 dark:text-gray-400">Salvando...</span>
+							<span className="text-sm text-gray-500 dark:text-gray-400">Salvando...</span>
 						)}
 					</div>
 
 					{localCategories && localCategories.length > 0 ? (
 						<>
 							<ScrollArea>
-								<ul className="divide-y divide-gray-200 dark:divide-gray-800 text-sm">
+								<ul className="divide-y divide-gray-200 dark:divide-gray-800 text-sm sm:text-base lg:text-lg">
 									{localCategories.map((category) => (
 									<li
 										key={category.id}
-										className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between"
+										className="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:justify-between"
 									>
 										<span className="text-gray-900 dark:text-gray-100">{category.name}</span>
-										<div className="flex flex-wrap items-center justify-end gap-2 text-xs sm:flex-nowrap">
+										<div className="flex flex-wrap items-center justify-end gap-2 text-xs sm:text-sm lg:text-base sm:flex-nowrap">
 											<SecondaryButton
 												type="button"
 												onClick={() => openEditCategoryModal(category)}
-												className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
+												className="rounded-full px-4 py-1.5 text-xs sm:text-sm lg:text-base font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
 											>
 												Renomear
 											</SecondaryButton>
 											<DangerButton
 												type="button"
 												onClick={() => openConfirmDelete('category', { categoryId: category.id, name: category.name })}
-												className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+												className="rounded-full px-4 py-1.5 text-xs sm:text-sm lg:text-base font-semibold uppercase tracking-wide"
 											>
 												Remover
 											</DangerButton>
@@ -293,7 +293,7 @@ export default function Conta({ bankAccounts, categories }) {
 							<Pagination links={categories?.links || []} />
 						</>
 					) : (
-						<p className="text-xs text-gray-500 dark:text-gray-400">
+						<p className="text-sm sm:text-base lg:text-lg text-gray-500 dark:text-gray-400">
 							Nenhuma categoria cadastrada. Use as ações rápidas para criar novas categorias.
 						</p>
 					)}
@@ -311,14 +311,14 @@ export default function Conta({ bankAccounts, categories }) {
 				title="Editar vencimento da conta"
 			>
 				<form className="space-y-4" onSubmit={handleSubmitEditBank} noValidate>
-					<p className="text-lg text-gray-600 dark:text-gray-300">
+					<p className="text-xl text-gray-600 dark:text-gray-300">
 						Conta:{' '}
 						<span className="font-medium text-gray-900 dark:text-gray-100">
 							{bankBeingEdited?.name || ''}
 						</span>
 					</p>
 					<div className="flex flex-col gap-1">
-						<label className="text-lg font-medium text-gray-700 dark:text-gray-200">
+						<label className="text-lg sm:text-xl font-medium text-gray-700 dark:text-gray-200">
 							Dia de vencimento (1 a 31)
 						</label>
 						<input
@@ -329,12 +329,12 @@ export default function Conta({ bankAccounts, categories }) {
 							onKeyDown={handleIntegerKeyDown}
 							value={bankDueDayInput}
 							onChange={(e) => setBankDueDayInput(e.target.value)}
-							className="w-full rounded-md border border-gray-300 bg-white p-2 text-md shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+							className="w-full rounded-md border border-gray-300 bg-white p-2.5 text-base sm:text-lg shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							placeholder="Ex: 10"
 						/>
 					</div>
 
-					<div className="flex items-center justify-end gap-3 pt-2">
+					<div className="flex items-center justify-end gap-4 pt-3">
 						<SecondaryButton
 							type="button"
 							onClick={() => {
@@ -342,7 +342,7 @@ export default function Conta({ bankAccounts, categories }) {
 								setIsEditBankModalOpen(false);
 								setBankBeingEdited(null);
 							}}
-							className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							className="rounded-lg px-5 py-2.5 text-sm sm:text-base font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
 						>
 							Cancelar
 						</SecondaryButton>
@@ -365,19 +365,19 @@ export default function Conta({ bankAccounts, categories }) {
 			>
 				<form className="space-y-4" onSubmit={handleSubmitEditCategory} noValidate>
 					<div className="flex flex-col gap-1">
-						<label className="text-lg font-medium text-gray-700 dark:text-gray-200">
+						<label className="text-lg sm:text-xl font-medium text-gray-700 dark:text-gray-200">
 							Nome da categoria
 						</label>
 						<input
 							type="text"
 							value={categoryNameInput}
 							onChange={(e) => setCategoryNameInput(e.target.value)}
-							className="w-full rounded-md border border-gray-300 p-2 text-md shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+							className="w-full rounded-md border border-gray-300 p-2.5 text-base sm:text-lg shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							placeholder="Ex: Mercado, Lazer, Shopping"
 						/>
 					</div>
 
-					<div className="flex items-center justify-end gap-3 pt-2">
+					<div className="flex items-center justify-end gap-4 pt-3">
 						<SecondaryButton
 							type="button"
 							onClick={() => {
@@ -385,7 +385,7 @@ export default function Conta({ bankAccounts, categories }) {
 								setIsEditCategoryModalOpen(false);
 								setCategoryBeingEdited(null);
 						}}
-							className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							className="rounded-lg px-5 py-2.5 text-sm sm:text-base font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
 						>
 							Cancelar
 						</SecondaryButton>
