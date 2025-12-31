@@ -76,7 +76,7 @@ export default function FaturaPayModal({
       maxWidth="md"
       title={`Pagar fatura de ${monthLabel}`}
     >
-      <div className="space-y-4 text-sm">
+      <div className="space-y-4 text-sm sm:text-base">
         {pendingItems.length === 0 ? (
           <p className="text-gray-600 dark:text-gray-300">
             Não há pendências para este mês.
@@ -87,8 +87,8 @@ export default function FaturaPayModal({
               Você está prestes a registrar o pagamento das pendências deste mês.
             </p>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs shadow-sm dark:border-gray-800 dark:bg-[#050505]">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <div className="rounded-xl border border-gray-200 bg-white p-3 sm:p-4 text-xs sm:text-sm shadow-sm dark:border-gray-800 dark:bg-[#050505]">
+              <p className="mb-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 Pendências do mês
               </p>
               <ScrollArea maxHeightClassName="max-h-64" className="space-y-2 pr-1">
@@ -109,18 +109,18 @@ export default function FaturaPayModal({
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-2 py-1.5 text-gray-700 dark:bg-gray-900 dark:text-gray-200"
+                      className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-2.5 py-2 text-gray-700 dark:bg-gray-900 dark:text-gray-200"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-[13px] font-medium">
+                        <p className="truncate text-sm font-medium">
                           {item.title}
                         </p>
-                        <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                        <p className="mt-0.5 text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
                           Parcela atual: {logicalInstallment}/{totalInstallments} •
                           Valor da parcela: {formatCurrency(installmentAmount)}
                         </p>
                       </div>
-                      <div className="text-right text-[11px] text-gray-500 dark:text-gray-400">
+                      <div className="text-right text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
                         <p>Restantes: {remainingInstallments}</p>
                       </div>
                     </div>
@@ -128,7 +128,7 @@ export default function FaturaPayModal({
                 })}
               </ScrollArea>
 
-              <div className="mt-3 flex items-center justify-between border-t border-dashed border-gray-200 pt-2 text-[11px] dark:border-gray-700">
+              <div className="mt-3 flex items-center justify-between border-t border-dashed border-gray-200 pt-2 text-[11px] sm:text-xs dark:border-gray-700">
                 <span className="font-medium text-gray-600 dark:text-gray-300">
                   Total a pagar agora
                 </span>
@@ -138,7 +138,7 @@ export default function FaturaPayModal({
               </div>
             </div>
 
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+            <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
               Observação: faturas parceladas só serão marcadas como "pagas" quando
               todas as parcelas forem quitadas.
             </p>
@@ -150,7 +150,7 @@ export default function FaturaPayModal({
         <SecondaryButton
           type="button"
           onClick={onClose}
-          className="rounded-lg px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="rounded-lg px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Cancelar
         </SecondaryButton>

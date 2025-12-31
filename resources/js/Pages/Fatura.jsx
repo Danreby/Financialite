@@ -164,13 +164,13 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 		<AuthenticatedLayout>
 			<Head title="Faturas" />
 
-			<div className="w-full max-w-[1600px] mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
+			<div className="w-full max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-8 space-y-5 sm:space-y-6 lg:space-y-7">
 				<header className="pt-1 sm:pt-2 space-y-3 sm:space-y-4">
 					<div>
-						<h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1 dark:text-gray-100">
+						<h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-1 dark:text-gray-100">
 							Faturas
 						</h1>
-						<p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+						<p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300">
 							Visualize suas despesas agrupadas por mês.
 						</p>
 					</div>
@@ -191,7 +191,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 					</div>
 
 						{selectedAccount && (
-							<div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs text-gray-600 dark:text-gray-300">
+							<div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
 							<span>
 								Dia de vencimento:{' '}
 								{selectedAccount.due_day
@@ -201,7 +201,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 							<SecondaryButton
 								type="button"
 								onClick={handleOpenDueDayModal}
-								className="rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
+								className="rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-rose-600 border border-rose-500 hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
 							>
 								Definir dia de vencimento
 							</SecondaryButton>

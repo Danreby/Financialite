@@ -192,7 +192,7 @@ export default function Conta({ bankAccounts, categories }) {
 
 			<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-6 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
 				<header className="space-y-1">
-					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-gray-100">Minhas contas</h1>
+					<h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-gray-900 dark:text-gray-100">Contas</h1>
 					<p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300">
 						Gerencie as contas bancárias vinculadas e as categorias usadas nas suas transações.
 					</p>

@@ -116,7 +116,7 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 					</h1>
 					<p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300">
 						Acompanhe todas as suas transações em faturas, veja um resumo financeiro por período,
-						filtre por conta e categoria e exporte um arquivo Excel completo organizado por mês/ano.
+						filtre por conta e categoria e exporte um arquivo Excel completo.
 					</p>
 				</header>
 
