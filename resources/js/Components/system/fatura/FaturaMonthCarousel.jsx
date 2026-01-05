@@ -10,6 +10,30 @@ export default function FaturaMonthCarousel({
 }) {
   if (!months || months.length === 0) return null;
 
+  const formatMonthLabel = (monthKey, fallbackLabel) => {
+    if (!monthKey || typeof monthKey !== "string") {
+      return fallbackLabel || monthKey || "";
+    }
+
+    const [yearStr, monthStr] = monthKey.split("-");
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+
+    if (!year || !month) {
+      return fallbackLabel || monthKey;
+    }
+
+    try {
+      const date = new Date(year, month - 1, 1);
+      return new Intl.DateTimeFormat("pt-BR", {
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    } catch (e) {
+      return fallbackLabel || monthKey;
+    }
+  };
+
   const currentIndex = months.findIndex((m) => m.month_key === selectedMonthKey);
   const effectiveIndex = currentIndex === -1 ? 0 : currentIndex;
 
@@ -73,7 +97,7 @@ export default function FaturaMonthCarousel({
             onClick={handlePrev}
             className="rounded-full px-3 py-1 text-[11px] font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-900 border-none shadow-none"
           >
-            {prev.month_label}
+            {formatMonthLabel(prev.month_key, prev.month_label)}
           </SecondaryButton>
         )}
       </div>
@@ -107,7 +131,7 @@ export default function FaturaMonthCarousel({
                   : "text-gray-900 dark:text-gray-50"
               }`}
             >
-              {current.month_label}
+                  {formatMonthLabel(current.month_key, current.month_label)}
             </span>
 				<span className={`font-semibold text-xl sm:text-2xl lg:text-3xl 2xl:text-3xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
               {formatCurrency(total_spent)}
@@ -123,7 +147,7 @@ export default function FaturaMonthCarousel({
             onClick={handleNext}
 					className="rounded-full px-3 py-1 text-[11px] sm:text-xs 2xl:text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-900 border-none shadow-none"
           >
-            {next.month_label}
+						{formatMonthLabel(next.month_key, next.month_label)}
           </SecondaryButton>
         )}
       </div>
