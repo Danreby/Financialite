@@ -101,6 +101,7 @@ export default function QuickActions({ bankAccounts = [], categories = [] }) {
       <CategoryForm
         isOpen={showCategoryForm}
         onClose={() => setShowCategoryForm(false)}
+        categories={localCategories}
         onSuccess={(category) => {
           if (!category || !category.id) return;
           if (!category.name) return;

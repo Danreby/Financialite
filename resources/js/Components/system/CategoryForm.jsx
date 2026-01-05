@@ -6,7 +6,7 @@ import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import FloatLabelField from "@/Components/common/inputs/FloatLabelField";
 
-export default function CategoryForm({ isOpen, onClose, onSuccess }) {
+export default function CategoryForm({ isOpen, onClose, onSuccess, categories = [] }) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleSubmit = async (event) => {
@@ -21,6 +21,18 @@ export default function CategoryForm({ isOpen, onClose, onSuccess }) {
 
 		if (!name) {
 			toast.error("Informe o nome da categoria.");
+			form.elements.namedItem("name")?.focus();
+			return;
+		}
+
+		const normalizedName = name.toLowerCase();
+		const alreadyExists = (categories || []).some((category) => {
+			if (!category || !category.name) return false;
+			return category.name.toString().trim().toLowerCase() === normalizedName;
+		});
+
+		if (alreadyExists) {
+			toast.error("Você já possui uma categoria com esse nome.");
 			form.elements.namedItem("name")?.focus();
 			return;
 		}
