@@ -17,6 +17,7 @@ const FloatLabelField = forwardRef(
             className = '',
             containerClassName = '',
             inputProps = {},
+            rightElement,
         },
         ref,
     ) => {
@@ -73,12 +74,19 @@ const FloatLabelField = forwardRef(
                         onBlur={() => setIsFocused(false)}
                         className={
                             baseInputClasses +
+                            (rightElement ? ' pr-10 ' : '') +
                             errorInputClasses +
                             disabledClasses +
                             className
                         }
                         {...inputProps}
                     />
+
+                    {rightElement && (
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                            {rightElement}
+                        </div>
+                    )}
 
                     <motion.label
                         htmlFor={fieldId}

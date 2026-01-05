@@ -1,5 +1,5 @@
 // FILE: src/Pages/Auth/Register.jsx
-import React from 'react'
+import React, { useState } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import GuestLayout from '@/Layouts/GuestLayout'
@@ -7,6 +7,7 @@ import AuthCard from '@/Components/auth/AuthCard'
 import AuthHeader from '@/Components/auth/AuthHeader'
 import FormField from '@/Components/auth/FormField'
 import PrimaryButton from '@/Components/common/buttons/PrimaryButton'
+import EyeIcon from '@/Components/common/icons/EyeIcon'
 
 export default function Register() {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -15,6 +16,9 @@ export default function Register() {
     password: '',
     password_confirmation: '',
   })
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false)
 
   const submit = (e) => {
     e.preventDefault()
@@ -73,7 +77,18 @@ export default function Register() {
               onChange={(e) => setData('password', e.target.value)}
               error={errors.password}
               autoComplete="new-password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="text-gray-400 hover:text-gray-200 focus:outline-none mt-3"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  <EyeIcon type={showPassword ? 1 : 2} />
+                </button>
+              }
             />
 
             <FormField
@@ -83,7 +98,28 @@ export default function Register() {
               onChange={(e) => setData('password_confirmation', e.target.value)}
               error={errors.password_confirmation}
               autoComplete="new-password"
-              type="password"
+              type={showPasswordConfirmation ? 'text' : 'password'}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPasswordConfirmation((prev) => !prev)
+                  }
+                  className="text-gray-400 hover:text-gray-200 focus:outline-none mt-3"
+                  aria-label={
+                    showPasswordConfirmation
+                      ? 'Ocultar confirmação de senha'
+                      : 'Mostrar confirmação de senha'
+                  }
+                  title={
+                    showPasswordConfirmation
+                      ? 'Ocultar confirmação de senha'
+                      : 'Mostrar confirmação de senha'
+                  }
+                >
+                  <EyeIcon type={showPasswordConfirmation ? 1 : 2} />
+                </button>
+              }
             />
 
             <div>

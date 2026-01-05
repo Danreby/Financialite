@@ -1,5 +1,5 @@
 // FILE: src/Pages/Auth/Login.jsx
-import React from 'react'
+import React, { useState } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import GuestLayout from '@/Layouts/GuestLayout'
@@ -7,6 +7,7 @@ import AuthCard from '@/Components/auth/AuthCard'
 import AuthHeader from '@/Components/auth/AuthHeader'
 import FormField from '@/Components/auth/FormField'
 import PrimaryButton from '@/Components/common/buttons/PrimaryButton'
+import EyeIcon from '@/Components/common/icons/EyeIcon'
 
 export default function Login({ status, canResetPassword }) {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -14,6 +15,8 @@ export default function Login({ status, canResetPassword }) {
     password: '',
     remember: false,
   })
+
+  const [showPassword, setShowPassword] = useState(false)
 
   const submit = (e) => {
     e.preventDefault()
@@ -69,7 +72,18 @@ export default function Login({ status, canResetPassword }) {
               onChange={(e) => setData('password', e.target.value)}
               error={errors.password}
               autoComplete="current-password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
+              rightElement={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="text-gray-400 hover:text-gray-200 focus:outline-none mt-3"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  <EyeIcon type={showPassword ? 1 : 2} />
+                </button>
+              }
             />
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

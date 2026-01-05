@@ -13,6 +13,7 @@ export default function FormField({
   autoFocus,
   required,
   helperText,
+  rightElement,
 }) {
   return (
     <div className="space-y-1.5">
@@ -26,6 +27,7 @@ export default function FormField({
         error={error}
         isRequired={required}
         containerClassName="w-full"
+        rightElement={rightElement}
         inputProps={{
           autoComplete,
           autoFocus,
