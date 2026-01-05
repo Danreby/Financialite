@@ -1,13 +1,17 @@
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/common/buttons/PrimaryButton';
 import FloatLabelField from '@/Components/common/inputs/FloatLabelField';
+import EyeIcon from '@/Components/common/icons/EyeIcon';
 import { Transition } from '@headlessui/react';
 import { useForm } from '@inertiajs/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 export default function UpdatePasswordForm({ className = '' }) {
     const passwordInput = useRef();
     const currentPasswordInput = useRef();
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
 
     const {
         data,
@@ -60,7 +64,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     <FloatLabelField
                         id="current_password"
                         name="current_password"
-                        type="password"
+                        type={showCurrentPassword ? 'text' : 'password'}
                         label="Current Password"
                         value={data.current_password}
                         onChange={(e) =>
@@ -70,6 +74,17 @@ export default function UpdatePasswordForm({ className = '' }) {
                         isRequired
                         ref={currentPasswordInput}
                         inputProps={{ autoComplete: 'current-password' }}
+                        rightElement={
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword((prev) => !prev)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                                aria-label={showCurrentPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                                title={showCurrentPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            >
+                                <EyeIcon type={showCurrentPassword ? 1 : 2} />
+                            </button>
+                        }
                     />
 
                     <InputError
@@ -82,7 +97,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     <FloatLabelField
                         id="password"
                         name="password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         label="New Password"
                         value={data.password}
                         onChange={(e) => setData('password', e.target.value)}
@@ -90,6 +105,17 @@ export default function UpdatePasswordForm({ className = '' }) {
                         isRequired
                         ref={passwordInput}
                         inputProps={{ autoComplete: 'new-password' }}
+                        rightElement={
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                                title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                            >
+                                <EyeIcon type={showPassword ? 1 : 2} />
+                            </button>
+                        }
                     />
 
                     <InputError message={errors.password} className="mt-2" />
@@ -99,7 +125,7 @@ export default function UpdatePasswordForm({ className = '' }) {
                     <FloatLabelField
                         id="password_confirmation"
                         name="password_confirmation"
-                        type="password"
+                        type={showPasswordConfirmation ? 'text' : 'password'}
                         label="Confirm Password"
                         value={data.password_confirmation}
                         onChange={(e) =>
@@ -108,6 +134,17 @@ export default function UpdatePasswordForm({ className = '' }) {
                         error={errors.password_confirmation}
                         isRequired
                         inputProps={{ autoComplete: 'new-password' }}
+                        rightElement={
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswordConfirmation((prev) => !prev)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                                aria-label={showPasswordConfirmation ? 'Ocultar senha' : 'Mostrar senha'}
+                                title={showPasswordConfirmation ? 'Ocultar senha' : 'Mostrar senha'}
+                            >
+                                <EyeIcon type={showPasswordConfirmation ? 1 : 2} />
+                            </button>
+                        }
                     />
 
                     <InputError
