@@ -14,8 +14,8 @@ export default function FaturaMonthCarousel({
   const effectiveIndex = currentIndex === -1 ? 0 : currentIndex;
 
   const current = months[effectiveIndex];
-  const prev = months[effectiveIndex + 1] || null;
-  const next = months[effectiveIndex - 1] || null;
+  const prev = months[effectiveIndex - 1] || null;
+  const next = months[effectiveIndex + 1] || null;
 
   const isPaid = current?.is_paid;
 

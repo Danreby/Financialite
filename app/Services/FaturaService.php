@@ -158,7 +158,7 @@ class FaturaService
             ];
         });
 
-        return $result->sortByDesc('month_key')->values()->all();
+        return $result->sortBy('month_key')->values()->all();
     }
 
     public function faturaAppliesToMonth(Fatura $fatura, Carbon $targetMonth): bool

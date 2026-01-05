@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -46,9 +46,26 @@ function getClosestMonthKey(monthlyGroups, currentMonthKey) {
 }
 
 export default function Fatura({ monthlyGroups = [], bankAccounts = [], categories = [], filters = {}, currentMonthKey = null }) {
+	const normalizedMonthlyGroups = useMemo(() => {
+		if (!Array.isArray(monthlyGroups)) return [];
+
+		const byKey = new Map();
+
+		for (const group of monthlyGroups) {
+			if (!group || !group.month_key || typeof group.month_key !== 'string') continue;
+			if (!byKey.has(group.month_key)) {
+				byKey.set(group.month_key, group);
+			}
+		}
+
+		const result = Array.from(byKey.values());
+		result.sort((a, b) => monthKeyToIndex(a.month_key) - monthKeyToIndex(b.month_key));
+		return result;
+	}, [monthlyGroups]);
+
 	const selectedBankId = filters?.bank_user_id ?? '';
 	const [selectedMonthKey, setSelectedMonthKey] = useState(() =>
-		getClosestMonthKey(monthlyGroups, currentMonthKey),
+		getClosestMonthKey(normalizedMonthlyGroups, currentMonthKey),
 	);
 	const [isDueDayModalOpen, setIsDueDayModalOpen] = useState(false);
 	const [dueDayInput, setDueDayInput] = useState('');
@@ -73,17 +90,17 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 	};
 
 	useEffect(() => {
-		if (!monthlyGroups || monthlyGroups.length === 0) {
+		if (!normalizedMonthlyGroups || normalizedMonthlyGroups.length === 0) {
 			setSelectedMonthKey(null);
 			return;
 		}
 
-		const exists = monthlyGroups.some((g) => g.month_key === selectedMonthKey);
+		const exists = normalizedMonthlyGroups.some((g) => g.month_key === selectedMonthKey);
 		if (!exists) {
-			const closest = getClosestMonthKey(monthlyGroups, currentMonthKey);
+			const closest = getClosestMonthKey(normalizedMonthlyGroups, currentMonthKey);
 			setSelectedMonthKey(closest);
 		}
-	}, [monthlyGroups, selectedMonthKey, currentMonthKey]);
+	}, [normalizedMonthlyGroups, selectedMonthKey, currentMonthKey]);
 
 	const handleFiltersChange = (nextFilters) => {
 		router.get(route('faturas.index'), nextFilters, {
@@ -137,28 +154,28 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 	};
 
 	const handlePaidMonth = () => {
-		if (!monthlyGroups || monthlyGroups.length === 0 || !selectedGroup) {
+		if (!normalizedMonthlyGroups || normalizedMonthlyGroups.length === 0 || !selectedGroup) {
 			router.reload({ only: ['monthlyGroups'], preserveState: true });
 			return;
 		}
 
-		const currentIndex = monthlyGroups.findIndex(
+		const currentIndex = normalizedMonthlyGroups.findIndex(
 			(group) => group.month_key === selectedGroup.month_key,
 		);
 
 		const previousIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
-		const nextGroup = monthlyGroups[previousIndex] || selectedGroup;
+		const nextGroup = normalizedMonthlyGroups[previousIndex] || selectedGroup;
 
 		setSelectedMonthKey(nextGroup.month_key);
 		router.reload({ only: ['monthlyGroups'], preserveState: true });
 	};
 
 	const selectedGroup =
-		monthlyGroups && monthlyGroups.length > 0
-			? monthlyGroups.find((g) => g.month_key === selectedMonthKey) || monthlyGroups[0]
+		normalizedMonthlyGroups && normalizedMonthlyGroups.length > 0
+			? normalizedMonthlyGroups.find((g) => g.month_key === selectedMonthKey) || normalizedMonthlyGroups[0]
 			: null;
 
-	const logicalCurrentKey = getClosestMonthKey(monthlyGroups, currentMonthKey);
+	const logicalCurrentKey = getClosestMonthKey(normalizedMonthlyGroups, currentMonthKey);
 
 	return (
 		<AuthenticatedLayout>
@@ -180,7 +197,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 							bankAccounts={bankAccounts}
 							categories={categories}
 							filters={filters}
-							months={monthlyGroups}
+							months={normalizedMonthlyGroups}
 							monthValue={selectedGroup?.month_key || selectedMonthKey}
 							onFiltersChange={handleFiltersChange}
 							onMonthChange={handleChangeMonth}
@@ -209,17 +226,17 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 					)}
 				</header>
 
-				<div className="space-y-4 sm:space-y-5 pb-6 sm:pb-8">
-					{(!monthlyGroups || monthlyGroups.length === 0) && (
+					<div className="space-y-4 sm:space-y-5 pb-6 sm:pb-8">
+						{(!normalizedMonthlyGroups || normalizedMonthlyGroups.length === 0) && (
 						<p className="text-sm text-gray-500 dark:text-gray-400">
 							Nenhuma fatura encontrada para o filtro atual.
 						</p>
 					)}
 
-					{monthlyGroups && monthlyGroups.length > 0 && (
+						{normalizedMonthlyGroups && normalizedMonthlyGroups.length > 0 && (
 						<>
 							<FaturaMonthCarousel
-									months={monthlyGroups}
+									months={normalizedMonthlyGroups}
 									selectedMonthKey={selectedGroup?.month_key}
 									onChangeMonth={handleChangeMonth}
 									{...selectedGroup}
