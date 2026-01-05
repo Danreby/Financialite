@@ -107,7 +107,6 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
     };
 
     if (all || !header) {
-      // Modo "all" ou sem header definido: mantém comportamento antigo
       for (let r = 1; r <= range.e.r; r++) {
         for (let c = range.s.c; c <= range.e.c; c++) {
           const cellAddress = XLSX.utils.encode_cell({ r, c });
@@ -212,7 +211,6 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
     const lastRow = range.e.r;
     const lastCol = range.e.c;
     if (lastRow > 0) {
-      // Destaque da última linha (ex.: totais): negrito, borda forte e cor de fundo diferente
       for (let c = range.s.c; c <= lastCol; c++) {
         const cellAddress = XLSX.utils.encode_cell({ r: lastRow, c });
         if (worksheet[cellAddress]) {
@@ -223,26 +221,24 @@ export default function ExportExcel({ data, header, all = false, get, filters, n
             border: StrongBorderStyle,
             fill: {
               patternType: "solid",
-              fgColor: { rgb: "FFF2CC" }, // cor diferente para a última linha
+              fgColor: { rgb: "FFF2CC" },
             },
           };
         }
       }
 
-      // Destaque da última coluna (ex.: coluna de totais)
       for (let r = 0; r <= lastRow; r++) {
         const cellAddress = XLSX.utils.encode_cell({ r, c: lastCol });
         if (worksheet[cellAddress]) {
           const existingFont = (worksheet[cellAddress].s && worksheet[cellAddress].s.font) || {};
           worksheet[cellAddress].s = {
             ...worksheet[cellAddress].s,
-            font: { ...existingFont, bold: true, color: { rgb: "000000" } },
+            font: { ...existingFont, bold: true, color: { rgb: r === 0 ? "ffffff" : "000000" } },
             border: StrongBorderStyle,
           };
         }
       }
 
-      // Primeira coluna (itens): negrito em toda a coluna
       const firstCol = range.s.c;
       for (let r = 0; r <= lastRow; r++) {
         const cellAddress = XLSX.utils.encode_cell({ r, c: firstCol });
