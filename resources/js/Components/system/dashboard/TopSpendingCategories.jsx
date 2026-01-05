@@ -3,8 +3,8 @@ import { formatCurrencyBRL } from '@/Lib/formatters'
 
 export default function TopSpendingCategories({ data = [] }) {
   return (
-    <div className="rounded-2xl border dark:border-red-950/50 border-gray-50/90 bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
-      <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+    <div className="rounded-2xl border dark:border-red-950/50 border-gray-50/90 bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+      <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
         Maiores categorias de gasto (mês)
       </h2>
 
@@ -15,7 +15,7 @@ export default function TopSpendingCategories({ data = [] }) {
       )}
 
       {data && data.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
           {data.map((item) => (
             <li key={item.category_id ?? 'none'} className="flex flex-col gap-1">
               <div className="flex items-center justify-between text-sm">

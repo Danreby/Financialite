@@ -10,6 +10,7 @@ import MonthlySummaryChart from '@/Components/system/dashboard/MonthlySummaryCha
 import TopSpendingCategories from '@/Components/system/dashboard/TopSpendingCategories'
 import { formatCurrencyBRL } from '@/Lib/formatters'
 import FaturaDetailModal from '@/Components/system/fatura/FaturaDetailModal'
+import ScrollArea from '@/Components/common/ScrollArea'
 
 function formatDateLabel(value) {
   if (!value) return ''
@@ -143,15 +144,15 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="max-w-[1600px] mx-auto"
+        className="max-w-[1600px] mx-auto pb-6"
       >
-        <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-          <h1 className="text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex flex-col gap-3 mb-6 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100">
             Visão geral
           </h1>
 
-          <div className="flex items-center gap-3 text-base">
-            <label className="text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm lg:text-base">
+            <label className="text-xs lg:text-sm font-medium uppercase tracking-wide text-gray-600 dark:text-gray-400">
               Banco do dashboard
             </label>
             <select
@@ -170,7 +171,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
           {stats.map((stat) => (
             <StatCard
               key={stat.id}
@@ -181,16 +182,16 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           ))}
         </div>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
-          <div className="lg:col-span-2 border dark:border-red-950/50 border-gray-50/90 rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
+          <div className="lg:col-span-2 border dark:border-red-950/50 border-gray-50/90 rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100">
                 Transações recentes
               </h2>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Últimos lançamentos</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">Últimos lançamentos</span>
             </div>
 
-            <div className="space-y-4">
+            <ScrollArea maxHeightClassName="max-h-[260px]" className="space-y-3 pr-1">
               {recentFaturas && recentFaturas.length > 0 ? (
                 recentFaturas.slice(0, 5).map((fatura) => {
                   const isDebit = fatura.type === 'debit'
@@ -237,13 +238,13 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
                   Nenhuma transação recente encontrada.
                 </p>
               )}
-            </div>
+            </ScrollArea>
           </div>
 
           <QuickActions bankAccounts={bankAccounts} categories={categories} />
         </div>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
+        <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7">
           <div className="lg:col-span-2 border rounded-2xl dark:border-red-950/50 border-gray-50/90">
             <MonthlySummaryChart data={monthlySummary} />
           </div>
@@ -270,10 +271,10 @@ function Transaction({ title, subtitle, value, negative, onClick }) {
       tabIndex={onClick ? 0 : undefined}
     >
       <div>
-        <div className="text-base lg:text-lg font-medium text-gray-900 dark:text-gray-200">{title}</div>
-        <div className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</div>
+        <div className="text-sm lg:text-base font-medium text-gray-900 dark:text-gray-200">{title}</div>
+        <div className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">{subtitle}</div>
       </div>
-      <div className="text-base lg:text-lg font-semibold text-red-400">
+      <div className="text-sm lg:text-base font-semibold text-red-400">
         {value}
       </div>
     </div>

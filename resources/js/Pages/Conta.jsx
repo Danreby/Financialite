@@ -395,7 +395,7 @@ export default function Conta({ bankAccounts, categories }) {
 					</div>
 				</form>
 			</Modal>
-,
+
 			<Modal
 				isOpen={isConfirmModalOpen}
 				onClose={() => {

@@ -16,8 +16,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 export default function MonthlySummaryChart({ data = [] }) {
   if (!data || data.length === 0) {
     return (
-      <div className="rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
-        <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+      <div className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+        <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
           Gastos mensais
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -95,17 +95,17 @@ export default function MonthlySummaryChart({ data = [] }) {
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <div className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100">
           Gastos mensais
         </h2>
-        <span className="text-xs uppercase tracking-wide text-gray-600 dark:text-gray-400">
+        <span className="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-400">
           Últimos 6 meses
         </span>
       </div>
 
-      <div className="h-64 w-full lg:h-72">
+      <div className="h-56 w-full lg:h-64">
         <Line data={chartData} options={options} />
       </div>
     </div>
