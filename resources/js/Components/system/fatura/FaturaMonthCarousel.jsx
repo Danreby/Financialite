@@ -34,6 +34,11 @@ export default function FaturaMonthCarousel({
     }
   };
 
+  const capitalizeFirst = (text) => {
+    if (!text || typeof text !== "string") return text;
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
   const currentIndex = months.findIndex((m) => m.month_key === selectedMonthKey);
   const effectiveIndex = currentIndex === -1 ? 0 : currentIndex;
 
@@ -131,7 +136,7 @@ export default function FaturaMonthCarousel({
                   : "text-gray-900 dark:text-gray-50"
               }`}
             >
-                  {formatMonthLabel(current.month_key, current.month_label)}
+				  {capitalizeFirst(formatMonthLabel(current.month_key, current.month_label))}
             </span>
 				<span className={`font-semibold text-xl sm:text-2xl lg:text-3xl 2xl:text-3xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
               {formatCurrency(total_spent)}
