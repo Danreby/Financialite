@@ -124,24 +124,24 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		<AuthenticatedLayout>
 			<Head title="Transações" />
 
-				<div className="w-full max-w-[1600px] mx-auto px-3 py-4 space-y-5 sm:px-4 sm:py-5 lg:px-8 lg:py-7">
-					<header className="space-y-2 pt-1 sm:pt-2">
-						<h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-gray-100">
+			<div className="w-full max-w-[1450px] 2xl:max-w-[1500px] mx-auto px-3 py-2 space-y-3 sm:px-4 sm:py-3 lg:px-5 lg:py-4">
+				<header className="space-y-1 pt-1 sm:pt-1.5">
+					<h1 className="text-xl sm:text-2xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100">
 						Transações pendentes
 					</h1>
-					<p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300">
+					<p className="text-xs sm:text-sm lg:text-sm text-gray-600 dark:text-gray-300">
 						Visualize, edite ou remova transações que ainda não foram pagas.
 					</p>
 				</header>
 
-				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4 lg:p-6">
-					<div className="mb-4 flex flex-col gap-3 text-sm sm:flex-wrap sm:flex-row sm:items-center sm:justify-between">
+				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-3 lg:p-3">
+					<div className="mb-3 flex flex-col gap-2 text-xs sm:flex-wrap sm:flex-row sm:items-center sm:justify-between">
 						<div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 sm:w-auto w-full">
 							<input
 								type="text"
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:w-52"
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:w-52"
 								placeholder="Título da transação"
 							/>
 						</div>
@@ -150,7 +150,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 							<select
 								value={selectedBankId}
 								onChange={(e) => setSelectedBankId(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[200px]"
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[190px]"
 							>
 								<option value="">Todos</option>
 								{bankAccounts.map((account) => (
@@ -165,7 +165,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 							<select
 								value={selectedType}
 								onChange={(e) => setSelectedType(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[180px]"
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[170px]"
 							>
 								<option value="">Débito e crédito</option>
 								<option value="debit">Apenas débito</option>
@@ -177,7 +177,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 							<select
 								value={recurringFilter}
 								onChange={(e) => setRecurringFilter(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[180px]"
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[170px]"
 							>
 								<option value="">Todas</option>
 								<option value="recurring">Somente recorrentes</option>
@@ -189,7 +189,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 							<select
 								value={selectedCategoryId}
 								onChange={(e) => setSelectedCategoryId(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[200px]"
+								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[190px]"
 							>
 								<option value="">Todas</option>
 								{categories.map((category) => (
@@ -209,7 +209,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 								setRecurringFilter("");
 								setSearchTerm("");
 							}}
-							className="w-full justify-center rounded-full px-4 py-2 text-xs sm:text-sm font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 sm:w-auto"
+							className="w-full justify-center rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 sm:w-auto"
 						>
 							Limpar filtros
 						</SecondaryButton>

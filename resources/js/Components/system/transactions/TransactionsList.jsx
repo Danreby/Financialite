@@ -5,14 +5,17 @@ import TransactionRow from "@/Components/system/transactions/TransactionRow";
 export default function TransactionsList({ transactions = [], onEdit, onDelete }) {
   if (!transactions.length) {
     return (
-      <p className="px-3 py-4 text-base sm:text-lg text-gray-500 dark:text-gray-400">
+			<p className="px-3 py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
         Nenhuma transação pendente encontrada.
       </p>
     );
   }
 
   return (
-    <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
+		<ScrollArea
+			maxHeightClassName="max-h-[380px] md:max-h-[420px] lg:max-h-[460px] 2xl:max-h-[460px]"
+			className="divide-y divide-gray-100 dark:divide-gray-800"
+		>
       {transactions.map((tx) => (
         <TransactionRow
           key={tx.id}
