@@ -31,7 +31,7 @@ export default function AuthenticatedLayout({ children }) {
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
 
-        <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 lg:px-6 bg-gray-50 dark:bg-[#070707]">
+    		<main className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 sm:px-4 lg:px-6 bg-gray-50 dark:bg-[#070707]">
           {children}
         </main>
       </div>

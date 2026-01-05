@@ -65,7 +65,7 @@ export default function FaturaMonthCarousel({
   }
   
   return (
-  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:gap-6">
+	<div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-center sm:gap-3 lg:gap-4 2xl:gap-4">
       <div className="flex justify-between sm:w-32 sm:justify-end">
         {prev && (
           <SecondaryButton
@@ -87,7 +87,7 @@ export default function FaturaMonthCarousel({
             initial="enter"
             animate="center"
             exit="exit"
-            className={`inline-flex flex-col items-center rounded-full px-6 py-3 sm:px-8 sm:py-3 lg:px-10 lg:py-4 shadow-sm ring-1 bg-gradient-to-r dark:bg-gradient-to-r ${
+            className={`inline-flex flex-col items-center rounded-full px-4 py-2 sm:px-6 sm:py-2 lg:px-8 lg:py-3 2xl:px-8 2xl:py-3 shadow-sm ring-1 bg-gradient-to-r dark:bg-gradient-to-r ${
               isPaid
                 ? "from-emerald-50 via-white to-emerald-50 ring-emerald-200 dark:from-[#052e26] dark:via-[#050505] dark:to-[#052e26] dark:ring-emerald-900/50"
                 : "from-rose-50 via-white to-rose-50 ring-rose-100 dark:from-[#150709] dark:via-[#0b0b0b] dark:to-[#150709] dark:ring-rose-900/40"
@@ -101,7 +101,7 @@ export default function FaturaMonthCarousel({
               <div />
             )}
             <span
-              className={`mt-1 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight ${
+					className={`mt-1 text-lg sm:text-xl md:text-2xl lg:text-3xl 2xl:text-3xl font-bold tracking-tight ${
                 isPaid
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-gray-900 dark:text-gray-50"
@@ -109,7 +109,7 @@ export default function FaturaMonthCarousel({
             >
               {current.month_label}
             </span>
-            <span className={`font-semibold text-2xl sm:text-3xl lg:text-4xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+				<span className={`font-semibold text-xl sm:text-2xl lg:text-3xl 2xl:text-3xl ${isPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
               {formatCurrency(total_spent)}
             </span>
           </motion.div>
@@ -121,7 +121,7 @@ export default function FaturaMonthCarousel({
           <SecondaryButton
             type="button"
             onClick={handleNext}
-            className="rounded-full px-3 py-1 text-[11px] font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-900 border-none shadow-none"
+					className="rounded-full px-3 py-1 text-[11px] sm:text-xs 2xl:text-sm font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-900 border-none shadow-none"
           >
             {next.month_label}
           </SecondaryButton>

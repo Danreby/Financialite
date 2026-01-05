@@ -200,13 +200,13 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 		<AuthenticatedLayout>
 			<Head title="Faturas" />
 
-			<div className="w-full max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-8 space-y-5 sm:space-y-6 lg:space-y-7">
+			<div className="w-full max-w-[1500px] 2xl:max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 2xl:px-6 space-y-4 sm:space-y-5 lg:space-y-6 2xl:space-y-6">
 				<header className="pt-1 sm:pt-2 space-y-3 sm:space-y-4">
 					<div>
-						<h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-1 dark:text-gray-100">
+						<h1 className="text-xl sm:text-2xl lg:text-3xl 2xl:text-3xl font-semibold text-gray-900 mb-1 dark:text-gray-100">
 							Faturas
 						</h1>
-						<p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300">
+						<p className="text-xs sm:text-sm lg:text-base 2xl:text-base text-gray-600 dark:text-gray-300">
 							Visualize suas despesas agrupadas por mês.
 						</p>
 					</div>
@@ -227,7 +227,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 					</div>
 
 						{selectedAccount && (
-							<div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+							<div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm 2xl:text-sm text-gray-600 dark:text-gray-300">
 							<span>
 								Dia de vencimento:{' '}
 								{selectedAccount.due_day
@@ -242,12 +242,12 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 								Definir dia de vencimento
 							</SecondaryButton>
 						</div>
-					)}
-				</header>
+						)}
+					</header>
 
-					<div className="space-y-4 sm:space-y-5 pb-6 sm:pb-8">
+					<div className="space-y-3 sm:space-y-4 lg:space-y-5 2xl:space-y-5 pb-4 sm:pb-6 2xl:pb-6">
 						{(!normalizedMonthlyGroups || normalizedMonthlyGroups.length === 0) && (
-						<p className="text-sm text-gray-500 dark:text-gray-400">
+							<p className="text-xs sm:text-sm lg:text-base 2xl:text-base text-gray-500 dark:text-gray-400">
 							Nenhuma fatura encontrada para o filtro atual.
 						</p>
 					)}
@@ -298,11 +298,11 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 								inputMode="numeric"
 								value={dueDayField.value}
 								onChange={dueDayField.handleChange}
-								className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+								className="w-full rounded-md border border-gray-300 bg-white p-2 text-xs sm:text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							/>
 						</div>
 
-						<div className="flex items-center justify-end gap-3 pt-2 text-xs">
+						<div className="flex items-center justify-end gap-3 pt-2 text-xs sm:text-xs">
 							<SecondaryButton
 								type="button"
 								onClick={() => !isUpdatingDueDay && setIsDueDayModalOpen(false)}

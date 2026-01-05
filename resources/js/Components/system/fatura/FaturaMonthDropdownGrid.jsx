@@ -45,10 +45,10 @@ export default function FaturaMonthDropdownGrid({ months = [], value, onChange }
         type="button"
         ref={buttonRef}
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs lg:text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+				className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-[11px] lg:text-xs 2xl:text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
      >
         <span className="inline-flex flex-col text-left">
-          <span className="text-xs lg:text-sm font-medium text-gray-900 dark:text-gray-100">
+					<span className="text-[11px] lg:text-xs 2xl:text-xs font-medium text-gray-900 dark:text-gray-100">
             {selected ? selected.month_label : 'Selecione um mês'}
             {selected && selected.is_paid ? ' (paga)' : ''}
           </span>
@@ -75,10 +75,10 @@ export default function FaturaMonthDropdownGrid({ months = [], value, onChange }
       {open && (
         <div
           ref={panelRef}
-          className="absolute right-0 z-20 mt-2 w-72 sm:w-96 origin-top-right rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5 dark:bg-[#050505] dark:ring-black/40"
+					className="absolute right-0 z-20 mt-2 w-64 sm:w-80 2xl:w-80 origin-top-right rounded-2xl bg-white p-3 shadow-xl ring-1 ring-black/5 dark:bg-[#050505] dark:ring-black/40"
         >
 
-          <ScrollArea maxHeightClassName="max-h-64">
+					<ScrollArea maxHeightClassName="max-h-56 2xl:max-h-56">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mr-2">
               {months.map((month) => {
                 const isSelected = month.month_key === (selected && selected.month_key)
@@ -97,7 +97,7 @@ export default function FaturaMonthDropdownGrid({ months = [], value, onChange }
                         : 'border-gray-200 bg-gray-50/60 dark:border-gray-800 dark:bg-[#050505]',
                     )}
                   >
-                    <span className="text-lg font-medium text-gray-800 dark:text-gray-100 leading-tight">
+								<span className="text-sm 2xl:text-sm font-medium text-gray-800 dark:text-gray-100 leading-tight">
                       {month.month_label}
                     </span>
                     {/* <span

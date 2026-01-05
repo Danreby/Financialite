@@ -39,11 +39,11 @@ export default function FaturaFiltersBar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 text-sm sm:text-base">
+		<div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm lg:text-sm 2xl:text-sm">
       <select
         value={selectedBankId || ""}
         onChange={handleBankChange}
-        className="min-w-[200px] sm:min-w-[220px] lg:min-w-[260px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+				className="min-w-[190px] sm:min-w-[210px] lg:min-w-[230px] 2xl:min-w-[230px] rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm 2xl:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
       >
         <option value="">Todos os bancos</option>
         {bankAccounts.map((account) => (
@@ -57,7 +57,7 @@ export default function FaturaFiltersBar({
       <select
         value={selectedCategoryId || ""}
         onChange={handleCategoryChange}
-        className="min-w-[200px] sm:min-w-[220px] lg:min-w-[260px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
+				className="min-w-[190px] sm:min-w-[210px] lg:min-w-[230px] 2xl:min-w-[230px] rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs sm:text-sm 2xl:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
       >
         <option value="">Todas as categorias</option>
         {categories.map((category) => (

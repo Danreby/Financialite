@@ -56,16 +56,16 @@ export default function FaturaMonthSection({
   }, [items, sortField, sortDirection]);
 
   return (
-  <section className="space-y-4 sm:space-y-5 lg:space-y-6">
+	<section className="space-y-3 sm:space-y-4 lg:space-y-5 2xl:space-y-5">
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1 flex justify-start items-center gap-3 sm:gap-4">
           <div className="inline-flex flex-col items-start rounded-2xl sm:rounded-full px-4 py-2 sm:px-6 sm:py-3 bg-transparent">
             {due_day && (
-              <p className="mt-0.5 text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400">
+						<p className="mt-0.5 text-[11px] sm:text-xs lg:text-sm 2xl:text-sm text-gray-500 dark:text-gray-400">
                 Vencimento do cartão: todo dia <span className="font-semibold">{due_day}</span>
               </p>
             )}
-            <p className="mt-1 text-xs sm:text-sm lg:text-base text-gray-500 dark:text-gray-400">
+					<p className="mt-1 text-[11px] sm:text-xs lg:text-sm 2xl:text-sm text-gray-500 dark:text-gray-400">
               Total de despesas do mês{}:
               <span className="ml-1 font-semibold text-rose-600 dark:text-rose-400">
                 {formatCurrency(total_spent)}
@@ -84,20 +84,20 @@ export default function FaturaMonthSection({
         )}
       </div>
 
-      <div className="rounded-2xl bg-white border border-gray-50/90 dark:border-red-950/50 px-2 py-2 sm:px-3 sm:py-3 lg:px-5 lg:py-4 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
+      <div className="rounded-2xl bg-white border border-gray-50/90 dark:border-red-950/50 px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-3 2xl:px-4 2xl:py-3 shadow-sm ring-1 ring-black/5 dark:bg-[#080808] dark:ring-white/5 shadow-gray-500 dark:shadow-gray-900">
         {items.length === 0 ? (
-          <p className="px-3 py-3 text-sm sm:text-base text-gray-500 dark:text-gray-400">
+					<p className="px-3 py-2 text-xs sm:text-sm lg:text-base 2xl:text-sm text-gray-500 dark:text-gray-400">
             Nenhuma transação neste mês.
           </p>
         ) : (
           <>
-            <div className="flex items-center justify-between px-3 pt-2 pb-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+						<div className="flex items-center justify-between px-3 pt-1 pb-1 text-[11px] sm:text-xs lg:text-sm 2xl:text-sm text-gray-500 dark:text-gray-400">
               <span className="font-semibold uppercase tracking-wide">Ordenar</span>
               <div className="flex items-center gap-2">
                 <BareButton
                   type="button"
                   onClick={() => setSortField("date")}
-                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] sm:text-xs font-medium transition ${
+								className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] sm:text-[11px] 2xl:text-[11px] font-medium transition ${
                     sortField === "date"
                       ? "border-[#7b1818] bg-[#7b1818] text-white shadow-sm dark:border-rose-500 dark:bg-rose-500"
                       : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
@@ -108,7 +108,7 @@ export default function FaturaMonthSection({
                 <BareButton
                   type="button"
                   onClick={() => setSortField("amount")}
-                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] sm:text-xs font-medium transition ${
+								className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] sm:text-[11px] 2xl:text-[11px] font-medium transition ${
                     sortField === "amount"
                       ? "border-[#7b1818] bg-[#7b1818] text-white shadow-sm dark:border-rose-500 dark:bg-rose-500"
                       : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
@@ -123,19 +123,22 @@ export default function FaturaMonthSection({
                       : "Do mais antigo/mais barato para o mais recente/mais caro"
                   }
                 >
-                  <BareButton
+                    <BareButton
                     type="button"
                     onClick={() =>
                       setSortDirection((prev) => (prev === "desc" ? "asc" : "desc"))
                     }
-                    className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2.5 py-1.5 text-[11px] sm:text-xs font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
+								className="inline-flex items-center rounded-full border border-gray-300 bg-white px-2.5 py-1.5 text-[10px] sm:text-[11px] 2xl:text-[11px] font-medium text-gray-600 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-[#050505] dark:text-gray-200 dark:hover:bg-gray-800"
                   >
                     {sortDirection === "desc" ? "▼" : "▲"}
                   </BareButton>
                 </Tooltip>
               </div>
             </div>
-            <ScrollArea className="divide-y divide-gray-100 dark:divide-gray-800">
+						<ScrollArea
+							maxHeightClassName="max-h-[360px] md:max-h-[420px] lg:max-h-[460px] 2xl:max-h-[400px]"
+							className="divide-y divide-gray-100 dark:divide-gray-800"
+						>
               {sortedItems.map((item) => (
                 <FaturaItemRow
                   key={item.id}
