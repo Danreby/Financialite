@@ -45,6 +45,42 @@ function getClosestMonthKey(monthlyGroups, currentMonthKey) {
 	return monthlyGroups[0].month_key;
 }
 
+function useNumericInput(initialValue = '', min, max) {
+	const [value, setValue] = useState(initialValue);
+
+	const handleChange = (event) => {
+		let input = event.target.value ?? '';
+
+		input = input.replace(/[^0-9]/g, '');
+
+		if (typeof max === 'number') {
+			const maxLength = String(max).length;
+			if (input.length > maxLength) {
+				input = input.slice(0, maxLength);
+			}
+		}
+
+		setValue(input);
+	};
+
+	const validate = () => {
+		if (value === '') return false;
+		const numeric = parseInt(value, 10);
+		if (Number.isNaN(numeric)) return false;
+		if (typeof min === 'number' && numeric < min) return false;
+		if (typeof max === 'number' && numeric > max) return false;
+		return true;
+	};
+
+	return {
+		value,
+		setValue,
+		handleChange,
+		isValid: validate(),
+		numericValue: value === '' ? null : parseInt(value, 10),
+	};
+}
+
 export default function Fatura({ monthlyGroups = [], bankAccounts = [], categories = [], filters = {}, currentMonthKey = null }) {
 	const normalizedMonthlyGroups = useMemo(() => {
 		if (!Array.isArray(monthlyGroups)) return [];
@@ -68,26 +104,8 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 		getClosestMonthKey(normalizedMonthlyGroups, currentMonthKey),
 	);
 	const [isDueDayModalOpen, setIsDueDayModalOpen] = useState(false);
-	const [dueDayInput, setDueDayInput] = useState('');
+	const dueDayField = useNumericInput('', 1, 31);
 	const [isUpdatingDueDay, setIsUpdatingDueDay] = useState(false);
-
-	const handleIntegerKeyDown = (event) => {
-		const allowedKeys = [
-			"Backspace",
-			"Tab",
-			"ArrowLeft",
-			"ArrowRight",
-			"Delete",
-			"Home",
-			"End",
-		];
-
-		if (allowedKeys.includes(event.key)) return;
-
-		if (!/^[0-9]$/.test(event.key)) {
-			event.preventDefault();
-		}
-	};
 
 	useEffect(() => {
 		if (!normalizedMonthlyGroups || normalizedMonthlyGroups.length === 0) {
@@ -120,7 +138,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 
 	const handleOpenDueDayModal = () => {
 		if (!selectedAccount) return;
-		setDueDayInput(selectedAccount.due_day ? String(selectedAccount.due_day) : '');
+		dueDayField.setValue(selectedAccount.due_day ? String(selectedAccount.due_day) : '');
 		setIsDueDayModalOpen(true);
 	};
 
@@ -128,11 +146,12 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 		event.preventDefault();
 		if (!selectedAccount || isUpdatingDueDay) return;
 
-		const parsed = parseInt(dueDayInput, 10);
-		if (Number.isNaN(parsed) || parsed < 1 || parsed > 31) {
+		if (!dueDayField.isValid) {
 			toast.error('Informe um dia de vencimento entre 1 e 31.');
 			return;
 		}
+
+		const parsed = dueDayField.numericValue;
 
 		setIsUpdatingDueDay(true);
 		toast.dismiss();
@@ -277,9 +296,8 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 								min={1}
 								max={31}
 								inputMode="numeric"
-								onKeyDown={handleIntegerKeyDown}
-								value={dueDayInput}
-								onChange={(e) => setDueDayInput(e.target.value)}
+								value={dueDayField.value}
+								onChange={dueDayField.handleChange}
 								className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"
 							/>
 						</div>
