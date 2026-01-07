@@ -14,6 +14,8 @@ import { formatCurrencyBRL } from '@/Lib/formatters'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler)
 
 export default function MonthlySummaryChart({ data = [] }) {
+  const [mode, setMode] = React.useState('both')
+
   if (!data || data.length === 0) {
     return (
       <div className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
@@ -31,11 +33,14 @@ export default function MonthlySummaryChart({ data = [] }) {
   const invoiceValues = data.map((item) => Number(item.invoice_total || 0))
   const debitValues = data.map((item) => Number(item.debit_total || 0))
 
+  const showInvoice = mode === 'both' || mode === 'invoice'
+  const showDebit = mode === 'both' || mode === 'debit'
+
   const chartData = {
     labels,
     datasets: [
       {
-        label: 'Fatura do mês',
+        label: 'Crédito',
         data: invoiceValues,
         tension: 0.35,
         fill: true,
@@ -46,12 +51,13 @@ export default function MonthlySummaryChart({ data = [] }) {
         pointBackgroundColor: '#ffffff',
         pointBorderColor: 'rgba(244, 63, 94, 1)',
         pointBorderWidth: 2,
+        hidden: !showInvoice,
       },
       {
-        label: 'Total no débito',
+        label: 'Débito',
         data: debitValues,
         tension: 0.35,
-        fill: false,
+        fill: true,
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.15)',
         pointRadius: 4,
@@ -59,6 +65,7 @@ export default function MonthlySummaryChart({ data = [] }) {
         pointBackgroundColor: '#ffffff',
         pointBorderColor: 'rgba(59, 130, 246, 1)',
         pointBorderWidth: 2,
+        hidden: !showDebit,
       },
     ],
   }
@@ -114,9 +121,46 @@ export default function MonthlySummaryChart({ data = [] }) {
         <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100">
           Gastos mensais
         </h2>
-        <span className="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-400">
-          Últimos 6 meses
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wide text-gray-600 dark:text-gray-400">
+            Últimos 6 meses
+          </span>
+          <div className="inline-flex items-center gap-1 rounded-lg bg-gray-100 p-1 text-[11px] dark:bg-gray-900/50">
+            <button
+              type="button"
+              onClick={() => setMode('both')}
+              className={`px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+                mode === 'both'
+                  ? 'bg-rose-500 text-white border-rose-500'
+                  : 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              Ambos
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('invoice')}
+              className={`px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+                mode === 'invoice'
+                  ? 'bg-rose-500 text-white border-rose-500'
+                  : 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              Crédito
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('debit')}
+              className={`px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+                mode === 'debit'
+                  ? 'bg-rose-500 text-white border-rose-500'
+                  : 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-gray-800'
+              }`}
+            >
+              Débito
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="h-56 w-full lg:h-64">
