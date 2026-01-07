@@ -527,42 +527,30 @@ class FaturaController extends Controller
         $monthStart = $today->copy()->startOfMonth();
         $monthEnd = $today->copy()->endOfMonth();
 
-        // Monthly income vs expenses (last 6 months) for dashboard charts
+        // Monthly invoice (card bill) vs debit transactions (last 6 months) for dashboard charts
         $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
 
-        $seriesEntries = (clone $base)
-            ->whereBetween('created_at', [$seriesStart, $monthEnd])
-            ->get();
+        $paidQuery = Paid::where('user_id', $user->id);
 
-        $monthlySummary = $seriesEntries
-            ->groupBy(function (Fatura $fatura) {
-                return $fatura->created_at instanceof Carbon
-                    ? $fatura->created_at->format('Y-m')
-                    : Carbon::parse($fatura->created_at)->format('Y-m');
-            })
-            ->map(function ($items, $yearMonth) {
-                $carbon = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
+        if ($request->has('bank_user_id')) {
+            if (is_null($bankUserId)) {
+                $paidQuery->whereNull('bank_user_id');
+            } else {
+                $paidQuery->where('bank_user_id', $bankUserId);
+            }
+        }
 
-                $incomePaid = $items
-                    ->where('type', 'credit')
-                    ->where('status', 'paid')
-                    ->sum('amount');
+        $paidByMonth = $paidQuery
+            ->pluck('total_paid', 'month_key');
 
-                $expensesPaid = $items
-                    ->where('type', 'debit')
-                    ->where('status', 'paid')
-                    ->sum('amount');
-
-                return [
-                    'month_key' => $yearMonth,
-                    'month_label' => ucfirst($carbon->translatedFormat('M Y')),
-                    'income_paid' => (float) $incomePaid,
-                    'expenses_paid' => (float) $expensesPaid,
-                ];
-            })
-            ->sortBy('month_key')
-            ->values()
-            ->all();
+        $monthlySummary = $this->faturaService->buildDashboardMonthlySummary(
+            $user,
+            $bankUserId,
+            $categoryId,
+            $seriesStart,
+            $monthEnd,
+            $paidByMonth
+        );
 
         // Top spending categories in the current month (paid debits)
         $currentMonthPaidDebits = (clone $base)
@@ -608,19 +596,6 @@ class FaturaController extends Controller
             ->notStatus('paid')
             ->orderBy('created_at', 'desc')
             ->get();
-
-        $paidQuery = Paid::where('user_id', $user->id);
-
-        if ($request->has('bank_user_id')) {
-            if (is_null($bankUserId)) {
-                $paidQuery->whereNull('bank_user_id');
-            } else {
-                $paidQuery->where('bank_user_id', $bankUserId);
-            }
-        }
-
-        $paidByMonth = $paidQuery
-            ->pluck('total_paid', 'month_key');
 
         $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
 

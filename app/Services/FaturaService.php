@@ -78,6 +78,56 @@ class FaturaService
         ];
     }
 
+    public function buildDashboardMonthlySummary(
+        Authenticatable $user,
+        ?int $bankUserId,
+        ?int $categoryId,
+        Carbon $seriesStart,
+        Carbon $seriesEnd,
+        $paidByMonth
+    ): array {
+        $paidByMonth = collect($paidByMonth);
+
+        $debitEntries = Fatura::forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            })
+            ->where('type', 'debit')
+            ->whereBetween('created_at', [$seriesStart, $seriesEnd])
+            ->get();
+
+        $debitByMonth = $debitEntries
+            ->groupBy(function (Fatura $fatura) {
+                return $fatura->created_at instanceof Carbon
+                    ? $fatura->created_at->format('Y-m')
+                    : Carbon::parse($fatura->created_at)->format('Y-m');
+            })
+            ->map(function ($items) {
+                return (float) $items->sum('amount');
+            });
+
+        $months = [];
+        $cursor = $seriesStart->copy()->startOfMonth();
+        $end = $seriesEnd->copy()->startOfMonth();
+
+        while ($cursor->lte($end)) {
+            $monthKey = $cursor->format('Y-m');
+            $carbon = $cursor->copy()->startOfMonth();
+
+            $months[] = [
+                'month_key' => $monthKey,
+                'month_label' => ucfirst($carbon->translatedFormat('M Y')),
+                'invoice_total' => (float) $paidByMonth->get($monthKey, 0.0),
+                'debit_total' => (float) $debitByMonth->get($monthKey, 0.0),
+            ];
+
+            $cursor->addMonth();
+        }
+
+        return $months;
+    }
+
     public function groupFaturasByMonth($faturas, $paidByMonth = null)
     {
         $entries = collect();

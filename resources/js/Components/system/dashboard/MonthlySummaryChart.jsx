@@ -28,14 +28,15 @@ export default function MonthlySummaryChart({ data = [] }) {
   }
 
   const labels = data.map((item) => item.month_label)
-  const values = data.map((item) => Number(item.expenses_paid || 0))
+  const invoiceValues = data.map((item) => Number(item.invoice_total || 0))
+  const debitValues = data.map((item) => Number(item.debit_total || 0))
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: 'Total gasto no mês',
-        data: values,
+        label: 'Fatura do mês',
+        data: invoiceValues,
         tension: 0.35,
         fill: true,
         borderColor: 'rgba(244, 63, 94, 1)',
@@ -46,6 +47,19 @@ export default function MonthlySummaryChart({ data = [] }) {
         pointBorderColor: 'rgba(244, 63, 94, 1)',
         pointBorderWidth: 2,
       },
+      {
+        label: 'Total no débito',
+        data: debitValues,
+        tension: 0.35,
+        fill: false,
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+        pointRadius: 4,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: 'rgba(59, 130, 246, 1)',
+        pointBorderWidth: 2,
+      },
     ],
   }
 
@@ -54,13 +68,13 @@ export default function MonthlySummaryChart({ data = [] }) {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: true,
       },
       tooltip: {
         callbacks: {
           label: (context) => {
             const value = context.parsed.y || 0
-            return `Total gasto: ${formatCurrencyBRL(value)}`
+            return `${context.dataset.label}: ${formatCurrencyBRL(value)}`
           },
         },
       },
