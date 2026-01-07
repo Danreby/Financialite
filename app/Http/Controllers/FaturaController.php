@@ -44,6 +44,18 @@ class FaturaController extends Controller
             $monthLabel = $createdAt ? ucfirst($createdAt->translatedFormat('F Y')) : null;
             $createdAtFormatted = $createdAt ? $createdAt->format('d/m/Y H:i') : null;
 
+            // Determine invoice/billing month and installment amount for reporting
+            if ($fatura->type === 'credit') {
+                $invoiceMonthKey = $this->faturaService->resolveBillingMonthKey($fatura);
+                $invoiceCarbon = Carbon::createFromFormat('Y-m', $invoiceMonthKey)->startOfMonth();
+                $invoiceMonthLabel = ucfirst($invoiceCarbon->translatedFormat('F Y'));
+                $installmentAmount = (float) $fatura->amount / max((int) ($fatura->total_installments ?? 1), 1);
+            } else {
+                $invoiceMonthKey = $yearMonth;
+                $invoiceMonthLabel = $monthLabel;
+                $installmentAmount = (float) $fatura->amount;
+            }
+
             return [
                 'id' => (string) $fatura->id,
                 'title' => $fatura->title,
@@ -57,6 +69,10 @@ class FaturaController extends Controller
                 'is_recurring' => (bool) $fatura->is_recurring,
                 'year_month' => $yearMonth,
                 'month_label' => $monthLabel,
+                // New fields for proper monthly invoice reporting
+                'invoice_month' => $invoiceMonthKey,
+                'invoice_month_label' => $invoiceMonthLabel,
+                'installment_amount' => (float) $installmentAmount,
                 'created_at_formatted' => $createdAtFormatted,
                 'bank_user' => [
                     'id' => $fatura->bankUser->id ?? null,

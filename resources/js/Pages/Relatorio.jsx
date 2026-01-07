@@ -55,12 +55,13 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 				});
 
 				const raw = Array.isArray(exportResponse.data) ? exportResponse.data : [];
+				// Group by invoice_month for credit (card bill) and by created month for debit
 				const grouped = raw.reduce((acc, item) => {
-					const key = item.year_month || "sem-data";
+					const key = item.invoice_month || item.year_month || "sem-data";
 					if (!acc[key]) {
 						acc[key] = {
-							year_month: item.year_month || null,
-							month_label: item.month_label || item.year_month || "Sem data",
+							year_month: key,
+							month_label: item.invoice_month_label || item.month_label || key || "Sem data",
 							total_amount: 0,
 							total_credit: 0,
 							total_debit: 0,
@@ -68,13 +69,12 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 						};
 					}
 
-					const amount = Number(item.amount || 0);
-					acc[key].total_amount += amount;
-					if (item.type === "credit") {
-						acc[key].total_credit += amount;
-					} else if (item.type === "debit") {
-						acc[key].total_debit += amount;
-					}
+					const debitAmount = Number(item.type === "debit" ? item.amount || 0 : 0);
+					const creditInstallment = Number(item.type === "credit" ? item.installment_amount || 0 : 0);
+
+					acc[key].total_debit += debitAmount;
+					acc[key].total_credit += creditInstallment;
+					acc[key].total_amount += debitAmount + creditInstallment;
 					acc[key].count += 1;
 					return acc;
 				}, {});
