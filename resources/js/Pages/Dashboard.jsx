@@ -65,7 +65,6 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
 
         const statsPayload = statsResponse.data || {}
 
-        const totalIncome = Number(statsPayload.total_income || 0)
         const currentMonthDebitTotal = Number(statsPayload.current_month_debit_total || 0)
         const overdueCount = Number(statsPayload.overdue_count || 0)
 
@@ -79,6 +78,8 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
 
         const currentMonthPendingBill = Number(statsPayload.current_month_pending_bill || 0)
         const currentMonthLabel = statsPayload.current_month_label || 'Mês atual'
+
+        const totalMonthlySpent = currentMonthPendingBill + currentMonthDebitTotal
 
         setStats([
           {
@@ -95,8 +96,8 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           },
           {
             id: 3,
-            title: 'Receitas pagas',
-            value: formatCurrencyBRL(totalIncome),
+            title: 'Total Mensal',
+            value: formatCurrencyBRL(totalMonthlySpent),
             delta: '',
           },
           {
