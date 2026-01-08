@@ -36,7 +36,7 @@ export default function Sidebar({ open: openProp = true, setOpen: setOpenProp })
 
   return (
     <motion.aside
-      initial={false}
+      initial={{ width: 64 }}
       animate={{ width: isOpen ? 260 : 64 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className="flex-shrink-0 h-screen bg-white border-r border-gray-200 mt-2 shadow-md ring-1 ring-black/5 overflow-hidden dark:bg-gradient-to-b dark:from-[#070707] dark:to-[#0b0b0b] dark:border-gray-800 dark:ring-black/30"
