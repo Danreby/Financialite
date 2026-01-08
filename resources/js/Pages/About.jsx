@@ -159,7 +159,8 @@ export default function About() {
 						<p className="text-base sm:text-lg">
 							Financialite é uma aplicação em constante evolução, desenvolvida com as tecnologias
 							mais modernas para garantir uma experiência de usuário excepcional. Novos recursos são
-							adicionados regularmente, refinando fluxos conforme o uso diário.
+							adicionados regularmente, refinando fluxos conforme o uso diário. É possivel analisar o codigo acessando
+							o <a href="https://github.com/Danreby/financialite" target="_blank" rel="noopener noreferrer">repositório</a> no GitHub.
 						</p>
 						<p className="text-base sm:text-lg">
 							<span className="font-semibold text-blue-600 dark:text-blue-400">100% Pessoal:</span>{' '}
