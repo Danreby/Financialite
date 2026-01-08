@@ -1,1 +1,0 @@
-import{j as e}from"./app-BeSJTAoC.js";function l({maxHeightClassName:o="max-h-[500px]",className:r="",children:s,...a}){return e.jsx("div",{className:`${o} overflow-y-auto overflow-x-hidden scrollbar-custom ${r}`,...a,children:s})}export{l as S};
