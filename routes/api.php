@@ -19,9 +19,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('faturas/stats', [FaturaController::class, 'stats'])->name('faturas.stats');
     Route::post('faturas/{id}/restore', [FaturaController::class, 'restore'])->name('faturas.restore');
 
-    // Categorias de fatura
-    Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('categories', [CategoryController::class, 'store'])->name('categories.store');
-    Route::match(['put', 'patch'], 'categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    // (Rotas de categorias foram movidas para as rotas web autenticadas em routes/Fatura.php)
 });

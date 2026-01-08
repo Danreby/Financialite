@@ -21,6 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 	Route::prefix('categories')->name('categories.')->group(function () {
 		Route::post('/', [CategoryController::class, 'store'])->name('store');
+		Route::match(['put', 'patch'], '/{category}', [CategoryController::class, 'update'])->name('update');
+		Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
 	});
 });
 
