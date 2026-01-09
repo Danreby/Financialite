@@ -25,10 +25,8 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 	const [selectedType, setSelectedType] = useState(String(filters?.type ?? ""));
 	const [recurringFilter, setRecurringFilter] = useState(String(filters?.recurring ?? ""));
 	const [searchTerm, setSearchTerm] = useState(String(filters?.search ?? ""));
-	const [isDeletingId, setIsDeletingId] = useState(null);
 	const [editingTransaction, setEditingTransaction] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-	const [isDeletingId, setIsDeletingId] = useState(null);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
 
