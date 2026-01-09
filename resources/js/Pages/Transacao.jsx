@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -13,81 +13,60 @@ import DangerButton from "@/Components/common/buttons/DangerButton";
 import Modal from "@/Components/common/Modal";
 import Pagination from "@/Components/common/Pagination";
 
-export default function Transacao({ transactions, bankAccounts = [], categories = [] }) {
+export default function Transacao({ transactions, bankAccounts = [], categories = [], filters = {} }) {
 	const initialTransactions = Array.isArray(transactions?.data)
 		? transactions.data
 		: Array.isArray(transactions)
 			? transactions
 			: [];
 
-	const [localTransactions, setLocalTransactions] = useState(initialTransactions);
-	const [selectedBankId, setSelectedBankId] = useState("");
-	const [selectedCategoryId, setSelectedCategoryId] = useState("");
-	const [selectedType, setSelectedType] = useState("");
-	const [recurringFilter, setRecurringFilter] = useState("");
-	const [searchTerm, setSearchTerm] = useState("");
+	const [selectedBankId, setSelectedBankId] = useState(String(filters?.bank_user_id ?? ""));
+	const [selectedCategoryId, setSelectedCategoryId] = useState(String(filters?.category_id ?? ""));
+	const [selectedType, setSelectedType] = useState(String(filters?.type ?? ""));
+	const [recurringFilter, setRecurringFilter] = useState(String(filters?.recurring ?? ""));
+	const [searchTerm, setSearchTerm] = useState(String(filters?.search ?? ""));
+	const [isDeletingId, setIsDeletingId] = useState(null);
 	const [editingTransaction, setEditingTransaction] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeletingId, setIsDeletingId] = useState(null);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
 
+	// Server-side filtering: react to filter changes
 	useEffect(() => {
-		const nextTransactions = Array.isArray(transactions?.data)
-			? transactions.data
-			: Array.isArray(transactions)
-				? transactions
-				: [];
-		setLocalTransactions(nextTransactions);
-	}, [transactions]);
+		const timeout = setTimeout(() => {
+			router.get(route('transactions.index'), {
+				bank_user_id: selectedBankId || undefined,
+				category_id: selectedCategoryId || undefined,
+				type: selectedType || undefined,
+				recurring: recurringFilter || undefined,
+				search: searchTerm || undefined,
+			}, {
+				preserveState: true,
+				preserveScroll: true,
+				replace: true,
+			});
+		}, 300);
 
-	const filteredTransactions = useMemo(() => {
-		const term = searchTerm.trim().toLowerCase();
-		return localTransactions.filter((tx) => {
-			if (selectedBankId && String(tx.bank_user_id) !== String(selectedBankId)) {
-				return false;
-			}
-			if (selectedCategoryId && String(tx.category_id) !== String(selectedCategoryId)) {
-				return false;
-			}
-			if (selectedType && tx.type !== selectedType) {
-				return false;
-			}
-			if (recurringFilter === "recurring" && !tx.is_recurring) {
-				return false;
-			}
-			if (recurringFilter === "non_recurring" && tx.is_recurring) {
-				return false;
-			}
-			if (term && !(tx.title || "").toLowerCase().includes(term)) {
-				return false;
-			}
-			return true;
-		});
-	}, [localTransactions, selectedBankId, selectedCategoryId, selectedType, recurringFilter, searchTerm]);
+		return () => clearTimeout(timeout);
+	}, [selectedBankId, selectedCategoryId, selectedType, recurringFilter, searchTerm]);
+
+	// No client-side filtering: rely on server-side sorted/paginated data
 
 	const handleEdit = (tx) => {
 		setEditingTransaction(tx);
 		setIsEditModalOpen(true);
 	};
 
-	const handleUpdated = (updated) => {
-		setLocalTransactions((prev) => {
-			// Se a transação foi marcada como paga, removemos da lista de pendentes
-			if (updated.status === "paid") {
-				return prev.filter((tx) => tx.id !== updated.id);
-			}
-
-			return prev.map((tx) => {
-				if (tx.id !== updated.id) return tx;
-				return {
-					...tx,
-					...updated,
-					bank_name: updated.bank_user?.bank?.name ?? tx.bank_name ?? null,
-					category_name: updated.category?.name ?? tx.category_name ?? null,
-				};
-			});
-		});
+	const handleUpdated = () => {
+		// Refresh current page data to reflect changes
+		router.get(route('transactions.index'), {
+			bank_user_id: selectedBankId || undefined,
+			category_id: selectedCategoryId || undefined,
+			type: selectedType || undefined,
+			recurring: recurringFilter || undefined,
+			search: searchTerm || undefined,
+		}, { preserveState: true, preserveScroll: true, replace: true });
 	};
 
 	const handleDelete = async (tx) => {
@@ -105,7 +84,14 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		try {
 			await axios.delete(route("faturas.destroy", transactionToDelete.id));
 			toast.success("Transação removida com sucesso.");
-			setLocalTransactions((prev) => prev.filter((item) => item.id !== transactionToDelete.id));
+			// Refresh current page after deletion
+			router.get(route('transactions.index'), {
+				bank_user_id: selectedBankId || undefined,
+				category_id: selectedCategoryId || undefined,
+				type: selectedType || undefined,
+				recurring: recurringFilter || undefined,
+				search: searchTerm || undefined,
+			}, { preserveState: true, preserveScroll: true, replace: true });
 		} catch (error) {
 			console.error(error);
 			if (error.response?.data?.message) {
@@ -216,7 +202,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 					</div>
 
 					<TransactionsList
-						transactions={filteredTransactions}
+						transactions={initialTransactions}
 						onEdit={handleEdit}
 						onDelete={handleDelete}
 					/>
