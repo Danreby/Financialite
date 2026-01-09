@@ -1,6 +1,6 @@
 # 💰 Financialite
 
-> Uma plataforma web completa para gerenciamento de finanças pessoais e controle de faturas
+> Uma plataforma web completa para gerenciamento de finanças pessoais e controle de faturas, é possivel acessar o projeto pelo link https://financialite.rolims.com
 
 ## 📋 Visão Geral
 
@@ -320,16 +320,6 @@ A aplicação inclui suporte a testes com PHPUnit:
 php artisan test
 ```
 
-## 📊 Funcionalidades Futuras
-
-- [ ] Autenticação multi-fator (2FA)
-- [ ] Integração com bancos reais
-- [ ] Aplicativo mobile (React Native)
-- [ ] Previsões com IA
-- [ ] Compartilhamento de dados com contador
-- [ ] Alertas e notificações push
-- [ ] Dashboard colaborativo
-
 ## 📝 Convenções de Código
 
 ### PHP
@@ -361,7 +351,7 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 
 ## 👨‍💻 Autor
 
-Desenvolvido com ❤️ para simplificar a gestão financeira pessoal.
+Desenvolvido puramente para uso pessoal
 
 ---
 
