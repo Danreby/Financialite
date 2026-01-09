@@ -6,49 +6,15 @@ import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import BareButton from "@/Components/common/buttons/BareButton";
 import FloatLabelField from "@/Components/common/inputs/FloatLabelField";
+import { useNumericInput, useDecimalInput } from "@/Hooks/useNumericInput";
 
 export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = [], categories = [] }) {
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState("");
 
-  const handleIntegerKeyDown = (event) => {
-    const allowedKeys = [
-      "Backspace",
-      "Tab",
-      "ArrowLeft",
-      "ArrowRight",
-      "Delete",
-      "Home",
-      "End",
-    ];
-
-    if (allowedKeys.includes(event.key)) return;
-
-    if (!/^[0-9]$/.test(event.key)) {
-      event.preventDefault();
-    }
-  };
-
-  const handleDecimalKeyDown = (event) => {
-    const allowedKeys = [
-      "Backspace",
-      "Tab",
-      "ArrowLeft",
-      "ArrowRight",
-      "Delete",
-      "Home",
-      "End",
-    ];
-
-    if (allowedKeys.includes(event.key)) return;
-
-    if (event.key === "," || event.key === ".") return;
-
-    if (!/^[0-9]$/.test(event.key)) {
-      event.preventDefault();
-    }
-  };
+  const handleNumericKeyDown = useNumericInput();
+  const handleDecimalKeyDown = useDecimalInput();
 
   const MAX_AMOUNT = 1_000_000_000;
 
@@ -289,7 +255,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               min: "1",
               max: "360",
               inputMode: "numeric",
-              onKeyDown: handleIntegerKeyDown,
+              onKeyDown: handleNumericKeyDown,
               placeholder: "Quantidade de parcelas",
               maxLength: 3,
               onInput: handleInstallmentsInputLimit,
@@ -324,7 +290,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
               value={type === "debit" ? 0 : isRecurring ? 1 : 0}
             />
           </div>
-          <div className="flex flex-col gap-1 md:col-span-2">
+          <div className="flex Numericl gap-1 md:col-span-2">
             {/* <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
               Categoria
             </label> */}

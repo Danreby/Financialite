@@ -9,6 +9,7 @@ import SecondaryButton from '@/Components/common/buttons/SecondaryButton';
 import DangerButton from '@/Components/common/buttons/DangerButton';
 import ScrollArea from '@/Components/common/ScrollArea';
 import Pagination from '@/Components/common/Pagination';
+import { useNumericInput } from '@/Hooks/useNumericInput';
 
 function formatDueDay(dueDay) {
 	if (!dueDay) return 'Não definido';
@@ -39,6 +40,7 @@ export default function Conta({ bankAccounts, categories }) {
 	const [categoryNameInput, setCategoryNameInput] = useState('');
 	const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 	const [confirmTarget, setConfirmTarget] = useState({ type: null, id: null, name: '' });
+	const handleNumericInput = useNumericInput();
 
 	useEffect(() => {
 		const nextBankAccounts = Array.isArray(bankAccounts?.data)
@@ -89,24 +91,6 @@ export default function Conta({ bankAccounts, categories }) {
 			toast.error('Não foi possível atualizar o dia de vencimento.');
 		} finally {
 			setSaving(false);
-		}
-	};
-
-	const handleIntegerKeyDown = (event) => {
-		const allowedKeys = [
-			"Backspace",
-			"Tab",
-			"ArrowLeft",
-			"ArrowRight",
-			"Delete",
-			"Home",
-			"End",
-		];
-
-		if (allowedKeys.includes(event.key)) return;
-
-		if (!/^[0-9]$/.test(event.key)) {
-			event.preventDefault();
 		}
 	};
 
@@ -329,7 +313,7 @@ export default function Conta({ bankAccounts, categories }) {
 							min={1}
 							max={31}
 							inputMode="numeric"
-							onKeyDown={handleIntegerKeyDown}
+							onKeyDown={handleNumericInput}
 							value={bankDueDayInput}
 							onChange={(e) => setBankDueDayInput(e.target.value)}
 							className="w-full rounded-md border border-gray-300 bg-white p-2 text-sm sm:text-base shadow-sm dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100"

@@ -6,6 +6,7 @@ import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import BareButton from "@/Components/common/buttons/BareButton";
 import FloatLabelField from "@/Components/common/inputs/FloatLabelField";
+import { useNumericInput, useDecimalInput } from "@/Hooks/useNumericInput";
 
 export default function EditTransactionModal({
   isOpen,
@@ -26,43 +27,8 @@ export default function EditTransactionModal({
   const [status, setStatus] = useState("unpaid");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleIntegerKeyDown = (event) => {
-    const allowedKeys = [
-      "Backspace",
-      "Tab",
-      "ArrowLeft",
-      "ArrowRight",
-      "Delete",
-      "Home",
-      "End",
-    ];
-
-    if (allowedKeys.includes(event.key)) return;
-
-    if (!/^[0-9]$/.test(event.key)) {
-      event.preventDefault();
-    }
-  };
-
-  const handleDecimalKeyDown = (event) => {
-    const allowedKeys = [
-      "Backspace",
-      "Tab",
-      "ArrowLeft",
-      "ArrowRight",
-      "Delete",
-      "Home",
-      "End",
-    ];
-
-    if (allowedKeys.includes(event.key)) return;
-
-    if (event.key === "," || event.key === ".") return;
-
-    if (!/^[0-9]$/.test(event.key)) {
-      event.preventDefault();
-    }
-  };
+  const handleNumericKeyDown = useNumericInput();
+  const handleDecimalKeyDown = useDecimalInput();
 
   const MAX_AMOUNT = 1_000_000_000;
 
@@ -255,7 +221,7 @@ export default function EditTransactionModal({
               min: "1",
               max: "360",
               inputMode: "numeric",
-              onKeyDown: handleIntegerKeyDown,
+              onKeyDown: handleNumericKeyDown,
               placeholder: "Quantidade de parcelas",
               maxLength: 3,
               onInput: handleInstallmentsInputLimit,

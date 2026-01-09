@@ -5,28 +5,13 @@ import Modal from "../common/Modal";
 import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import SecondaryButton from "@/Components/common/buttons/SecondaryButton";
 import FloatLabelField from "@/Components/common/inputs/FloatLabelField";
+import { useNumericInput } from "@/Hooks/useNumericInput";
 
 export default function BankForm({ isOpen, onClose, onSuccess }) {
 	const [banks, setBanks] = useState([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const handleIntegerKeyDown = (event) => {
-		const allowedKeys = [
-			"Backspace",
-			"Tab",
-			"ArrowLeft",
-			"ArrowRight",
-			"Delete",
-			"Home",
-			"End",
-		];
-
-		if (allowedKeys.includes(event.key)) return;
-
-		if (!/^[0-9]$/.test(event.key)) {
-			event.preventDefault();
-		}
-	};
+	const handleNumericKeyDown = useNumericInput();
 
 	useEffect(() => {
 		if (!isOpen) return;
@@ -145,7 +130,7 @@ export default function BankForm({ isOpen, onClose, onSuccess }) {
 							min: 1,
 							max: 31,
 							inputMode: 'numeric',
-							onKeyDown: handleIntegerKeyDown,
+							onKeyDown: handleNumericKeyDown,
 							placeholder: 'Opcional. Ex: 10',
 						}}
 					/>
