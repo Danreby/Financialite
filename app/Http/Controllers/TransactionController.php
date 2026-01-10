@@ -14,9 +14,8 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
-        $perPage = (int) ($request->integer('per_page') ?: 15);
-        if ($perPage < 5) $perPage = 5;
-        if ($perPage > 100) $perPage = 100;
+        // Force a fixed page size of 5 to avoid clients bypassing pagination
+        $perPage = 5;
 
         $filters = [
             'type' => $request->get('type'),
@@ -90,7 +89,6 @@ class TransactionController extends Controller
                 'category_id' => $filters['category_id'] ?? null,
                 'recurring' => $recurringParam,
                 'search' => $search,
-                'per_page' => $perPage,
             ],
         ]);
     }

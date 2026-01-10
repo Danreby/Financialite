@@ -25,10 +25,12 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 	const [selectedType, setSelectedType] = useState(String(filters?.type ?? ""));
 	const [recurringFilter, setRecurringFilter] = useState(String(filters?.recurring ?? ""));
 	const [searchTerm, setSearchTerm] = useState(String(filters?.search ?? ""));
+	// Server enforces 5 items per page; no client override
 	const [editingTransaction, setEditingTransaction] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
+	const [isDeletingId, setIsDeletingId] = useState(null);
 
 	// Server-side filtering: react to filter changes
 	useEffect(() => {
