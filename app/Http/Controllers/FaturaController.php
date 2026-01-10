@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Fatura;
 use App\Models\BankUser;
 use App\Services\FaturaService;
+use App\Services\FaturaExportService;
+use App\Services\FaturaImportService;
+use App\Services\FaturaDashboardService;
+use App\Services\FaturaPaymentService;
 use App\Services\NotificationService;
 use App\Http\Requests\Fatura\FaturaStoreRequest;
 use App\Http\Requests\Fatura\FaturaUpdateRequest;
@@ -18,6 +22,10 @@ class FaturaController extends Controller
 {
     public function __construct(
         private FaturaService $faturaService,
+        private FaturaExportService $exportService,
+        private FaturaImportService $importService,
+        private FaturaDashboardService $dashboardService,
+        private FaturaPaymentService $paymentService,
         private NotificationService $notifications
     )
     {
@@ -30,7 +38,7 @@ class FaturaController extends Controller
         $bankUserId = $request->input('bank_user_id');
         $categoryId = $request->input('category_id');
 
-        $faturas = $this->faturaService->exportForUser($user->id, $bankUserId, $categoryId);
+        $faturas = $this->exportService->exportForUser($user->id, $bankUserId, $categoryId);
 
         return response()->json($faturas);
     }
@@ -42,7 +50,7 @@ class FaturaController extends Controller
         $rows = $request->validated()['rows'] ?? [];
 
         try {
-            $importedCount = $this->faturaService->importRows($user, $rows);
+            $importedCount = $this->importService->importRows($user, $rows);
 
             return response()->json([
                 'message' => 'Importação concluída.',
@@ -89,7 +97,7 @@ class FaturaController extends Controller
             'category_id' => $categoryId,
         ];
 
-        $dashboard = $this->faturaService->buildDashboardData($user, $filters);
+        $dashboard = $this->dashboardService->buildDashboardData($user, $filters);
 
         if ($request->wantsJson()) {
             $paginated = $dashboard['base_query']->paginate(15);
@@ -106,11 +114,6 @@ class FaturaController extends Controller
             ],
             'categories' => $dashboard['categories'],
         ]);
-    }
-
-    protected function resolveInstallmentNumberForMonth(Fatura $fatura, string $yearMonth): ?int
-    {
-        return $this->faturaService->resolveInstallmentNumberForMonth($fatura, $yearMonth);
     }
 
     public function show(Request $request, $id)
@@ -222,7 +225,7 @@ class FaturaController extends Controller
         }
 
         try {
-            $totalPaidThisRun = $this->faturaService->payMonthForUser($user, $data['month'], $bankUser ?? null);
+            $totalPaidThisRun = $this->paymentService->payMonthForUser($user, $data['month'], $bankUser ?? null);
 
             if ($totalPaidThisRun <= 0) {
                 return response()->json(['message' => 'Nenhuma fatura pendente para este mês.'], 200);
@@ -256,7 +259,7 @@ class FaturaController extends Controller
             }
         }
 
-        $stats = $this->faturaService->buildStats(
+        $stats = $this->dashboardService->buildStats(
             $user,
             $bankUserId,
             $categoryId,
