@@ -12,6 +12,7 @@ import DangerButton from "@/Components/common/buttons/DangerButton";
 import Modal from "@/Components/common/Modal";
 import Pagination from "@/Components/common/Pagination";
 import TransactionFilters from "@/Components/system/transactions/TransactionFilters";
+import FaturaDetailModal from "@/Components/system/fatura/FaturaDetailModal";
 
 export default function Transacao({ transactions, bankAccounts = [], categories = [], months = [], filters = {} }) {
 	const initialTransactions = Array.isArray(transactions?.data)
@@ -39,6 +40,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
 	const [isDeletingId, setIsDeletingId] = useState(null);
+	const [detailTransaction, setDetailTransaction] = useState(null);
 
 	useEffect(() => {
 		const timeout = setTimeout(() => {
@@ -83,6 +85,11 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		if (!tx || isDeletingId) return;
 		setTransactionToDelete(tx);
 		setIsDeleteConfirmOpen(true);
+	};
+
+	const handleShowDetails = (tx) => {
+		if (!tx) return;
+		setDetailTransaction(tx);
 	};
 
 	const clearFilters = () => {
@@ -172,6 +179,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 						transactions={initialTransactions}
 						onEdit={handleEdit}
 						onDelete={handleDelete}
+						onShowDetails={handleShowDetails}
 					/>
 
 					<Pagination links={transactions?.links || []} />
@@ -185,6 +193,12 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 				bankAccounts={bankAccounts}
 				categories={categories}
 				onUpdated={handleUpdated}
+			/>
+
+			<FaturaDetailModal
+				isOpen={!!detailTransaction}
+				onClose={() => setDetailTransaction(null)}
+				item={detailTransaction}
 			/>
 
 			<Modal

@@ -92,6 +92,7 @@ class TransactionController extends Controller
                     'amount' => (float) $fatura->amount,
                     'type' => $fatura->type,
                     'status' => $fatura->status,
+                    'paid_date' => $fatura->paid_date,
                     'created_at' => $fatura->created_at,
                     'total_installments' => $fatura->total_installments,
                     'current_installment' => $fatura->current_installment,

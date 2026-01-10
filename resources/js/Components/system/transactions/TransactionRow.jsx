@@ -25,7 +25,7 @@ function formatDate(dateString) {
   });
 }
 
-export default function TransactionRow({ transaction, onEdit, onDelete }) {
+export default function TransactionRow({ transaction, onEdit, onDelete, onShowDetails }) {
   const {
     title,
     description,
@@ -41,8 +41,28 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
   const installmentsLabel =
     totalInstallmentsNumber > 1 ? `${totalInstallmentsNumber}x` : null;
 
+  const handleRowClick = () => {
+    if (onShowDetails) onShowDetails(transaction);
+  };
+
+  const stopAnd = (fn) => (event) => {
+    event.stopPropagation();
+    if (fn) fn(transaction);
+  };
+
   return (
-    <div className="flex flex-col gap-2 rounded-lg px-3 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-gray-900/60 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className="flex flex-col gap-2 rounded-lg px-3 lg:px-3 py-1.5 lg:py-2 hover:bg-gray-50 dark:hover:bg-gray-900/60 sm:flex-row sm:items-center sm:justify-between cursor-pointer"
+      onClick={handleRowClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleRowClick();
+        }
+      }}
+      role={onShowDetails ? "button" : undefined}
+      tabIndex={onShowDetails ? 0 : undefined}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-sm lg:text-base font-medium text-gray-900 dark:text-gray-100">
@@ -79,7 +99,7 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
           <Tooltip label="Editar transação">
             <SecondaryButton
               type="button"
-              onClick={() => onEdit && onEdit(transaction)}
+					onClick={stopAnd(onEdit)}
 						className="rounded-full px-3.5 py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide"
             >
               <EditIcon type={1} size={20} />
@@ -88,7 +108,7 @@ export default function TransactionRow({ transaction, onEdit, onDelete }) {
           <Tooltip label="Remover transação">
             <DangerButton
               type="button"
-              onClick={() => onDelete && onDelete(transaction)}
+					onClick={stopAnd(onDelete)}
 						className="rounded-full px-3.5 py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide"
             >
               <RemoveIcon type={1} size={20} />

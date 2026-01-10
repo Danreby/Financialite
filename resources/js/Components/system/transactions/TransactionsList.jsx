@@ -2,7 +2,7 @@ import React from "react";
 import ScrollArea from "@/Components/common/ScrollArea";
 import TransactionRow from "@/Components/system/transactions/TransactionRow";
 
-export default function TransactionsList({ transactions = [], onEdit, onDelete }) {
+export default function TransactionsList({ transactions = [], onEdit, onDelete, onShowDetails }) {
   if (!transactions.length) {
     return (
 			<p className="px-3 py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
@@ -22,6 +22,7 @@ export default function TransactionsList({ transactions = [], onEdit, onDelete }
           transaction={tx}
           onEdit={onEdit}
           onDelete={onDelete}
+          onShowDetails={onShowDetails}
         />
       ))}
     </ScrollArea>
