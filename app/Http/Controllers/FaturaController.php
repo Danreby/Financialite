@@ -4,18 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Fatura;
 use App\Models\BankUser;
-use App\Models\Paid;
 use App\Services\FaturaService;
 use App\Services\NotificationService;
 use App\Http\Requests\Fatura\FaturaStoreRequest;
 use App\Http\Requests\Fatura\FaturaUpdateRequest;
 use App\Http\Requests\Fatura\PayMonthRequest;
-use App\Models\Category;
+use App\Http\Requests\Fatura\FaturaImportRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use Carbon\Carbon;
+use DomainException;
 
 class FaturaController extends Controller
 {
@@ -33,166 +30,31 @@ class FaturaController extends Controller
         $bankUserId = $request->input('bank_user_id');
         $categoryId = $request->input('category_id');
 
-        $query = Fatura::with(['bankUser.bank', 'category'])
-            ->forUser($user->id)
-            ->forBankUser($bankUserId)
-            ->when($categoryId, function ($q, $categoryId) {
-                $q->where('category_id', $categoryId);
-            })
-            ->orderBy('created_at', 'desc');
-
-        $faturas = $query->get()->map(function (Fatura $fatura) {
-            $createdAt = $fatura->created_at ? Carbon::parse($fatura->created_at) : null;
-            $yearMonth = $createdAt ? $createdAt->format('Y-m') : null;
-            $monthLabel = $createdAt ? ucfirst($createdAt->translatedFormat('F Y')) : null;
-            $createdAtFormatted = $createdAt ? $createdAt->format('d/m/Y H:i') : null;
-
-            if ($fatura->type === 'credit') {
-                $invoiceMonthKey = $this->faturaService->resolveBillingMonthKey($fatura);
-                $invoiceCarbon = Carbon::createFromFormat('Y-m', $invoiceMonthKey)->startOfMonth();
-                $invoiceMonthLabel = ucfirst($invoiceCarbon->translatedFormat('F Y'));
-                $installmentAmount = (float) $fatura->amount / max((int) ($fatura->total_installments ?? 1), 1);
-            } else {
-                $invoiceMonthKey = $yearMonth;
-                $invoiceMonthLabel = $monthLabel;
-                $installmentAmount = (float) $fatura->amount;
-            }
-
-            return [
-                'id' => (string) $fatura->id,
-                'title' => $fatura->title,
-                'description' => $fatura->description,
-                'amount' => (float) $fatura->amount,
-                'type' => $fatura->type,
-                'status' => $fatura->status,
-                'created_at' => $fatura->created_at,
-                'total_installments' => $fatura->total_installments,
-                'current_installment' => $fatura->current_installment,
-                'is_recurring' => (bool) $fatura->is_recurring,
-                'year_month' => $yearMonth,
-                'month_label' => $monthLabel,
-                'invoice_month' => $invoiceMonthKey,
-                'invoice_month_label' => $invoiceMonthLabel,
-                'installment_amount' => (float) $installmentAmount,
-                'created_at_formatted' => $createdAtFormatted,
-                'bank_user' => [
-                    'id' => $fatura->bankUser->id ?? null,
-                    'bank' => [
-                        'name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
-                    ],
-                ],
-                'category' => [
-                    'id' => $fatura->category->id ?? null,
-                    'name' => $fatura->category->name ?? null,
-                ],
-            ];
-        });
+        $faturas = $this->faturaService->exportForUser($user->id, $bankUserId, $categoryId);
 
         return response()->json($faturas);
     }
 
-    public function import(Request $request)
+    public function import(FaturaImportRequest $request)
     {
         $user = $request->user();
 
-        $validated = $request->validate([
-            'rows' => ['required', 'array', 'min:1'],
-            'rows.*.title' => ['required', 'string', 'max:255'],
-            'rows.*.description' => ['nullable', 'string'],
-            'rows.*.amount' => ['required', 'numeric', 'min:0'],
-            'rows.*.type' => ['required', 'string', Rule::in(['credit', 'debit'])],
-            'rows.*.status' => ['nullable', 'string', Rule::in(['unpaid', 'paid', 'overdue'])],
-            'rows.*.total_installments' => ['nullable', 'integer', 'min:1', 'max:360'],
-            'rows.*.current_installment' => ['nullable', 'integer', 'min:0', 'max:360'],
-            'rows.*.is_recurring' => ['nullable'],
-            'rows.*.bank_user_name' => ['nullable', 'string', 'max:255'],
-            'rows.*.category_name' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $rows = $validated['rows'] ?? [];
-
-        DB::beginTransaction();
+        $rows = $request->validated()['rows'] ?? [];
 
         try {
-            $importedCount = 0;
-
-            foreach ($rows as $index => $row) {
-                $bankUserId = null;
-                $categoryId = null;
-
-                if (!empty($row['bank_user_name'])) {
-                    $bankUser = BankUser::with('bank')
-                        ->forUser($user->id)
-                        ->whereHas('bank', function ($q) use ($row) {
-                            $q->where('name', $row['bank_user_name']);
-                        })
-                        ->first();
-
-                    if (!$bankUser) {
-                        DB::rollBack();
-
-                        $this->notifications->error(
-                            $user,
-                            'Erro na importação de faturas',
-                            'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name']
-                        );
-
-                        return response()->json([
-                            'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
-                        ], 422);
-                    }
-
-                    $bankUserId = $bankUser->id;
-                }
-
-                if (!empty($row['category_name'])) {
-                    $category = Category::forUser($user->id)
-                        ->where('name', $row['category_name'])
-                        ->first();
-
-                    if (!$category) {
-                        DB::rollBack();
-
-                        $this->notifications->error(
-                            $user,
-                            'Erro na importação de faturas',
-                            'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name']
-                        );
-
-                        return response()->json([
-                            'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
-                        ], 422);
-                    }
-
-                    $categoryId = $category->id;
-                }
-
-                $data = [
-                    'title' => $row['title'],
-                    'description' => $row['description'] ?? null,
-                    'amount' => $row['amount'],
-                    'type' => $row['type'],
-                    'status' => $row['status'] ?? null,
-                    'total_installments' => $row['total_installments'] ?? null,
-                    'current_installment' => $row['current_installment'] ?? null,
-                    'is_recurring' => filter_var($row['is_recurring'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                    'bank_user_id' => $bankUserId,
-                    'category_id' => $categoryId,
-                ];
-
-                $this->faturaService->createForUser($user, $data);
-                $importedCount++;
-            }
-
-            DB::commit();
+            $importedCount = $this->faturaService->importRows($user, $rows);
 
             return response()->json([
                 'message' => 'Importação concluída.',
                 'imported_count' => $importedCount,
             ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
+        } catch (DomainException $e) {
+            $this->notifications->error($user, 'Erro na importação de faturas', $e->getMessage());
 
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Throwable $e) {
             $this->notifications->error($user, 'Erro ao importar faturas', 'Ocorreu um erro inesperado ao importar faturas.');
 
             return response()->json([
@@ -227,57 +89,22 @@ class FaturaController extends Controller
             'category_id' => $categoryId,
         ];
 
-        $baseQuery = Fatura::with(['bankUser.bank', 'user', 'category'])
-            ->forUser($user->id)
-            ->filter($filters)
-            ->orderBy('created_at', 'desc');
+        $dashboard = $this->faturaService->buildDashboardData($user, $filters);
 
         if ($request->wantsJson()) {
-            $paginated = $baseQuery->paginate(15);
+            $paginated = $dashboard['base_query']->paginate(15);
             return response()->json($paginated);
         }
 
-        $allFaturas = (clone $baseQuery)
-            ->where('type', 'credit')
-            ->get();
-
-        $paidByMonth = $this->faturaService->paidByMonthForUser(
-            $user->id,
-            $bankUserId,
-            $request->has('bank_user_id')
-        );
-
-        $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
-
-        $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
-
-        $effective = $this->faturaService->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
-        $effectiveMonthKey = $effective['month_key'];
-
-        $bankAccounts = BankUser::with('bank')
-            ->forUser($user->id)
-            ->get()
-            ->map(function ($bankUser) {
-                return [
-                    'id' => $bankUser->id,
-                    'name' => $bankUser->bank?->name ?? ('Conta #' . $bankUser->id),
-                    'due_day' => $bankUser->due_day,
-                ];
-            });
-
-        $categories = Category::forUser($user->id)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
         return Inertia::render('Fatura', [
-            'monthlyGroups' => $monthlyGroups,
-            'bankAccounts' => $bankAccounts,
-            'currentMonthKey' => $effectiveMonthKey,
+            'monthlyGroups' => $dashboard['monthly_groups'],
+            'bankAccounts' => $dashboard['bank_accounts'],
+            'currentMonthKey' => $dashboard['current_month_key'],
             'filters' => [
                 'bank_user_id' => $request->input('bank_user_id'),
                 'category_id' => $request->input('category_id'),
             ],
-            'categories' => $categories,
+            'categories' => $dashboard['categories'],
         ]);
     }
 
@@ -385,6 +212,7 @@ class FaturaController extends Controller
         $user = $request->user();
         $data = $request->validated();
         $bankUserId = $data['bank_user_id'] ?? null;
+        $bankUser = null;
 
         if ($bankUserId) {
             $bankUser = BankUser::findOrFail($bankUserId);
@@ -393,47 +221,12 @@ class FaturaController extends Controller
             }
         }
 
-        $query = Fatura::with('bankUser')
-            ->forUser($user->id)
-            ->forBankUser($bankUserId)
-            ->notStatus('paid');
-
-        $allFaturas = $query->get();
-
-        $targetMonth = Carbon::createFromFormat('Y-m', $data['month'])->startOfMonth();
-
-        $faturas = $allFaturas->filter(function (Fatura $fatura) use ($targetMonth) {
-            return $this->faturaService->faturaAppliesToMonth($fatura, $targetMonth);
-        });
-
-        if ($faturas->isEmpty()) {
-            return response()->json(['message' => 'Nenhuma fatura pendente para este mês.'], 200);
-        }
-
-        DB::beginTransaction();
         try {
-            $totalPaidThisRun = 0;
+            $totalPaidThisRun = $this->faturaService->payMonthForUser($user, $data['month'], $bankUser ?? null);
 
-            foreach ($faturas as $fatura) {
-                $totalPaidThisRun += $this->faturaService->applyPaymentForMonth($fatura);
-                $fatura->save();
+            if ($totalPaidThisRun <= 0) {
+                return response()->json(['message' => 'Nenhuma fatura pendente para este mês.'], 200);
             }
-
-            if ($totalPaidThisRun > 0) {
-                $monthKey = $data['month'];
-
-                $paid = Paid::firstOrNew([
-                    'user_id' => $user->id,
-                    'month_key' => $monthKey,
-                    'bank_user_id' => $bankUserId,
-                ]);
-
-                $paid->total_paid = ($paid->total_paid ?? 0) + $totalPaidThisRun;
-                $paid->paid_at = now()->toDateString();
-                $paid->save();
-            }
-
-            DB::commit();
 
             $this->notifications->info($user, 'Pagamentos do mês', 'Pagamentos registrados com sucesso para o mês selecionado.');
 
@@ -441,8 +234,6 @@ class FaturaController extends Controller
                 'message' => 'Pagamentos registrados com sucesso.',
             ]);
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             $this->notifications->error($user, 'Erro ao registrar pagamentos', 'Ocorreu um erro inesperado ao registrar os pagamentos do mês.');
 
             return response()->json([
@@ -457,8 +248,6 @@ class FaturaController extends Controller
         $user = $request->user();
         $bankUserId = $request->input('bank_user_id');
         $categoryId = $request->input('category_id');
-        $selectedBankUser = null;
-
         if ($request->filled('bank_user_id')) {
             $selectedBankUser = BankUser::findOrFail($bankUserId);
 
@@ -467,94 +256,12 @@ class FaturaController extends Controller
             }
         }
 
-        $base = Fatura::forUser($user->id)
-            ->forBankUser($bankUserId)
-            ->when($categoryId, function ($q, $categoryId) {
-                $q->where('category_id', $categoryId);
-            });
-
-        $stats = $this->faturaService->calculateBaseStats($base);
-
-        $today = Carbon::today();
-        $monthStart = $today->copy()->startOfMonth();
-        $monthEnd = $today->copy()->endOfMonth();
-
-        $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
-
-        $paidByMonth = $this->faturaService->paidByMonthForUser(
-            $user->id,
-            $bankUserId,
-            $request->has('bank_user_id')
-        );
-
-        $monthlySummary = $this->faturaService->buildDashboardMonthlySummary(
+        $stats = $this->faturaService->buildStats(
             $user,
             $bankUserId,
             $categoryId,
-            $seriesStart,
-            $monthEnd,
-            $paidByMonth
+            $request->has('bank_user_id')
         );
-
-        $currentMonthPaidDebits = (clone $base)
-            ->with('category')
-            ->where('type', 'debit')
-            ->where('status', 'paid')
-            ->whereBetween('created_at', [$monthStart, $monthEnd])
-            ->get();
-
-        $topSpendingCategories = $currentMonthPaidDebits
-            ->groupBy('category_id')
-            ->map(function ($items) {
-                $first = $items->first();
-
-                return [
-                    'category_id' => $first?->category_id,
-                    'category_name' => $first && $first->category ? $first->category->name : 'Sem categoria',
-                    'total' => (float) $items->sum('amount'),
-                ];
-            })
-            ->sortByDesc('total')
-            ->take(5)
-            ->values()
-            ->all();
-
-        $currentMonthDebitTotal = Fatura::forUser($user->id)
-            ->forBankUser($bankUserId)
-            ->when($categoryId, function ($q, $categoryId) {
-                $q->where('category_id', $categoryId);
-            })
-            ->where('type', 'debit')
-            ->whereBetween('created_at', [$monthStart, $monthEnd])
-            ->sum('amount');
-
-        $allFaturas = Fatura::with('bankUser')
-            ->forUser($user->id)
-            ->forBankUser($bankUserId)
-            ->when($categoryId, function ($q, $categoryId) {
-                $q->where('category_id', $categoryId);
-            })
-            ->where('type', 'credit')
-            ->notStatus('paid')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
-
-        $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
-
-        $effective = $this->faturaService->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
-        $effectiveGroup = $effective['group'];
-        $effectiveMonthKey = $effective['month_key'];
-
-        $currentPendingBill = $this->faturaService->calculatePendingBillFromGroup($effectiveGroup);
-
-        $stats['current_month_key'] = $effectiveMonthKey;
-        $stats['current_month_label'] = $effectiveGroup['month_label'] ?? null;
-        $stats['current_month_pending_bill'] = (float) $currentPendingBill;
-        $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
-        $stats['monthly_summary'] = $monthlySummary;
-        $stats['top_spending_categories'] = $topSpendingCategories;
 
         return response()->json($stats);
     }

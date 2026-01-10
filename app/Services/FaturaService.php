@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\BankUser;
+use App\Models\Category;
 use App\Models\Fatura;
 use App\Models\Paid;
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +53,49 @@ class FaturaService
             }
 
             return $fatura->refresh();
+        });
+    }
+
+    public function exportForUser(int $userId, ?int $bankUserId = null, ?int $categoryId = null): Collection
+    {
+        $query = Fatura::with(['bankUser.bank', 'category'])
+            ->forUser($userId)
+            ->forBankUser($bankUserId)
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            })
+            ->orderBy('created_at', 'desc');
+
+        return $query->get()->map(fn (Fatura $fatura) => $this->mapForExport($fatura));
+    }
+
+    public function importRows(Authenticatable $user, array $rows): int
+    {
+        return DB::transaction(function () use ($user, $rows) {
+            $importedCount = 0;
+
+            foreach ($rows as $index => $row) {
+                $bankUserId = $this->resolveBankUserIdByName($user->id, $row['bank_user_name'] ?? null, $index);
+                $categoryId = $this->resolveCategoryIdByName($user->id, $row['category_name'] ?? null, $index);
+
+                $data = [
+                    'title' => $row['title'],
+                    'description' => $row['description'] ?? null,
+                    'amount' => $row['amount'],
+                    'type' => $row['type'],
+                    'status' => $row['status'] ?? null,
+                    'total_installments' => $row['total_installments'] ?? null,
+                    'current_installment' => $row['current_installment'] ?? null,
+                    'is_recurring' => filter_var($row['is_recurring'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                    'bank_user_id' => $bankUserId,
+                    'category_id' => $categoryId,
+                ];
+
+                $this->createForUser($user, $data);
+                $importedCount++;
+            }
+
+            return $importedCount;
         });
     }
 
@@ -142,6 +187,63 @@ class FaturaService
         }
 
         return $query->pluck('total_paid', 'month_key');
+    }
+
+    public function buildDashboardData(Authenticatable $user, array $filters): array
+    {
+        $bankUserId = $filters['bank_user_id'] ?? null;
+        $categoryId = $filters['category_id'] ?? null;
+
+        $selectedBankUser = null;
+
+        if ($bankUserId) {
+            $selectedBankUser = BankUser::forUser($user->id)->findOrFail($bankUserId);
+        }
+
+        $baseQuery = Fatura::with(['bankUser.bank', 'user', 'category'])
+            ->forUser($user->id)
+            ->filter($filters)
+            ->orderBy('created_at', 'desc');
+
+        $allFaturas = (clone $baseQuery)
+            ->where('type', 'credit')
+            ->get();
+
+        $paidByMonth = $this->paidByMonthForUser(
+            $user->id,
+            $bankUserId,
+            array_key_exists('bank_user_id', $filters)
+        );
+
+        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
+
+        $currentMonthKey = $this->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
+
+        $effective = $this->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
+        $effectiveMonthKey = $effective['month_key'];
+
+        $bankAccounts = BankUser::with('bank')
+            ->forUser($user->id)
+            ->get()
+            ->map(function ($bankUser) {
+                return [
+                    'id' => $bankUser->id,
+                    'name' => $bankUser->bank?->name ?? ('Conta #' . $bankUser->id),
+                    'due_day' => $bankUser->due_day,
+                ];
+            });
+
+        $categories = Category::forUser($user->id)
+            ->ordered()
+            ->get(['id', 'name']);
+
+        return [
+            'base_query' => $baseQuery,
+            'monthly_groups' => $monthlyGroups,
+            'bank_accounts' => $bankAccounts,
+            'current_month_key' => $effectiveMonthKey,
+            'categories' => $categories,
+        ];
     }
 
     public function groupFaturasByMonth($faturas, $paidByMonth = null)
@@ -285,6 +387,150 @@ class FaturaService
         return (float) $pending;
     }
 
+    public function buildStats(Authenticatable $user, ?int $bankUserId, ?int $categoryId, bool $filterBankUser): array
+    {
+        $selectedBankUser = null;
+
+        if ($bankUserId) {
+            $selectedBankUser = BankUser::forUser($user->id)->findOrFail($bankUserId);
+        }
+
+        $base = Fatura::forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+
+        $stats = $this->calculateBaseStats($base);
+
+        $today = Carbon::today();
+        $monthStart = $today->copy()->startOfMonth();
+        $monthEnd = $today->copy()->endOfMonth();
+        $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
+
+        $paidByMonth = $this->paidByMonthForUser(
+            $user->id,
+            $bankUserId,
+            $filterBankUser
+        );
+
+        $monthlySummary = $this->buildDashboardMonthlySummary(
+            $user,
+            $bankUserId,
+            $categoryId,
+            $seriesStart,
+            $monthEnd,
+            $paidByMonth
+        );
+
+        $currentMonthPaidDebits = (clone $base)
+            ->with('category')
+            ->where('type', 'debit')
+            ->where('status', 'paid')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->get();
+
+        $topSpendingCategories = $currentMonthPaidDebits
+            ->groupBy('category_id')
+            ->map(function ($items) {
+                $first = $items->first();
+
+                return [
+                    'category_id' => $first?->category_id,
+                    'category_name' => $first && $first->category ? $first->category->name : 'Sem categoria',
+                    'total' => (float) $items->sum('amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->take(5)
+            ->values()
+            ->all();
+
+        $currentMonthDebitTotal = Fatura::forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            })
+            ->where('type', 'debit')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->sum('amount');
+
+        $allFaturas = Fatura::with('bankUser')
+            ->forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->when($categoryId, function ($q, $categoryId) {
+                $q->where('category_id', $categoryId);
+            })
+            ->where('type', 'credit')
+            ->notStatus('paid')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $monthlyGroups = $this->groupFaturasByMonth($allFaturas, $paidByMonth);
+
+        $currentMonthKey = $this->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
+
+        $effective = $this->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
+        $effectiveGroup = $effective['group'];
+        $effectiveMonthKey = $effective['month_key'];
+
+        $currentPendingBill = $this->calculatePendingBillFromGroup($effectiveGroup);
+
+        $stats['current_month_key'] = $effectiveMonthKey;
+        $stats['current_month_label'] = $effectiveGroup['month_label'] ?? null;
+        $stats['current_month_pending_bill'] = (float) $currentPendingBill;
+        $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
+        $stats['monthly_summary'] = $monthlySummary;
+        $stats['top_spending_categories'] = $topSpendingCategories;
+
+        return $stats;
+    }
+
+    public function payMonthForUser(Authenticatable $user, string $monthKey, ?BankUser $bankUser): float
+    {
+        $bankUserId = $bankUser?->id;
+
+        $query = Fatura::with('bankUser')
+            ->forUser($user->id)
+            ->forBankUser($bankUserId)
+            ->notStatus('paid');
+
+        $allFaturas = $query->get();
+
+        $targetMonth = Carbon::createFromFormat('Y-m', $monthKey)->startOfMonth();
+
+        $faturas = $allFaturas->filter(function (Fatura $fatura) use ($targetMonth) {
+            return $this->faturaAppliesToMonth($fatura, $targetMonth);
+        });
+
+        if ($faturas->isEmpty()) {
+            return 0.0;
+        }
+
+        return DB::transaction(function () use ($faturas, $user, $bankUserId, $monthKey) {
+            $totalPaidThisRun = 0.0;
+
+            foreach ($faturas as $fatura) {
+                $totalPaidThisRun += $this->applyPaymentForMonth($fatura);
+                $fatura->save();
+            }
+
+            if ($totalPaidThisRun > 0) {
+                $paid = Paid::firstOrNew([
+                    'user_id' => $user->id,
+                    'month_key' => $monthKey,
+                    'bank_user_id' => $bankUserId,
+                ]);
+
+                $paid->total_paid = ($paid->total_paid ?? 0) + $totalPaidThisRun;
+                $paid->paid_at = now()->toDateString();
+                $paid->save();
+            }
+
+            return (float) $totalPaidThisRun;
+        });
+    }
+
     public function faturaAppliesToMonth(Fatura $fatura, Carbon $targetMonth): bool
     {
         $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
@@ -396,5 +642,90 @@ class FaturaService
         }
 
         return $installment;
+    }
+
+    private function mapForExport(Fatura $fatura): array
+    {
+        $createdAt = $fatura->created_at ? Carbon::parse($fatura->created_at) : null;
+        $yearMonth = $createdAt ? $createdAt->format('Y-m') : null;
+        $monthLabel = $createdAt ? ucfirst($createdAt->translatedFormat('F Y')) : null;
+        $createdAtFormatted = $createdAt ? $createdAt->format('d/m/Y H:i') : null;
+
+        if ($fatura->type === 'credit') {
+            $invoiceMonthKey = $this->resolveBillingMonthKey($fatura);
+            $invoiceCarbon = Carbon::createFromFormat('Y-m', $invoiceMonthKey)->startOfMonth();
+            $invoiceMonthLabel = ucfirst($invoiceCarbon->translatedFormat('F Y'));
+            $installmentAmount = (float) $fatura->amount / max((int) ($fatura->total_installments ?? 1), 1);
+        } else {
+            $invoiceMonthKey = $yearMonth;
+            $invoiceMonthLabel = $monthLabel;
+            $installmentAmount = (float) $fatura->amount;
+        }
+
+        return [
+            'id' => (string) $fatura->id,
+            'title' => $fatura->title,
+            'description' => $fatura->description,
+            'amount' => (float) $fatura->amount,
+            'type' => $fatura->type,
+            'status' => $fatura->status,
+            'created_at' => $fatura->created_at,
+            'total_installments' => $fatura->total_installments,
+            'current_installment' => $fatura->current_installment,
+            'is_recurring' => (bool) $fatura->is_recurring,
+            'year_month' => $yearMonth,
+            'month_label' => $monthLabel,
+            'invoice_month' => $invoiceMonthKey,
+            'invoice_month_label' => $invoiceMonthLabel,
+            'installment_amount' => (float) $installmentAmount,
+            'created_at_formatted' => $createdAtFormatted,
+            'bank_user' => [
+                'id' => $fatura->bankUser->id ?? null,
+                'bank' => [
+                    'name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
+                ],
+            ],
+            'category' => [
+                'id' => $fatura->category->id ?? null,
+                'name' => $fatura->category->name ?? null,
+            ],
+        ];
+    }
+
+    private function resolveBankUserIdByName(int $userId, ?string $bankUserName, int $index): ?int
+    {
+        if (!$bankUserName) {
+            return null;
+        }
+
+        $bankUser = BankUser::with('bank')
+            ->forUser($userId)
+            ->whereHas('bank', function ($q) use ($bankUserName) {
+                $q->where('name', $bankUserName);
+            })
+            ->first();
+
+        if (!$bankUser) {
+            throw new DomainException('Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $bankUserName);
+        }
+
+        return $bankUser->id;
+    }
+
+    private function resolveCategoryIdByName(int $userId, ?string $categoryName, int $index): ?int
+    {
+        if (!$categoryName) {
+            return null;
+        }
+
+        $category = Category::forUser($userId)
+            ->where('name', $categoryName)
+            ->first();
+
+        if (!$category) {
+            throw new DomainException('Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $categoryName);
+        }
+
+        return $category->id;
     }
 }
