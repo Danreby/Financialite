@@ -7,6 +7,7 @@ use App\Models\BankUser;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
@@ -14,14 +15,30 @@ class TransactionController extends Controller
     {
         $user = $request->user();
 
-        // Force a fixed page size of 5 to avoid clients bypassing pagination
         $perPage = 5;
 
         $filters = [
             'type' => $request->get('type'),
             'bank_user_id' => $request->get('bank_user_id'),
             'category_id' => $request->get('category_id'),
+            'status' => $request->get('status'),
         ];
+
+        $order = $request->get('order', 'created_desc');
+
+        $monthKey = $request->get('month_key');
+        $monthRange = null;
+        if ($monthKey) {
+            try {
+                $monthDate = Carbon::createFromFormat('Y-m', $monthKey)->startOfMonth();
+                $monthRange = [
+                    $monthDate->copy()->startOfMonth(),
+                    $monthDate->copy()->endOfMonth(),
+                ];
+            } catch (\Throwable $e) {
+                $monthRange = null;
+            }
+        }
 
         $recurringParam = $request->get('recurring');
         if ($recurringParam === 'recurring') {
@@ -34,13 +51,37 @@ class TransactionController extends Controller
 
         $transactions = Fatura::with(['bankUser.bank', 'category'])
             ->forUser($user->id)
-            ->notStatus('paid')
             ->filter($filters)
+            ->when($monthRange, function ($q) use ($monthRange) {
+                [$start, $end] = $monthRange;
+                $q->whereBetween('created_at', [$start, $end]);
+            })
             ->when($search !== '', function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%");
             })
-            // Alphabetical ordering by title
-            ->orderBy('title', 'asc')
+            ->when(true, function ($q) use ($order) {
+                switch ($order) {
+                    case 'created_asc':
+                        $q->orderBy('created_at', 'asc');
+                        break;
+                    case 'title_asc':
+                        $q->orderBy('title', 'asc');
+                        break;
+                    case 'title_desc':
+                        $q->orderBy('title', 'desc');
+                        break;
+                    case 'amount_asc':
+                        $q->orderBy('amount', 'asc');
+                        break;
+                    case 'amount_desc':
+                        $q->orderBy('amount', 'desc');
+                        break;
+                    case 'created_desc':
+                    default:
+                        $q->orderBy('created_at', 'desc');
+                        break;
+                }
+            })
             ->paginate($perPage, ['*'], 'transactions_page')
             ->withQueryString()
             ->through(function (Fatura $fatura) {
@@ -79,16 +120,41 @@ class TransactionController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $months = Fatura::where('user_id', $user->id)
+            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month_key")
+            ->groupBy('month_key')
+            ->orderBy('month_key', 'desc')
+            ->get()
+            ->map(function ($row) {
+                $key = $row->month_key;
+                try {
+                    $label = Carbon::createFromFormat('Y-m', $key)->translatedFormat('F Y');
+                } catch (\Throwable $e) {
+                    $label = $key;
+                }
+
+                return [
+                    'month_key' => $key,
+                    'month_label' => ucfirst($label),
+                    'is_paid' => false,
+                ];
+            })
+            ->values();
+
         return Inertia::render('Transacao', [
             'transactions' => $transactions,
             'bankAccounts' => $bankAccounts,
             'categories' => $categories,
+            'months' => $months,
             'filters' => [
                 'type' => $filters['type'] ?? null,
                 'bank_user_id' => $filters['bank_user_id'] ?? null,
                 'category_id' => $filters['category_id'] ?? null,
+                'status' => $filters['status'] ?? null,
                 'recurring' => $recurringParam,
                 'search' => $search,
+                'month_key' => $monthKey,
+                'order' => $order,
             ],
         ]);
     }

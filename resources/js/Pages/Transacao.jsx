@@ -1,5 +1,4 @@
-
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Head, router } from "@inertiajs/react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -12,8 +11,9 @@ import PrimaryButton from "@/Components/common/buttons/PrimaryButton";
 import DangerButton from "@/Components/common/buttons/DangerButton";
 import Modal from "@/Components/common/Modal";
 import Pagination from "@/Components/common/Pagination";
+import TransactionFilters from "@/Components/system/transactions/TransactionFilters";
 
-export default function Transacao({ transactions, bankAccounts = [], categories = [], filters = {} }) {
+export default function Transacao({ transactions, bankAccounts = [], categories = [], months = [], filters = {} }) {
 	const initialTransactions = Array.isArray(transactions?.data)
 		? transactions.data
 		: Array.isArray(transactions)
@@ -23,24 +23,34 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 	const [selectedBankId, setSelectedBankId] = useState(String(filters?.bank_user_id ?? ""));
 	const [selectedCategoryId, setSelectedCategoryId] = useState(String(filters?.category_id ?? ""));
 	const [selectedType, setSelectedType] = useState(String(filters?.type ?? ""));
+	const [selectedStatus, setSelectedStatus] = useState(String(filters?.status ?? ""));
 	const [recurringFilter, setRecurringFilter] = useState(String(filters?.recurring ?? ""));
 	const [searchTerm, setSearchTerm] = useState(String(filters?.search ?? ""));
-	// Server enforces 5 items per page; no client override
+	const [selectedMonthKey, setSelectedMonthKey] = useState(String(filters?.month_key ?? ""));
+	const [selectedOrder, setSelectedOrder] = useState(String(filters?.order ?? "created_desc"));
+
+	const orderOptions = [
+		{ key: "created", label: "Data" },
+		{ key: "title", label: "A-Z" },
+		{ key: "amount", label: "Valor" },
+	];
 	const [editingTransaction, setEditingTransaction] = useState(null);
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [transactionToDelete, setTransactionToDelete] = useState(null);
 	const [isDeletingId, setIsDeletingId] = useState(null);
 
-	// Server-side filtering: react to filter changes
 	useEffect(() => {
 		const timeout = setTimeout(() => {
 			router.get(route('transactions.index'), {
 				bank_user_id: selectedBankId || undefined,
 				category_id: selectedCategoryId || undefined,
 				type: selectedType || undefined,
+				status: selectedStatus || undefined,
 				recurring: recurringFilter || undefined,
 				search: searchTerm || undefined,
+				month_key: selectedMonthKey || undefined,
+				order: selectedOrder || undefined,
 			}, {
 				preserveState: true,
 				preserveScroll: true,
@@ -49,9 +59,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		}, 300);
 
 		return () => clearTimeout(timeout);
-	}, [selectedBankId, selectedCategoryId, selectedType, recurringFilter, searchTerm]);
-
-	// No client-side filtering: rely on server-side sorted/paginated data
+	}, [selectedBankId, selectedCategoryId, selectedType, selectedStatus, recurringFilter, searchTerm, selectedMonthKey, selectedOrder]);
 
 	const handleEdit = (tx) => {
 		setEditingTransaction(tx);
@@ -59,13 +67,15 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 	};
 
 	const handleUpdated = () => {
-		// Refresh current page data to reflect changes
 		router.get(route('transactions.index'), {
 			bank_user_id: selectedBankId || undefined,
 			category_id: selectedCategoryId || undefined,
 			type: selectedType || undefined,
+			status: selectedStatus || undefined,
 			recurring: recurringFilter || undefined,
 			search: searchTerm || undefined,
+			month_key: selectedMonthKey || undefined,
+			order: selectedOrder || undefined,
 		}, { preserveState: true, preserveScroll: true, replace: true });
 	};
 
@@ -73,6 +83,17 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		if (!tx || isDeletingId) return;
 		setTransactionToDelete(tx);
 		setIsDeleteConfirmOpen(true);
+	};
+
+	const clearFilters = () => {
+		setSelectedBankId("");
+		setSelectedCategoryId("");
+		setSelectedType("");
+		setSelectedStatus("");
+		setRecurringFilter("");
+		setSearchTerm("");
+		setSelectedMonthKey("");
+		setSelectedOrder("created_desc");
 	};
 
 	const handleConfirmDelete = async () => {
@@ -84,13 +105,15 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		try {
 			await axios.delete(route("faturas.destroy", transactionToDelete.id));
 			toast.success("Transação removida com sucesso.");
-			// Refresh current page after deletion
 			router.get(route('transactions.index'), {
 				bank_user_id: selectedBankId || undefined,
 				category_id: selectedCategoryId || undefined,
 				type: selectedType || undefined,
+				status: selectedStatus || undefined,
 				recurring: recurringFilter || undefined,
 				search: searchTerm || undefined,
+				month_key: selectedMonthKey || undefined,
+				order: selectedOrder || undefined,
 			}, { preserveState: true, preserveScroll: true, replace: true });
 		} catch (error) {
 			console.error(error);
@@ -113,93 +136,37 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 			<div className="w-full max-w-[1450px] 2xl:max-w-[1500px] mx-auto px-3 py-2 space-y-3 sm:px-4 sm:py-3 lg:px-5 lg:py-4">
 				<header className="space-y-1 pt-1 sm:pt-1.5">
 					<h1 className="text-xl sm:text-2xl lg:text-2xl font-semibold text-gray-900 dark:text-gray-100">
-						Transações pendentes
+						Transações
 					</h1>
 					<p className="text-xs sm:text-sm lg:text-sm text-gray-600 dark:text-gray-300">
 						Visualize, edite ou remova transações que ainda não foram pagas.
 					</p>
 				</header>
 
-				<section className="rounded-2xl bg-white p-3 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-3 lg:p-3">
-					<div className="mb-3 flex flex-col gap-2 text-xs sm:flex-wrap sm:flex-row sm:items-center sm:justify-between">
-						<div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 sm:w-auto w-full">
-							<input
-								type="text"
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:w-52"
-								placeholder="Título da transação"
-							/>
-						</div>
-
-						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<select
-								value={selectedBankId}
-								onChange={(e) => setSelectedBankId(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[190px]"
-							>
-								<option value="">Todos</option>
-								{bankAccounts.map((account) => (
-									<option key={account.id} value={account.id}>
-										{account.name}
-									</option>
-								))}
-							</select>
-						</div>
-
-						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<select
-								value={selectedType}
-								onChange={(e) => setSelectedType(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[170px]"
-							>
-								<option value="">Débito e crédito</option>
-								<option value="debit">Apenas débito</option>
-								<option value="credit">Apenas crédito</option>
-							</select>
-						</div>
-
-						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<select
-								value={recurringFilter}
-								onChange={(e) => setRecurringFilter(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[170px]"
-							>
-								<option value="">Todas</option>
-								<option value="recurring">Somente recorrentes</option>
-								<option value="non_recurring">Somente não recorrentes</option>
-							</select>
-						</div>
-
-						<div className="flex w-full flex-col gap-1 sm:w-auto sm:flex-row sm:items-center sm:gap-2">
-							<select
-								value={selectedCategoryId}
-								onChange={(e) => setSelectedCategoryId(e.target.value)}
-								className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs sm:text-sm shadow-sm focus:border-rose-500 focus:ring-rose-500 dark:border-gray-700 dark:bg-[#0f0f0f] dark:text-gray-100 sm:min-w-[190px]"
-							>
-								<option value="">Todas</option>
-								{categories.map((category) => (
-									<option key={category.id} value={category.id}>
-										{category.name}
-									</option>
-								))}
-							</select>
-						</div>
-
-						<SecondaryButton
-							type="button"
-							onClick={() => {
-								setSelectedBankId("");
-								setSelectedCategoryId("");
-								setSelectedType("");
-								setRecurringFilter("");
-								setSearchTerm("");
-							}}
-							className="w-full justify-center rounded-full px-4 py-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 sm:w-auto"
-						>
-							Limpar filtros
-						</SecondaryButton>
-					</div>
+				<section className="rounded-2xl bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30 sm:p-4 lg:p-4">
+					<TransactionFilters
+						searchTerm={searchTerm}
+						onSearchChange={setSearchTerm}
+						months={months}
+						selectedMonthKey={selectedMonthKey}
+						onMonthChange={(value) => setSelectedMonthKey(value)}
+						orderOptions={orderOptions}
+						selectedOrder={selectedOrder}
+						onOrderChange={setSelectedOrder}
+						bankAccounts={bankAccounts}
+						selectedBankId={selectedBankId}
+						onBankChange={setSelectedBankId}
+						selectedType={selectedType}
+						onTypeChange={setSelectedType}
+						selectedStatus={selectedStatus}
+						onStatusChange={setSelectedStatus}
+						recurringFilter={recurringFilter}
+						onRecurringChange={setRecurringFilter}
+						categories={categories}
+						selectedCategoryId={selectedCategoryId}
+						onCategoryChange={setSelectedCategoryId}
+						onClear={clearFilters}
+					/>
 
 					<TransactionsList
 						transactions={initialTransactions}
