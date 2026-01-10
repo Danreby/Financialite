@@ -105,7 +105,7 @@ class TransactionController extends Controller
             });
 
         $bankAccounts = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->get()
             ->map(function ($bankUser) {
                 return [
@@ -117,8 +117,8 @@ class TransactionController extends Controller
             ->values()
             ->all();
 
-        $categories = Category::where('user_id', $user->id)
-            ->orderBy('name')
+        $categories = Category::forUser($user->id)
+            ->ordered()
             ->get(['id', 'name']);
 
         $months = Fatura::where('user_id', $user->id)

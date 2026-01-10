@@ -7,6 +7,7 @@ use App\Models\Fatura;
 use App\Models\Paid;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class FaturaService
@@ -128,6 +129,21 @@ class FaturaService
         return $months;
     }
 
+    public function paidByMonthForUser(int $userId, ?int $bankUserId = null, bool $shouldFilterByBankUser = false): Collection
+    {
+        $query = Paid::where('user_id', $userId);
+
+        if ($shouldFilterByBankUser) {
+            if (is_null($bankUserId)) {
+                $query->whereNull('bank_user_id');
+            } else {
+                $query->where('bank_user_id', $bankUserId);
+            }
+        }
+
+        return $query->pluck('total_paid', 'month_key');
+    }
+
     public function groupFaturasByMonth($faturas, $paidByMonth = null)
     {
         $entries = collect();
@@ -209,6 +225,64 @@ class FaturaService
         });
 
         return $result->sortBy('month_key')->values()->all();
+    }
+
+    public function resolveEffectiveGroup(array $monthlyGroups, string $currentMonthKey): array
+    {
+        $groupsCollection = collect($monthlyGroups);
+
+        $effectiveGroup = $groupsCollection->firstWhere('month_key', $currentMonthKey);
+
+        if (!$effectiveGroup || ($effectiveGroup['is_paid'] ?? false)) {
+            $targetMonth = null;
+
+            try {
+                $targetMonth = Carbon::createFromFormat('Y-m', $currentMonthKey)->startOfMonth();
+            } catch (\Throwable $e) {
+                $targetMonth = Carbon::today()->startOfMonth();
+            }
+
+            $unpaidGroups = $groupsCollection->filter(function ($group) {
+                return !($group['is_paid'] ?? false);
+            });
+
+            if ($unpaidGroups->isNotEmpty()) {
+                $effectiveGroup = $unpaidGroups->sortBy(function ($group) use ($targetMonth) {
+                    $groupMonth = Carbon::createFromFormat('Y-m', $group['month_key'])->startOfMonth();
+                    return $targetMonth->diffInMonths($groupMonth);
+                })->first();
+            } else {
+                $effectiveGroup = null;
+            }
+        }
+
+        $effectiveMonthKey = $currentMonthKey;
+
+        if ($effectiveGroup && !($effectiveGroup['is_paid'] ?? false)) {
+            $effectiveMonthKey = $effectiveGroup['month_key'] ?? $currentMonthKey;
+        }
+
+        return [
+            'group' => $effectiveGroup,
+            'month_key' => $effectiveMonthKey,
+        ];
+    }
+
+    public function calculatePendingBillFromGroup(?array $group): float
+    {
+        if (!$group || ($group['is_paid'] ?? false)) {
+            return 0.0;
+        }
+
+        $pending = 0.0;
+
+        foreach ($group['items'] ?? [] as $item) {
+            $totalInstallments = max((int) ($item['total_installments'] ?? 1), 1);
+            $amount = (float) ($item['amount'] ?? 0);
+            $pending += $amount / $totalInstallments;
+        }
+
+        return (float) $pending;
     }
 
     public function faturaAppliesToMonth(Fatura $fatura, Carbon $targetMonth): bool

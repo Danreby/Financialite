@@ -19,7 +19,7 @@ class BankUserController extends Controller
         $user = $request->user();
 
         $bankUsers = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -31,7 +31,7 @@ class BankUserController extends Controller
         $user = $request->user();
 
         $bankUser = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->findOrFail($id);
 
         return response()->json($bankUser);
@@ -43,7 +43,7 @@ class BankUserController extends Controller
 
         $data = $this->normalizeInsertData($request->validated());
 
-        $existing = BankUser::where('user_id', $user->id)
+        $existing = BankUser::forUser($user->id)
             ->where('bank_id', $data['bank_id'])
             ->first();
 
@@ -65,7 +65,7 @@ class BankUserController extends Controller
     {
         $user = $request->user();
 
-        $bankUser = BankUser::where('user_id', $user->id)->findOrFail($id);
+        $bankUser = BankUser::forUser($user->id)->findOrFail($id);
 
         $bankUser->delete();
 
@@ -77,7 +77,7 @@ class BankUserController extends Controller
         $user = $request->user();
 
         $stats = BankUser::with('bank')
-            ->where('user_id', $user->id)
+            ->forUser($user->id)
             ->get()
             ->map(function ($bankUser) {
                 return [

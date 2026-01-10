@@ -8,12 +8,12 @@ use App\Http\Requests\Bank\BankUpdateRequest;
 use App\Http\Requests\Bank\UpdateBankDueDayRequest;
 use App\Models\Bank;
 use App\Models\BankUser;
-use App\Models\Notification;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class BankController extends Controller
 {
-    public function __construct()
+    public function __construct(private NotificationService $notifications)
     {
         $this->middleware('auth');
     }
@@ -22,8 +22,8 @@ class BankController extends Controller
     {
         $user = $request->user();
         
-        $banks = $user->banks()
-            ->orderBy('name')
+        $banks = Bank::forUser($user->id)
+            ->ordered()
             ->paginate(20);
             
         return response()->json($banks);
@@ -33,7 +33,7 @@ class BankController extends Controller
     {
         $user = $request->user();
         
-        $bank = $user->banks()->findOrFail($id);
+        $bank = Bank::forUser($user->id)->findOrFail($id);
         
         return response()->json($bank);
     }
@@ -51,12 +51,7 @@ class BankController extends Controller
             'user_id' => $user->id,
         ]);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Banco adicionado',
-            'message' => 'Um novo banco foi vinculado à sua conta.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Banco adicionado', 'Um novo banco foi vinculado à sua conta.');
 
         return response()->json($bank, 201);
     }
@@ -65,18 +60,13 @@ class BankController extends Controller
     {
         $user = $request->user();
         
-        $bank = $user->banks()->findOrFail($id);
+        $bank = Bank::forUser($user->id)->findOrFail($id);
 
         $data = $request->validated();
 
         $bank->update($data);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Banco atualizado',
-            'message' => 'As informações do banco foram atualizadas.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Banco atualizado', 'As informações do banco foram atualizadas.');
 
         return response()->json($bank);
     }
@@ -87,23 +77,18 @@ class BankController extends Controller
         
         $bank = $user->banks()->findOrFail($id);
         
-        BankUser::where('bank_id', $bank->id)
-            ->where('user_id', $user->id)
+        BankUser::forUser($user->id)
+            ->forBank($bank->id)
             ->delete();
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Banco removido',
-            'message' => 'Um banco foi desvinculado da sua conta.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Banco removido', 'Um banco foi desvinculado da sua conta.');
 
         return response()->json(['message' => 'Banco removido.']);
     }
 
     public function list(Request $request)
     {
-        $banks = Bank::orderBy('name')->get(['id', 'name']);
+        $banks = Bank::ordered()->get(['id', 'name']);
         return response()->json($banks);
     }
 
@@ -111,7 +96,7 @@ class BankController extends Controller
     {
         $user = $request->user();
 
-        if ($bankUser->user_id !== $user->id) {
+        if (!$bankUser->belongsToUser($user->id)) {
             return response()->json(['message' => 'Não autorizado.'], 403);
         }
 
@@ -120,12 +105,7 @@ class BankController extends Controller
         $bankUser->due_day = $data['due_day'];
         $bankUser->save();
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Vencimento atualizado',
-            'message' => 'O dia de vencimento da fatura foi atualizado.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Vencimento atualizado', 'O dia de vencimento da fatura foi atualizado.');
 
         return response()->json([
             'message' => 'Dia de vencimento atualizado com sucesso.',
@@ -140,17 +120,12 @@ class BankController extends Controller
 
         $data = $this->normalizeInsertData($request->validated());
 
-        $exists = BankUser::where('user_id', $user->id)
-            ->where('bank_id', $data['bank_id'])
+        $exists = BankUser::forUser($user->id)
+            ->forBank($data['bank_id'])
             ->first();
 
         if ($exists) {
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Banco já vinculado',
-                'message' => 'Tentativa de vincular um banco que já está associado à sua conta.',
-                'type' => 'warning',
-            ]);
+            $this->notifications->warning($user, 'Banco já vinculado', 'Tentativa de vincular um banco que já está associado à sua conta.');
 
             return response()->json([
                 'already_attached' => true,
@@ -165,12 +140,7 @@ class BankController extends Controller
             'due_day' => $data['due_day'] ?? null,
         ]);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Conta vinculada',
-            'message' => 'Uma conta de banco foi vinculada com sucesso.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Conta vinculada', 'Uma conta de banco foi vinculada com sucesso.');
 
         return response()->json($bankUser->load('bank'), 201);
     }

@@ -5,17 +5,22 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Category\CategoryStoreRequest;
 use App\Http\Requests\Category\CategoryUpdateRequest;
 use App\Models\Category;
-use App\Models\Notification;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    public function __construct(private NotificationService $notifications)
+    {
+        $this->middleware('auth');
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
 
         $categories = Category::forUser($user->id)
-            ->orderBy('name')
+            ->ordered()
             ->get(['id', 'name']);
 
         return response()->json($categories);
@@ -32,12 +37,7 @@ class CategoryController extends Controller
             'user_id' => $user->id,
         ]);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Categoria criada',
-            'message' => 'Uma nova categoria foi adicionada.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Categoria criada', 'Uma nova categoria foi adicionada.');
 
         return response()->json($category, 201);
     }
@@ -56,12 +56,7 @@ class CategoryController extends Controller
             'name' => $data['name'],
         ]);
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Categoria atualizada',
-            'message' => 'Uma categoria foi atualizada.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Categoria atualizada', 'Uma categoria foi atualizada.');
 
         return response()->json($category);
     }
@@ -76,12 +71,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        Notification::create([
-            'user_id' => $user->id,
-            'title' => 'Categoria removida',
-            'message' => 'Uma categoria foi removida.',
-            'type' => 'info',
-        ]);
+        $this->notifications->info($user, 'Categoria removida', 'Uma categoria foi removida.');
 
         return response()->json(['message' => 'Categoria removida.']);
     }

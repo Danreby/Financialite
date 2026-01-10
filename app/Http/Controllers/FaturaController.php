@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Fatura;
 use App\Models\BankUser;
 use App\Models\Paid;
-use App\Models\Notification;
 use App\Services\FaturaService;
+use App\Services\NotificationService;
 use App\Http\Requests\Fatura\FaturaStoreRequest;
 use App\Http\Requests\Fatura\FaturaUpdateRequest;
 use App\Http\Requests\Fatura\PayMonthRequest;
@@ -19,7 +19,10 @@ use Carbon\Carbon;
 
 class FaturaController extends Controller
 {
-    public function __construct(private FaturaService $faturaService)
+    public function __construct(
+        private FaturaService $faturaService,
+        private NotificationService $notifications
+    )
     {
         $this->middleware('auth');
     }
@@ -44,7 +47,6 @@ class FaturaController extends Controller
             $monthLabel = $createdAt ? ucfirst($createdAt->translatedFormat('F Y')) : null;
             $createdAtFormatted = $createdAt ? $createdAt->format('d/m/Y H:i') : null;
 
-            // Determine invoice/billing month and installment amount for reporting
             if ($fatura->type === 'credit') {
                 $invoiceMonthKey = $this->faturaService->resolveBillingMonthKey($fatura);
                 $invoiceCarbon = Carbon::createFromFormat('Y-m', $invoiceMonthKey)->startOfMonth();
@@ -69,7 +71,6 @@ class FaturaController extends Controller
                 'is_recurring' => (bool) $fatura->is_recurring,
                 'year_month' => $yearMonth,
                 'month_label' => $monthLabel,
-                // New fields for proper monthly invoice reporting
                 'invoice_month' => $invoiceMonthKey,
                 'invoice_month_label' => $invoiceMonthLabel,
                 'installment_amount' => (float) $installmentAmount,
@@ -130,12 +131,11 @@ class FaturaController extends Controller
                     if (!$bankUser) {
                         DB::rollBack();
 
-                        Notification::create([
-                            'user_id' => $user->id,
-                            'title' => 'Erro na importação de faturas',
-                            'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
-                            'type' => 'error',
-                        ]);
+                        $this->notifications->error(
+                            $user,
+                            'Erro na importação de faturas',
+                            'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name']
+                        );
 
                         return response()->json([
                             'message' => 'Conta não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['bank_user_name'],
@@ -153,12 +153,11 @@ class FaturaController extends Controller
                     if (!$category) {
                         DB::rollBack();
 
-                        Notification::create([
-                            'user_id' => $user->id,
-                            'title' => 'Erro na importação de faturas',
-                            'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
-                            'type' => 'error',
-                        ]);
+                        $this->notifications->error(
+                            $user,
+                            'Erro na importação de faturas',
+                            'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name']
+                        );
 
                         return response()->json([
                             'message' => 'Categoria não encontrada para o nome informado na linha ' . ($index + 2) . ': ' . $row['category_name'],
@@ -194,12 +193,7 @@ class FaturaController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Erro ao importar faturas',
-                'message' => 'Ocorreu um erro inesperado ao importar faturas.',
-                'type' => 'error',
-            ]);
+            $this->notifications->error($user, 'Erro ao importar faturas', 'Ocorreu um erro inesperado ao importar faturas.');
 
             return response()->json([
                 'message' => 'Erro ao importar faturas.',
@@ -243,60 +237,22 @@ class FaturaController extends Controller
             return response()->json($paginated);
         }
 
-        // Para a página de faturas, consideramos todas as compras no crédito,
-        // inclusive as já pagas, para permitir histórico completo.
         $allFaturas = (clone $baseQuery)
             ->where('type', 'credit')
             ->get();
 
-        $paidQuery = Paid::where('user_id', $user->id);
-
-        if ($request->has('bank_user_id')) {
-            if (is_null($bankUserId)) {
-                $paidQuery->whereNull('bank_user_id');
-            } else {
-                $paidQuery->where('bank_user_id', $bankUserId);
-            }
-        }
-
-        $paidByMonth = $paidQuery
-            ->pluck('total_paid', 'month_key');
+        $paidByMonth = $this->faturaService->paidByMonthForUser(
+            $user->id,
+            $bankUserId,
+            $request->has('bank_user_id')
+        );
 
         $monthlyGroups = $this->faturaService->groupFaturasByMonth($allFaturas, $paidByMonth);
 
         $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
-        $groupsCollection = collect($monthlyGroups);
-
-        $effectiveGroup = $groupsCollection->firstWhere('month_key', $currentMonthKey);
-
-        if (!$effectiveGroup || ($effectiveGroup['is_paid'] ?? false)) {
-            $targetMonth = null;
-            try {
-                $targetMonth = Carbon::createFromFormat('Y-m', $currentMonthKey)->startOfMonth();
-            } catch (\Throwable $e) {
-                $targetMonth = Carbon::today()->startOfMonth();
-            }
-
-            $unpaidGroups = $groupsCollection->filter(function ($group) {
-                return !($group['is_paid'] ?? false);
-            });
-
-            if ($unpaidGroups->isNotEmpty()) {
-                $effectiveGroup = $unpaidGroups->sortBy(function ($group) use ($targetMonth) {
-                    $groupMonth = Carbon::createFromFormat('Y-m', $group['month_key'])->startOfMonth();
-                    return $targetMonth->diffInMonths($groupMonth);
-                })->first();
-            } else {
-                $effectiveGroup = null;
-            }
-        }
-
-        $effectiveMonthKey = $currentMonthKey;
-
-        if ($effectiveGroup && !($effectiveGroup['is_paid'] ?? false)) {
-            $effectiveMonthKey = $effectiveGroup['month_key'] ?? $currentMonthKey;
-        }
+        $effective = $this->faturaService->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
+        $effectiveMonthKey = $effective['month_key'];
 
         $bankAccounts = BankUser::with('bank')
             ->forUser($user->id)
@@ -359,12 +315,7 @@ class FaturaController extends Controller
             $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura, 201);
         } catch (\Throwable $e) {
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Erro ao criar fatura',
-                'message' => 'Ocorreu um erro inesperado ao criar uma fatura.',
-                'type' => 'error',
-            ]);
+            $this->notifications->error($user, 'Erro ao criar fatura', 'Ocorreu um erro inesperado ao criar uma fatura.');
 
             return response()->json(['message' => 'Erro ao criar fatura', 'error' => $e->getMessage()], 500);
         }
@@ -393,12 +344,7 @@ class FaturaController extends Controller
             $fatura->load(['bankUser.bank', 'user']);
             return response()->json($fatura);
         } catch (\Throwable $e) {
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Erro ao atualizar fatura',
-                'message' => 'Ocorreu um erro inesperado ao atualizar uma fatura.',
-                'type' => 'error',
-            ]);
+            $this->notifications->error($user, 'Erro ao atualizar fatura', 'Ocorreu um erro inesperado ao atualizar uma fatura.');
 
             return response()->json(['message' => 'Erro ao atualizar fatura', 'error' => $e->getMessage()], 500);
         }
@@ -489,12 +435,7 @@ class FaturaController extends Controller
 
             DB::commit();
 
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Pagamentos do mês',
-                'message' => 'Pagamentos registrados com sucesso para o mês selecionado.',
-                'type' => 'info',
-            ]);
+            $this->notifications->info($user, 'Pagamentos do mês', 'Pagamentos registrados com sucesso para o mês selecionado.');
 
             return response()->json([
                 'message' => 'Pagamentos registrados com sucesso.',
@@ -502,12 +443,7 @@ class FaturaController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Erro ao registrar pagamentos',
-                'message' => 'Ocorreu um erro inesperado ao registrar os pagamentos do mês.',
-                'type' => 'error',
-            ]);
+            $this->notifications->error($user, 'Erro ao registrar pagamentos', 'Ocorreu um erro inesperado ao registrar os pagamentos do mês.');
 
             return response()->json([
                 'message' => 'Erro ao registrar pagamentos do mês.',
@@ -543,21 +479,13 @@ class FaturaController extends Controller
         $monthStart = $today->copy()->startOfMonth();
         $monthEnd = $today->copy()->endOfMonth();
 
-        // Monthly invoice (card bill) vs debit transactions (last 6 months) for dashboard charts
         $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
 
-        $paidQuery = Paid::where('user_id', $user->id);
-
-        if ($request->has('bank_user_id')) {
-            if (is_null($bankUserId)) {
-                $paidQuery->whereNull('bank_user_id');
-            } else {
-                $paidQuery->where('bank_user_id', $bankUserId);
-            }
-        }
-
-        $paidByMonth = $paidQuery
-            ->pluck('total_paid', 'month_key');
+        $paidByMonth = $this->faturaService->paidByMonthForUser(
+            $user->id,
+            $bankUserId,
+            $request->has('bank_user_id')
+        );
 
         $monthlySummary = $this->faturaService->buildDashboardMonthlySummary(
             $user,
@@ -568,7 +496,6 @@ class FaturaController extends Controller
             $paidByMonth
         );
 
-        // Top spending categories in the current month (paid debits)
         $currentMonthPaidDebits = (clone $base)
             ->with('category')
             ->where('type', 'debit')
@@ -579,7 +506,6 @@ class FaturaController extends Controller
         $topSpendingCategories = $currentMonthPaidDebits
             ->groupBy('category_id')
             ->map(function ($items) {
-                /** @var Fatura|null $first */
                 $first = $items->first();
 
                 return [
@@ -617,49 +543,14 @@ class FaturaController extends Controller
 
         $currentMonthKey = $this->faturaService->resolveCurrentBillingMonthKey($selectedBankUser, $paidByMonth);
 
-        $groupsCollection = collect($monthlyGroups);
+        $effective = $this->faturaService->resolveEffectiveGroup($monthlyGroups, $currentMonthKey);
+        $effectiveGroup = $effective['group'];
+        $effectiveMonthKey = $effective['month_key'];
 
-        $effectiveGroup = $groupsCollection->firstWhere('month_key', $currentMonthKey);
-
-        if (!$effectiveGroup || ($effectiveGroup['is_paid'] ?? false)) {
-            $targetMonth = null;
-            try {
-                $targetMonth = Carbon::createFromFormat('Y-m', $currentMonthKey)->startOfMonth();
-            } catch (\Throwable $e) {
-                $targetMonth = Carbon::today()->startOfMonth();
-            }
-
-            $unpaidGroups = $groupsCollection->filter(function ($group) {
-                return !($group['is_paid'] ?? false);
-            });
-
-            if ($unpaidGroups->isNotEmpty()) {
-                $effectiveGroup = $unpaidGroups->sortBy(function ($group) use ($targetMonth) {
-                    $groupMonth = Carbon::createFromFormat('Y-m', $group['month_key'])->startOfMonth();
-                    return $targetMonth->diffInMonths($groupMonth);
-                })->first();
-            } else {
-                $effectiveGroup = null;
-            }
-        }
-
-        $currentPendingBill = 0.0;
-        $currentMonthLabel = null;
-        $effectiveMonthKey = $currentMonthKey;
-
-        if ($effectiveGroup && !($effectiveGroup['is_paid'] ?? false)) {
-            $currentMonthLabel = $effectiveGroup['month_label'] ?? null;
-            $effectiveMonthKey = $effectiveGroup['month_key'] ?? $currentMonthKey;
-
-            foreach ($effectiveGroup['items'] as $item) {
-                $totalInstallments = max((int) ($item['total_installments'] ?? 1), 1);
-                $amount = (float) ($item['amount'] ?? 0);
-                $currentPendingBill += $amount / $totalInstallments;
-            }
-        }
+        $currentPendingBill = $this->faturaService->calculatePendingBillFromGroup($effectiveGroup);
 
         $stats['current_month_key'] = $effectiveMonthKey;
-        $stats['current_month_label'] = $currentMonthLabel;
+        $stats['current_month_label'] = $effectiveGroup['month_label'] ?? null;
         $stats['current_month_pending_bill'] = (float) $currentPendingBill;
         $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
         $stats['monthly_summary'] = $monthlySummary;
