@@ -10,6 +10,7 @@ use App\Models\Bank;
 use App\Models\BankUser;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BankController extends Controller
 {
@@ -43,15 +44,18 @@ class BankController extends Controller
         $user = $request->user();
         
         $data = $this->normalizeInsertData($request->validated());
+        $bank = DB::transaction(function () use ($data, $user) {
+            $bank = Bank::create($data);
 
-        $bank = Bank::create($data);
+            BankUser::create([
+                'bank_id' => $bank->id,
+                'user_id' => $user->id,
+            ]);
 
-        BankUser::create([
-            'bank_id' => $bank->id,
-            'user_id' => $user->id,
-        ]);
+            $this->notifications->info($user, 'Banco adicionado', 'Um novo banco foi vinculado à sua conta.');
 
-        $this->notifications->info($user, 'Banco adicionado', 'Um novo banco foi vinculado à sua conta.');
+            return $bank;
+        });
 
         return response()->json($bank, 201);
     }
@@ -63,10 +67,11 @@ class BankController extends Controller
         $bank = Bank::forUser($user->id)->findOrFail($id);
 
         $data = $request->validated();
+        DB::transaction(function () use ($bank, $data, $user) {
+            $bank->update($data);
 
-        $bank->update($data);
-
-        $this->notifications->info($user, 'Banco atualizado', 'As informações do banco foram atualizadas.');
+            $this->notifications->info($user, 'Banco atualizado', 'As informações do banco foram atualizadas.');
+        });
 
         return response()->json($bank);
     }
@@ -77,11 +82,15 @@ class BankController extends Controller
         
         $bank = $user->banks()->findOrFail($id);
         
-        BankUser::forUser($user->id)
-            ->forBank($bank->id)
-            ->delete();
+        DB::transaction(function () use ($user, $bank) {
+            BankUser::forUser($user->id)
+                ->forBank($bank->id)
+                ->delete();
 
-        $this->notifications->info($user, 'Banco removido', 'Um banco foi desvinculado da sua conta.');
+            $bank->delete();
+
+            $this->notifications->info($user, 'Banco removido', 'Um banco foi desvinculado da sua conta.');
+        });
 
         return response()->json(['message' => 'Banco removido.']);
     }
@@ -102,10 +111,12 @@ class BankController extends Controller
 
         $data = $request->validated();
 
-        $bankUser->due_day = $data['due_day'];
-        $bankUser->save();
+        DB::transaction(function () use ($bankUser, $data, $user) {
+            $bankUser->due_day = $data['due_day'];
+            $bankUser->save();
 
-        $this->notifications->info($user, 'Vencimento atualizado', 'O dia de vencimento da fatura foi atualizado.');
+            $this->notifications->info($user, 'Vencimento atualizado', 'O dia de vencimento da fatura foi atualizado.');
+        });
 
         return response()->json([
             'message' => 'Dia de vencimento atualizado com sucesso.',
@@ -134,13 +145,17 @@ class BankController extends Controller
             ], 200);
         }
 
-        $bankUser = BankUser::create([
-            'user_id' => $user->id,
-            'bank_id' => $data['bank_id'],
-            'due_day' => $data['due_day'] ?? null,
-        ]);
+        $bankUser = DB::transaction(function () use ($data, $user) {
+            $bankUser = BankUser::create([
+                'user_id' => $user->id,
+                'bank_id' => $data['bank_id'],
+                'due_day' => $data['due_day'] ?? null,
+            ]);
 
-        $this->notifications->info($user, 'Conta vinculada', 'Uma conta de banco foi vinculada com sucesso.');
+            $this->notifications->info($user, 'Conta vinculada', 'Uma conta de banco foi vinculada com sucesso.');
+
+            return $bankUser;
+        });
 
         return response()->json($bankUser->load('bank'), 201);
     }

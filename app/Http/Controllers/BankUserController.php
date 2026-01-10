@@ -6,6 +6,7 @@ use App\Http\Requests\BankUser\BankUserStoreRequest;
 use App\Models\Bank;
 use App\Models\BankUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BankUserController extends Controller
 {
@@ -51,10 +52,12 @@ class BankUserController extends Controller
             return response()->json(['message' => 'Este banco já está associado ao usuário.'], 422);
         }
 
-        $bankUser = BankUser::create([
-            'user_id' => $user->id,
-            'bank_id' => $data['bank_id'],
-        ]);
+        $bankUser = DB::transaction(function () use ($data, $user) {
+            return BankUser::create([
+                'user_id' => $user->id,
+                'bank_id' => $data['bank_id'],
+            ]);
+        });
 
         $bankUser->load('bank');
 
@@ -67,7 +70,9 @@ class BankUserController extends Controller
 
         $bankUser = BankUser::forUser($user->id)->findOrFail($id);
 
-        $bankUser->delete();
+        DB::transaction(function () use ($bankUser) {
+            $bankUser->delete();
+        });
 
         return response()->json(['message' => 'Banco desassociado do usuário.']);
     }
