@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Transacao;
 
 class Category extends Model
 {
@@ -23,9 +24,9 @@ class Category extends Model
         'deleted_at' => 'datetime',
     ];
 
-    public function faturas(): HasMany
+    public function transacoes(): HasMany
     {
-        return $this->hasMany(Fatura::class, 'category_id');
+        return $this->hasMany(Transacao::class, 'category_id');
     }
 
     public function user(): BelongsTo
