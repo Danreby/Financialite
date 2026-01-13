@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\BankUser;
 use App\Models\Category;
 use App\Models\Fatura;
-use App\Models\Paid;
+use App\Models\Transacao;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -53,7 +53,7 @@ class ExampleFaturasLastSixMonthsSeeder extends Seeder
                 $createdAt = $monthDate->copy()->addDays(rand(0, 25));
                 $amount = rand(50, 400);
 
-                $fatura = Fatura::create([
+                $transacao = Transacao::create([
                     'title' => $label . ' ' . $createdAt->translatedFormat('M/Y'),
                     'description' => null,
                     'amount' => $amount,
@@ -70,7 +70,7 @@ class ExampleFaturasLastSixMonthsSeeder extends Seeder
                     'updated_at' => $createdAt,
                 ]);
 
-                $monthlyPaidTotal += $fatura->amount;
+                $monthlyPaidTotal += $transacao->amount;
             }
 
             $creditExamples = [
@@ -91,7 +91,7 @@ class ExampleFaturasLastSixMonthsSeeder extends Seeder
 
                 $totalInstallments = rand(1, 6);
 
-                $fatura = Fatura::create([
+                $transacao = Transacao::create([
                     'title' => $label . ' ' . $createdAt->translatedFormat('M/Y'),
                     'description' => null,
                     'amount' => $amount,
@@ -109,12 +109,12 @@ class ExampleFaturasLastSixMonthsSeeder extends Seeder
                 ]);
 
                 if ($status === 'paid') {
-                    $monthlyPaidTotal += $fatura->amount;
+                    $monthlyPaidTotal += $transacao->amount;
                 }
             }
 
             if ($isPastMonth && $monthlyPaidTotal > 0) {
-                Paid::updateOrCreate(
+                Fatura::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'month_key' => $monthKey,

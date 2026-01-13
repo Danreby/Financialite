@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Fatura;
+use App\Models\Transacao;
 use App\Models\BankUser;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -49,7 +49,7 @@ class TransactionController extends Controller
 
         $search = trim((string) $request->get('search', ''));
 
-        $transactions = Fatura::with(['bankUser.bank', 'category'])
+        $transactions = Transacao::with(['bankUser.bank', 'category'])
             ->forUser($user->id)
             ->filter($filters)
             ->when($monthRange, function ($q) use ($monthRange) {
@@ -84,23 +84,23 @@ class TransactionController extends Controller
             })
             ->paginate($perPage, ['*'], 'transactions_page')
             ->withQueryString()
-            ->through(function (Fatura $fatura) {
+            ->through(function (Transacao $transacao) {
                 return [
-                    'id' => $fatura->id,
-                    'title' => $fatura->title,
-                    'description' => $fatura->description,
-                    'amount' => (float) $fatura->amount,
-                    'type' => $fatura->type,
-                    'status' => $fatura->status,
-                    'paid_date' => $fatura->paid_date,
-                    'created_at' => $fatura->created_at,
-                    'total_installments' => $fatura->total_installments,
-                    'current_installment' => $fatura->current_installment,
-                    'is_recurring' => (bool) $fatura->is_recurring,
-                    'bank_user_id' => $fatura->bank_user_id,
-                    'bank_name' => optional($fatura->bankUser->bank ?? null)->name ?? null,
-                    'category_id' => $fatura->category_id,
-                    'category_name' => $fatura->category->name ?? null,
+                    'id' => $transacao->id,
+                    'title' => $transacao->title,
+                    'description' => $transacao->description,
+                    'amount' => (float) $transacao->amount,
+                    'type' => $transacao->type,
+                    'status' => $transacao->status,
+                    'paid_date' => $transacao->paid_date,
+                    'created_at' => $transacao->created_at,
+                    'total_installments' => $transacao->total_installments,
+                    'current_installment' => $transacao->current_installment,
+                    'is_recurring' => (bool) $transacao->is_recurring,
+                    'bank_user_id' => $transacao->bank_user_id,
+                    'bank_name' => optional($transacao->bankUser->bank ?? null)->name ?? null,
+                    'category_id' => $transacao->category_id,
+                    'category_name' => $transacao->category->name ?? null,
                 ];
             });
 
@@ -121,7 +121,7 @@ class TransactionController extends Controller
             ->ordered()
             ->get(['id', 'name']);
 
-        $months = Fatura::where('user_id', $user->id)
+        $months = Transacao::where('user_id', $user->id)
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month_key")
             ->groupBy('month_key')
             ->orderBy('month_key', 'desc')

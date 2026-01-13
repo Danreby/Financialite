@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Fatura;
+use App\Models\Transacao;
 use Illuminate\Support\Collection;
 
 class FaturaExportService
@@ -13,7 +13,7 @@ class FaturaExportService
 
     public function exportForUser(int $userId, ?int $bankUserId = null, ?int $categoryId = null): Collection
     {
-        $query = Fatura::with(['bankUser.bank', 'category'])
+        $query = Transacao::with(['bankUser.bank', 'category'])
             ->forUser($userId)
             ->forBankUser($bankUserId)
             ->when($categoryId, function ($q, $categoryId) {
@@ -21,10 +21,10 @@ class FaturaExportService
             })
             ->orderBy('created_at', 'desc');
 
-        return $query->get()->map(fn (Fatura $fatura) => $this->mapForExport($fatura));
+        return $query->get()->map(fn (Transacao $transacao) => $this->mapForExport($transacao));
     }
 
-    private function mapForExport(Fatura $fatura): array
+    private function mapForExport(Transacao $fatura): array
     {
         $createdAt = $fatura->created_at;
         $yearMonth = $createdAt ? $createdAt->format('Y-m') : null;
