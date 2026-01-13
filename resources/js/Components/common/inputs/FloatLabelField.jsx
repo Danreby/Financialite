@@ -1,4 +1,4 @@
-import React, { forwardRef, useId, useState } from 'react';
+import React, { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
 const FloatLabelField = forwardRef(
@@ -6,6 +6,7 @@ const FloatLabelField = forwardRef(
         {
             id,
             name,
+            as = 'input',
             type = 'text',
             label,
             value,
@@ -23,10 +24,13 @@ const FloatLabelField = forwardRef(
     ) => {
         const autoId = useId();
         const fieldId = id || autoId;
+        const internalRef = useRef(null);
         const [isFocused, setIsFocused] = useState(false);
         const [internalValue, setInternalValue] = useState(
             inputProps?.defaultValue ?? '',
         );
+
+        const InputComponent = as === 'textarea' ? 'textarea' : 'input';
 
         const effectiveValue =
             value !== undefined && value !== null ? value : internalValue;
@@ -51,13 +55,39 @@ const FloatLabelField = forwardRef(
             ? 'cursor-not-allowed opacity-70 bg-gray-100 dark:bg-gray-800 '
             : '';
 
+        useEffect(() => {
+            if (InputComponent !== 'textarea') return;
+            const element = internalRef.current;
+            if (!element) return;
+
+            element.style.height = 'auto';
+            element.style.height = `${element.scrollHeight}px`;
+        }, [InputComponent, effectiveValue]);
+
+        const assignRefs = (node) => {
+            internalRef.current = node;
+            if (typeof ref === 'function') {
+                ref(node);
+            } else if (ref) {
+                ref.current = node;
+            }
+        };
+
+        const resolvedInputProps = { ...inputProps };
+
+        if (InputComponent === 'textarea' || type === 'text') {
+            if (resolvedInputProps.maxLength === undefined) {
+                resolvedInputProps.maxLength = 250;
+            }
+        }
+
         return (
             <div className={`w-full ${containerClassName}`}>
                 <div className="relative">
-                    <input
+                    <InputComponent
                         id={fieldId}
                         name={name || fieldId}
-                        type={type}
+                        {...(InputComponent === 'input' ? { type } : {})}
                         value={value}
                         onChange={(event) => {
                             if (value === undefined) {
@@ -69,7 +99,7 @@ const FloatLabelField = forwardRef(
                             }
                         }}
                         disabled={isDisabled}
-                        ref={ref}
+                        ref={assignRefs}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         className={
@@ -77,9 +107,10 @@ const FloatLabelField = forwardRef(
                             (rightElement ? ' pr-10 ' : '') +
                             errorInputClasses +
                             disabledClasses +
+                            (InputComponent === 'textarea' ? ' resize-none py-1.5 overflow-hidden ' : '') +
                             className
                         }
-                        {...inputProps}
+                        {...resolvedInputProps}
                     />
 
                     {rightElement && (

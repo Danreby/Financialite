@@ -187,12 +187,13 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
           <FloatLabelField
             id="description"
             name="description"
-            type="text"
+            as="textarea"
             label="Descrição"
             containerClassName="flex flex-col"
             inputProps={{
-              maxLength: 255,
+              maxLength: 250,
               placeholder: 'Descrição da transação',
+              rows: 1,
             }}
           />
 

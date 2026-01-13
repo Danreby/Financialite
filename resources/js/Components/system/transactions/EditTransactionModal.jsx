@@ -232,12 +232,16 @@ export default function EditTransactionModal({
             <FloatLabelField
               id="edit_description"
               name="edit_description"
-              type="text"
+              as="textarea"
               label="Descrição"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               containerClassName="flex flex-col"
-              inputProps={{ maxLength: 255 }}
+              inputProps={{
+                maxLength: 250,
+                rows: 1,
+                placeholder: "Descrição da transação",
+              }}
             />
           </div>
 
