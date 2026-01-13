@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\FaturaController;
+use App\Http\Controllers\TransacaoController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankUserController;
 use App\Http\Controllers\CategoryController;
@@ -14,10 +14,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('bank-users', BankUserController::class);
     Route::get('bank-users/stats', [BankUserController::class, 'stats'])->name('bank-users.stats');
 
-    // Rotas de Faturas
-    Route::apiResource('faturas', FaturaController::class);
-    Route::get('faturas/stats', [FaturaController::class, 'stats'])->name('faturas.stats');
-    Route::post('faturas/{id}/restore', [FaturaController::class, 'restore'])->name('faturas.restore');
+    // Rotas de Transações
+    Route::apiResource('transacoes', TransacaoController::class);
+    Route::get('transacoes/stats', [TransacaoController::class, 'stats'])->name('transacoes.stats');
+    Route::post('transacoes/{id}/restore', [TransacaoController::class, 'restore'])->name('transacoes.restore');
 
     // (Rotas de categorias foram movidas para as rotas web autenticadas em routes/Fatura.php)
 });
