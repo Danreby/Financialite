@@ -19,12 +19,12 @@ export default function TopSpendingCategories({ data = [] }) {
   return (
     <div className="rounded-2xl border dark:border-red-950/50 border-gray-50/90 bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
       <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-        Maiores Gastos (mês)
+        Maiores Gastos (últimos 30 dias)
       </h2>
 
       {(!prepared || prepared.length === 0) && (
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Ainda não há gastos pagos neste mês.
+          Ainda não há gastos pagos nos últimos 30 dias.
         </p>
       )}
 

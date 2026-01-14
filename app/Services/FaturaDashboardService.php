@@ -91,6 +91,8 @@ class FaturaDashboardService
         $today = Carbon::today();
         $monthStart = $today->copy()->startOfMonth();
         $monthEnd = $today->copy()->endOfMonth();
+        $last30Start = $today->copy()->subDays(29)->startOfDay();
+        $last30End = $today->copy()->endOfDay();
         $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
 
         $paidByMonth = $this->paidByMonthForUser(
@@ -108,14 +110,14 @@ class FaturaDashboardService
             $paidByMonth
         );
 
-        $currentMonthPaidDebits = (clone $base)
+        $recentPaidDebits = (clone $base)
             ->with('category')
             ->where('type', 'debit')
             ->where('status', 'paid')
-            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->whereBetween('created_at', [$last30Start, $last30End])
             ->get();
 
-        $topSpendingCategories = $currentMonthPaidDebits
+        $topSpendingCategories = $recentPaidDebits
             ->groupBy('category_id')
             ->map(function ($items) {
                 $first = $items->first();
@@ -127,7 +129,7 @@ class FaturaDashboardService
                 ];
             })
             ->sortByDesc('total')
-            ->take(5)
+            ->take(6)
             ->values()
             ->all();
 
