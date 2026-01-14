@@ -27,7 +27,7 @@ export default function ReportsPeriodSelector({
         )}
       </div>
 
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-stretch">
         <select
           value={safeValue}
           onChange={(event) => onChange?.(event.target.value)}
@@ -49,9 +49,9 @@ export default function ReportsPeriodSelector({
           type="button"
           onClick={() => onOpen?.(safeValue)}
           disabled={!hasPeriods || !safeValue || isLoading}
-          className="rounded-full px-4 py-2 text-[11px] sm:text-xs font-semibold uppercase tracking-wide w-full sm:w-auto"
+          className="h-[42px] sm:h-[42px] rounded-full px-4 text-[11px] sm:text-xs font-semibold uppercase tracking-wide w-full sm:w-auto flex items-center justify-center whitespace-nowrap"
         >
-          Ver fatura e transações
+          Ver fatura
         </PrimaryButton>
       </div>
 
