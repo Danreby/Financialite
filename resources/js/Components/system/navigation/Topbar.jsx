@@ -6,25 +6,14 @@ import SunIcon from '@/Components/common/icons/SunIcon'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export default function Topbar({ user, sidebarOpen, setSidebarOpen, onToggleNotifications, onOpenMobileNav }) {
-  const [isDark, setIsDark] = useState(false)
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const userMenuRef = useRef(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === 'undefined') return false
     const stored = window.localStorage.getItem('theme')
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-
-    const shouldUseDark = stored === 'dark' || (!stored && prefersDark)
-    setIsDark(shouldUseDark)
-
-    if (shouldUseDark) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [])
+    return stored === 'dark' || (!stored && prefersDark)
+  })
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
