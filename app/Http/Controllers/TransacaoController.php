@@ -289,7 +289,7 @@ class TransacaoController extends Controller
         return null;
     }
 
-    private function normalizeInsertData(array $data): array
+    protected function normalizeInsertData(array $data): array
     {
         return $data;
     }
