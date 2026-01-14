@@ -6,6 +6,10 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import TransactionsExportButton from "@/Components/system/transactions/TransactionsExportButton";
 import StatCard from "@/Components/system/dashboard/StatCard";
 import ReportsMonthlySummary from "@/Components/system/reports/ReportsMonthlySummary";
+import ReportsPeriodSelector from "@/Components/system/reports/ReportsPeriodSelector";
+import ReportsPeriodModal from "@/Components/system/reports/ReportsPeriodModal";
+import ReportsInsightsBar from "@/Components/system/reports/ReportsInsightsBar";
+import FaturaDetailModal from "@/Components/system/fatura/FaturaDetailModal";
 import { formatCurrencyBRL } from "@/Lib/formatters";
 
 export default function Relatorio({ bankAccounts = [], categories = [] }) {
@@ -20,6 +24,10 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 		overdue_count: 0,
 	});
 	const [monthlySummary, setMonthlySummary] = useState([]);
+	const [periodGroups, setPeriodGroups] = useState([]);
+	const [selectedPeriodKey, setSelectedPeriodKey] = useState("");
+	const [selectedTransaction, setSelectedTransaction] = useState(null);
+	const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
@@ -54,38 +62,66 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 					overdue_count: Number(payload.overdue_count || 0),
 				});
 
+				const normalizeTransaction = (item) => {
+					const periodKey = item.invoice_month || item.year_month || "sem-data";
+					const periodLabel = item.invoice_month_label || item.month_label || "Sem data";
+
+					return {
+						...item,
+						period_key: periodKey,
+						period_label: periodLabel,
+						bank_name: item.bank_user?.bank?.name || "Sem banco",
+						category_name: item.category?.name || "Sem categoria",
+						display_installment: item.display_installment || item.current_installment,
+						installment_amount: Number(item.installment_amount ?? item.amount ?? 0),
+						amount: Number(item.amount || 0),
+					};
+				};
+
 				const raw = Array.isArray(exportResponse.data) ? exportResponse.data : [];
-				// Group by invoice_month for credit (card bill) and by created month for debit
-				const grouped = raw.reduce((acc, item) => {
-					const key = item.invoice_month || item.year_month || "sem-data";
+				const normalized = raw.map(normalizeTransaction);
+
+				const grouped = normalized.reduce((acc, item) => {
+					const key = item.period_key;
 					if (!acc[key]) {
 						acc[key] = {
-							year_month: key,
-							month_label: item.invoice_month_label || item.month_label || key || "Sem data",
+							key,
+							label: item.period_label,
 							total_amount: 0,
 							total_credit: 0,
 							total_debit: 0,
 							count: 0,
+							transactions: [],
 						};
 					}
 
-					const debitAmount = Number(item.type === "debit" ? item.amount || 0 : 0);
-					const creditInstallment = Number(item.type === "credit" ? item.installment_amount || 0 : 0);
+					const debitAmount = item.type === "debit" ? item.amount || 0 : 0;
+					const creditInstallment = item.type === "credit" ? item.installment_amount || 0 : 0;
 
 					acc[key].total_debit += debitAmount;
 					acc[key].total_credit += creditInstallment;
-					acc[key].total_amount += debitAmount + creditInstallment;
+					acc[key].total_amount = acc[key].total_credit + acc[key].total_debit;
 					acc[key].count += 1;
+					acc[key].transactions.push(item);
 					return acc;
 				}, {});
 
-				const sorted = Object.values(grouped).sort((a, b) => {
-					const ka = a.year_month || "";
-					const kb = b.year_month || "";
-					return ka.localeCompare(kb);
-				});
+				const sortedGroups = Object.values(grouped).sort((a, b) => (a.key || "").localeCompare(b.key || ""));
 
-				setMonthlySummary(sorted);
+				setPeriodGroups(sortedGroups);
+				setMonthlySummary(
+					sortedGroups.map((group) => ({
+						year_month: group.key,
+						month_label: group.label,
+						total_amount: group.total_amount,
+						total_credit: group.total_credit,
+						total_debit: group.total_debit,
+						count: group.count,
+					}))
+				);
+
+				const fallbackKey = sortedGroups[sortedGroups.length - 1]?.key || "";
+				setSelectedPeriodKey((prev) => (sortedGroups.some((group) => group.key === prev) ? prev : fallbackKey));
 			} catch (error) {
 				console.error(error);
 				if (error.response?.data?.message) {
@@ -105,11 +141,48 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 		};
 	}, [selectedBankId, selectedCategoryId]);
 
+	const selectedPeriod = useMemo(
+		() => periodGroups.find((group) => group.key === selectedPeriodKey) || null,
+		[periodGroups, selectedPeriodKey],
+	);
+
+	const insights = useMemo(() => {
+		const totalAmount = periodGroups.reduce((sum, group) => sum + (group.total_amount || 0), 0);
+		const totalCount = periodGroups.reduce(
+			(sum, group) => sum + (Array.isArray(group.transactions) ? group.transactions.length : 0),
+			0,
+		);
+		const averageTicket = totalCount > 0 ? totalAmount / totalCount : 0;
+		const topExpense = [...periodGroups].sort((a, b) => (b.total_amount || 0) - (a.total_amount || 0))[0];
+
+		return {
+			netBalance: (stats.total_income || 0) - (stats.total_expenses || 0),
+			averageTicket,
+			topExpenseLabel: topExpense?.label || "",
+			topExpenseValue: topExpense?.total_amount || 0,
+		};
+	}, [periodGroups, stats.total_expenses, stats.total_income]);
+
+	const handleOpenPeriodModal = (key) => {
+		const resolved = key || selectedPeriodKey || periodGroups[periodGroups.length - 1]?.key || "";
+		if (!resolved) return;
+		setSelectedPeriodKey(resolved);
+		setIsPeriodModalOpen(true);
+	};
+
+	const handleClosePeriodModal = () => {
+		setIsPeriodModalOpen(false);
+	};
+
+	const handleSelectTransaction = (transaction) => {
+		setSelectedTransaction(transaction);
+	};
+
 	return (
 		<AuthenticatedLayout>
 			<Head title="Relatórios" />
 
-				<div className="w-full max-w-[1450px] 2xl:max-w-[1500px] mx-auto px-3 py-3 space-y-4 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
+			<div className="w-full max-w-[1450px] 2xl:max-w-[1500px] mx-auto px-3 py-3 space-y-4 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
 				<header className="space-y-1.5 pt-0.5 sm:pt-1">
 					<h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100">
 						Relatórios
@@ -165,6 +238,17 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 					</div>
 				</section>
 
+				<section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+					<ReportsPeriodSelector
+						periods={periodGroups}
+						selectedKey={selectedPeriodKey}
+						onChange={setSelectedPeriodKey}
+						onOpen={handleOpenPeriodModal}
+						isLoading={isLoading}
+					/>
+					<ReportsInsightsBar insights={insights} />
+				</section>
+
 				<section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
 					<StatCard title="Receitas pagas" value={formatCurrencyBRL(stats.total_income)} />
 					<StatCard title="Despesas pagas" value={formatCurrencyBRL(stats.total_expenses)} />
@@ -188,8 +272,21 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 							</span>
 						)}
 					</div>
-					<ReportsMonthlySummary items={monthlySummary} />
+					<ReportsMonthlySummary items={monthlySummary} onSelectPeriod={handleOpenPeriodModal} />
 				</section>
+
+					<ReportsPeriodModal
+						isOpen={isPeriodModalOpen}
+						onClose={handleClosePeriodModal}
+						period={selectedPeriod}
+						onSelectTransaction={handleSelectTransaction}
+					/>
+
+					<FaturaDetailModal
+						isOpen={!!selectedTransaction}
+						onClose={() => setSelectedTransaction(null)}
+						item={selectedTransaction}
+					/>
 			</div>
 		</AuthenticatedLayout>
 	);

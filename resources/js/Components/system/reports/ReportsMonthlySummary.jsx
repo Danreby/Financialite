@@ -8,7 +8,7 @@ function formatCurrency(value) {
   }).format(value || 0);
 }
 
-export default function ReportsMonthlySummary({ items = [] }) {
+export default function ReportsMonthlySummary({ items = [], onSelectPeriod }) {
   if (!items || items.length === 0) {
     return (
       <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
@@ -32,6 +32,7 @@ export default function ReportsMonthlySummary({ items = [] }) {
               <th className="py-2 px-3 text-right">Total crédito</th>
               <th className="py-2 px-3 text-right">Total débito</th>
               <th className="py-2 pl-3 text-right">Qtd. transações</th>
+              {onSelectPeriod && <th className="py-2 pl-3 text-right">Detalhar</th>}
             </tr>
           </thead>
           <tbody>
@@ -55,6 +56,17 @@ export default function ReportsMonthlySummary({ items = [] }) {
                 <td className="py-1.5 pl-3 text-right text-gray-700 dark:text-gray-200 whitespace-nowrap">
                   {row.count}
                 </td>
+                {onSelectPeriod && (
+                  <td className="py-1.5 pl-3 pr-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => onSelectPeriod(row.year_month)}
+                      className="inline-flex items-center rounded-full border border-rose-500 px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-rose-600 transition hover:bg-rose-50 dark:border-rose-500/70 dark:text-rose-300 dark:hover:bg-rose-900/20"
+                    >
+                      Ver período
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
