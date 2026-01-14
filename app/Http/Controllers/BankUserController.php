@@ -89,13 +89,13 @@ class BankUserController extends Controller
                     'bank_user_id' => $bankUser->id,
                     'bank_id' => $bankUser->bank_id,
                     'bank_name' => $bankUser->bank->name,
-                    'total_faturas' => $bankUser->faturas()->count(),
-                    'paid_faturas' => $bankUser->faturas()->where('status', 'paid')->count(),
-                    'unpaid_faturas' => $bankUser->faturas()->where('status', 'unpaid')->count(),
-                    'overdue_faturas' => $bankUser->faturas()->where('status', 'overdue')->count(),
-                    'total_amount' => $bankUser->faturas()->sum('amount'),
-                    'income_amount' => $bankUser->faturas()->where('type', 'credit')->sum('amount'),
-                    'expense_amount' => $bankUser->faturas()->where('type', 'debit')->sum('amount'),
+                    'total_faturas' => $bankUser->transacoes()->count(),
+                    'paid_faturas' => $bankUser->transacoes()->where('status', 'paid')->count(),
+                    'unpaid_faturas' => $bankUser->transacoes()->where('status', 'unpaid')->count(),
+                    'overdue_faturas' => $bankUser->transacoes()->where('status', 'overdue')->count(),
+                    'total_amount' => $bankUser->transacoes()->sum('amount'),
+                    'income_amount' => $bankUser->transacoes()->where('type', 'credit')->sum('amount'),
+                    'expense_amount' => $bankUser->transacoes()->where('type', 'debit')->sum('amount'),
                 ];
             });
 

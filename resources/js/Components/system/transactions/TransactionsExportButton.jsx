@@ -11,7 +11,7 @@ export default function TransactionsExportButton({ filters = {} }) {
 
     const load = async () => {
       try {
-        const response = await axios.get(route("faturas.export_data"), {
+        const response = await axios.get(route("transacoes.export_data"), {
           params: {
             bank_user_id: filters.bank_user_id || undefined,
             category_id: filters.category_id || undefined,

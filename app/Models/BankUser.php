@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Transacao;
 
 class BankUser extends Model
 {
@@ -31,9 +32,9 @@ class BankUser extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function faturas(): HasMany
+    public function transacoes(): HasMany
     {
-        return $this->hasMany(Fatura::class, 'bank_user_id');
+        return $this->hasMany(Transacao::class, 'bank_user_id');
     }
 
     public function scopeForUser(Builder $query, int $userId): Builder

@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\Fatura;
+use App\Models\Transacao;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
 
 class FaturaService
 {
-    public function createForUser(Authenticatable $user, array $data): Fatura
+    public function createForUser(Authenticatable $user, array $data): Transacao
     {
         $data['user_id'] = $user->id;
         $data['total_installments'] = max($data['total_installments'] ?? 1, 1);
@@ -31,11 +31,11 @@ class FaturaService
         }
 
         return DB::transaction(function () use ($data) {
-            return Fatura::create($data);
+            return Transacao::create($data);
         });
     }
 
-    public function updateForUser(Fatura $fatura, array $data): Fatura
+    public function updateForUser(Transacao $fatura, array $data): Transacao
     {
         return DB::transaction(function () use ($fatura, $data) {
             $fatura->update($data);

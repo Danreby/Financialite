@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\BankUser;
 use App\Models\Fatura;
-use App\Models\Paid;
+use App\Models\Transacao;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +18,7 @@ class FaturaPaymentService
     {
         $bankUserId = $bankUser?->id;
 
-        $query = Fatura::with('bankUser')
+        $query = Transacao::with('bankUser')
             ->forUser($user->id)
             ->forBankUser($bankUserId)
             ->notStatus('paid');
@@ -27,8 +27,8 @@ class FaturaPaymentService
 
         $targetMonth = now()->createFromFormat('Y-m', $monthKey)->startOfMonth();
 
-        $faturas = $allFaturas->filter(function (Fatura $fatura) use ($targetMonth) {
-            return $this->billing->faturaAppliesToMonth($fatura, $targetMonth);
+        $faturas = $allFaturas->filter(function (Transacao $transacao) use ($targetMonth) {
+            return $this->billing->faturaAppliesToMonth($transacao, $targetMonth);
         });
 
         if ($faturas->isEmpty()) {
@@ -38,13 +38,13 @@ class FaturaPaymentService
         return DB::transaction(function () use ($faturas, $user, $bankUserId, $monthKey) {
             $totalPaidThisRun = 0.0;
 
-            foreach ($faturas as $fatura) {
-                $totalPaidThisRun += $this->billing->applyPaymentForMonth($fatura);
-                $fatura->save();
+            foreach ($faturas as $transacao) {
+                $totalPaidThisRun += $this->billing->applyPaymentForMonth($transacao);
+                $transacao->save();
             }
 
             if ($totalPaidThisRun > 0) {
-                $paid = Paid::firstOrNew([
+                $paid = Fatura::firstOrNew([
                     'user_id' => $user->id,
                     'month_key' => $monthKey,
                     'bank_user_id' => $bankUserId,

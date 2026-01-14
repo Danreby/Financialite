@@ -98,7 +98,7 @@ export default function Sidebar({ open: openProp = true, setOpen: setOpenProp })
 
         <nav className="mt-3 flex-1 px-2 space-y-1">
           <NavItem type={8} open={isOpen} href={route('dashboard')} label="Dashboard" />
-          <NavItem type={4} open={isOpen} href={route('faturas.index')} label="Fatura" />
+          <NavItem type={4} open={isOpen} href={route('transacoes.index')} label="Fatura" />
           <NavItem type={6} open={isOpen} href={route('accounts.index')} label="Contas" />
           <NavItem type={9} open={isOpen} href={route('transactions.index')} label="Transações" />
           <NavItem type={10} open={isOpen} href={route('reports.index')} label="Relatórios" />

@@ -53,8 +53,8 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
     (async () => {
       try {
         const [faturasResponse, statsResponse] = await Promise.all([
-          axios.get(route('faturas.index'), { params: { ...currentFilters, page } }),
-          axios.get(route('faturas.stats'), { params: { ...currentFilters } }),
+          axios.get(route('transacoes.index'), { params: { ...currentFilters, page } }),
+          axios.get(route('transacoes.stats'), { params: { ...currentFilters } }),
         ])
 
         const payload = faturasResponse.data || {}

@@ -3,19 +3,19 @@
 namespace App\Services;
 
 use App\Models\BankUser;
-use App\Models\Fatura;
+use App\Models\Transacao;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class FaturaBillingService
 {
-    public function resolveBillingMonthKey(Fatura $fatura): string
+    public function resolveBillingMonthKey(Transacao $transacao): string
     {
-        $createdAt = $fatura->created_at instanceof Carbon
-            ? $fatura->created_at->copy()
-            : Carbon::parse($fatura->created_at);
+        $createdAt = $transacao->created_at instanceof Carbon
+            ? $transacao->created_at->copy()
+            : Carbon::parse($transacao->created_at);
 
-        $dueDay = $fatura->bankUser->due_day ?? null;
+        $dueDay = $transacao->bankUser->due_day ?? null;
 
         if (!$dueDay) {
             return $createdAt->format('Y-m');
@@ -49,14 +49,14 @@ class FaturaBillingService
         return $candidate->format('Y-m');
     }
 
-    public function faturaAppliesToMonth(Fatura $fatura, Carbon $targetMonth): bool
+    public function faturaAppliesToMonth(Transacao $transacao, Carbon $targetMonth): bool
     {
-        $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
+        $totalInstallments = max((int) ($transacao->total_installments ?? 1), 1);
 
-        $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
+        $firstBillingMonthKey = $this->resolveBillingMonthKey($transacao);
         $first = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
 
-        if ($fatura->is_recurring) {
+        if ($transacao->is_recurring) {
             return !$targetMonth->lt($first);
         }
 
@@ -65,46 +65,46 @@ class FaturaBillingService
         return !$targetMonth->lt($first) && !$targetMonth->gt($last);
     }
 
-    public function applyPaymentForMonth(Fatura $fatura): float
+    public function applyPaymentForMonth(Transacao $transacao): float
     {
-        $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
-        $installmentAmount = (float) $fatura->amount / $totalInstallments;
-        $isRecurring = (bool) $fatura->is_recurring;
+        $totalInstallments = max((int) ($transacao->total_installments ?? 1), 1);
+        $installmentAmount = (float) $transacao->amount / $totalInstallments;
+        $isRecurring = (bool) $transacao->is_recurring;
 
         if ($isRecurring) {
             return $installmentAmount;
         }
 
         if ($totalInstallments <= 1) {
-            $fatura->status = 'paid';
-            $fatura->paid_date = now()->toDateString();
+            $transacao->status = 'paid';
+            $transacao->paid_date = now()->toDateString();
 
-            return (float) $fatura->amount;
+            return (float) $transacao->amount;
         }
 
-        $currentInstallment = max((int) ($fatura->current_installment ?? 0), 0);
+        $currentInstallment = max((int) ($transacao->current_installment ?? 0), 0);
 
         if ($currentInstallment < $totalInstallments) {
             $currentInstallment++;
-            $fatura->current_installment = $currentInstallment;
+            $transacao->current_installment = $currentInstallment;
         }
 
         if ($currentInstallment >= $totalInstallments) {
-            $fatura->status = 'paid';
-            $fatura->paid_date = now()->toDateString();
+            $transacao->status = 'paid';
+            $transacao->paid_date = now()->toDateString();
         }
 
         return $installmentAmount;
     }
 
-    public function resolveInstallmentNumberForMonth(Fatura $fatura, string $yearMonth): ?int
+    public function resolveInstallmentNumberForMonth(Transacao $transacao, string $yearMonth): ?int
     {
-        $totalInstallments = (int) ($fatura->total_installments ?? 1);
+        $totalInstallments = (int) ($transacao->total_installments ?? 1);
         if ($totalInstallments <= 1) {
             return null;
         }
 
-        $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
+        $firstBillingMonthKey = $this->resolveBillingMonthKey($transacao);
         $first = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
         $current = Carbon::createFromFormat('Y-m', $yearMonth)->startOfMonth();
 
@@ -122,17 +122,17 @@ class FaturaBillingService
         return $installment;
     }
 
-    public function groupFaturasByMonth($faturas, ?Collection $paidByMonth = null): array
+    public function groupFaturasByMonth($transacoes, ?Collection $paidByMonth = null): array
     {
         $entries = collect();
 
         $projectionEnd = Carbon::today()->copy()->addYear()->startOfMonth();
 
-        foreach ($faturas as $fatura) {
-            $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
-            $isRecurring = (bool) $fatura->is_recurring;
+        foreach ($transacoes as $transacao) {
+            $totalInstallments = max((int) ($transacao->total_installments ?? 1), 1);
+            $isRecurring = (bool) $transacao->is_recurring;
 
-            $firstBillingMonthKey = $this->resolveBillingMonthKey($fatura);
+            $firstBillingMonthKey = $this->resolveBillingMonthKey($transacao);
             $month = Carbon::createFromFormat('Y-m', $firstBillingMonthKey)->startOfMonth();
 
             $installmentIndex = 1;
@@ -149,7 +149,7 @@ class FaturaBillingService
                 $monthKey = $month->format('Y-m');
 
                 $entries->push([
-                    'fatura' => $fatura,
+                    'transacao' => $transacao,
                     'month_key' => $monthKey,
                     'installment_index' => $installmentIndex,
                 ]);
@@ -166,9 +166,9 @@ class FaturaBillingService
             $label = ucfirst($carbon->translatedFormat('F Y'));
 
             $totalSpent = $items->sum(function ($entry) {
-                $fatura = $entry['fatura'];
-                $totalInstallments = max((int) ($fatura->total_installments ?? 1), 1);
-                return (float) $fatura->amount / $totalInstallments;
+                $transacao = $entry['transacao'];
+                $totalInstallments = max((int) ($transacao->total_installments ?? 1), 1);
+                return (float) $transacao->amount / $totalInstallments;
             });
             $isPaid = $paidByMonth ? $paidByMonth->has($yearMonth) : false;
 
@@ -178,12 +178,12 @@ class FaturaBillingService
                 'total_spent' => (float) $totalSpent,
                 'is_paid' => $isPaid,
                 'items' => $items->map(function ($entry) {
-                    $fatura = $entry['fatura'];
+                    $fatura = $entry['transacao'];
                     $installmentIndex = $entry['installment_index'];
 
                     return [
                         'id' => $fatura->id . '-' . $installmentIndex,
-                        'fatura_id' => $fatura->id,
+                        'transacao_id' => $fatura->id,
                         'title' => $fatura->title,
                         'description' => $fatura->description,
                         'amount' => (float) $fatura->amount,

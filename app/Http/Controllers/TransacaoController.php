@@ -18,7 +18,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use DomainException;
 
-class FaturaController extends Controller
+class TransacaoController extends Controller
 {
     public function __construct(
         private FaturaService $faturaService,
@@ -196,7 +196,7 @@ class FaturaController extends Controller
     public function restore(Request $request, $id)
     {
         $user = $request->user();
-        $fatura = Fatura::withTrashed()->findOrFail($id);
+        $fatura = Transacao::withTrashed()->findOrFail($id);
 
         if ($response = $this->ensureFaturaBelongsToUser($fatura, $user->id)) {
             return $response;
@@ -289,5 +289,8 @@ class FaturaController extends Controller
         return null;
     }
 
+    protected function normalizeInsertData(array $data): array
+    {
+        return $data;
+    }
 }
-

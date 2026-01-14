@@ -51,7 +51,7 @@ export default function FaturaPayModal({
         payload.bank_user_id = bankUserId;
       }
 
-      await axios.post(route("faturas.pay_month"), payload);
+      await axios.post(route("transacoes.pay_month"), payload);
 
       toast.success("Pagamentos do mês registrados com sucesso.");
       setIsSubmitting(false);

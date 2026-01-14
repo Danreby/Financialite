@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\BankUser;
 use App\Models\Category;
 use App\Models\Fatura;
-use App\Models\Paid;
+use App\Models\Transacao;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\Authenticatable;
 
@@ -26,7 +26,7 @@ class FaturaDashboardService
             $selectedBankUser = BankUser::forUser($user->id)->findOrFail($bankUserId);
         }
 
-        $baseQuery = Fatura::with(['bankUser.bank', 'user', 'category'])
+        $baseQuery = Transacao::with(['bankUser.bank', 'user', 'category'])
             ->forUser($user->id)
             ->filter($filters)
             ->orderBy('created_at', 'desc');
@@ -80,7 +80,7 @@ class FaturaDashboardService
             $selectedBankUser = BankUser::forUser($user->id)->findOrFail($bankUserId);
         }
 
-        $base = Fatura::forUser($user->id)
+        $base = Transacao::forUser($user->id)
             ->forBankUser($bankUserId)
             ->when($categoryId, function ($q, $categoryId) {
                 $q->where('category_id', $categoryId);
@@ -131,7 +131,7 @@ class FaturaDashboardService
             ->values()
             ->all();
 
-        $currentMonthDebitTotal = Fatura::forUser($user->id)
+        $currentMonthDebitTotal = Transacao::forUser($user->id)
             ->forBankUser($bankUserId)
             ->when($categoryId, function ($q, $categoryId) {
                 $q->where('category_id', $categoryId);
@@ -140,7 +140,7 @@ class FaturaDashboardService
             ->whereBetween('created_at', [$monthStart, $monthEnd])
             ->sum('amount');
 
-        $allFaturas = Fatura::with('bankUser')
+        $allFaturas = Transacao::with('bankUser')
             ->forUser($user->id)
             ->forBankUser($bankUserId)
             ->when($categoryId, function ($q, $categoryId) {
@@ -181,7 +181,7 @@ class FaturaDashboardService
     ): array {
         $paidByMonth = collect($paidByMonth);
 
-        $debitEntries = Fatura::forUser($user->id)
+        $debitEntries = Transacao::forUser($user->id)
             ->forBankUser($bankUserId)
             ->when($categoryId, function ($q, $categoryId) {
                 $q->where('category_id', $categoryId);
@@ -191,10 +191,10 @@ class FaturaDashboardService
             ->get();
 
         $debitByMonth = $debitEntries
-            ->groupBy(function (Fatura $fatura) {
-                return $fatura->created_at instanceof Carbon
-                    ? $fatura->created_at->format('Y-m')
-                    : Carbon::parse($fatura->created_at)->format('Y-m');
+            ->groupBy(function (Transacao $transacao) {
+                return $transacao->created_at instanceof Carbon
+                    ? $transacao->created_at->format('Y-m')
+                    : Carbon::parse($transacao->created_at)->format('Y-m');
             })
             ->map(function ($items) {
                 return (float) $items->sum('amount');
@@ -248,7 +248,7 @@ class FaturaDashboardService
 
     private function paidByMonthForUser(int $userId, ?int $bankUserId = null, bool $shouldFilterByBankUser = false)
     {
-        $query = Paid::where('user_id', $userId);
+        $query = Fatura::where('user_id', $userId);
 
         if ($shouldFilterByBankUser) {
             if (is_null($bankUserId)) {

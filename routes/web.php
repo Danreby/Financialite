@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BankController;
-use App\Http\Controllers\FaturaController;
+use App\Http\Controllers\TransacaoController;
 use App\Http\Controllers\NotificationController;
 use App\Models\BankUser;
 use App\Models\Category;
-use App\Models\Fatura;
+use App\Models\Transacao;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
