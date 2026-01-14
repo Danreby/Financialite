@@ -110,7 +110,7 @@ export default function Transacao({ transactions, bankAccounts = [], categories 
 		toast.dismiss();
 
 		try {
-			await axios.delete(route("faturas.destroy", transactionToDelete.id));
+			await axios.delete(route("transacoes.destroy", transactionToDelete.id));
 			toast.success("Transação removida com sucesso.");
 			router.get(route('transactions.index'), {
 				bank_user_id: selectedBankId || undefined,

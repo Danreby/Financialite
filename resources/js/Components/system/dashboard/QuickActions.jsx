@@ -55,7 +55,7 @@ export default function QuickActions({ bankAccounts = [], categories = [] }) {
           <PrimaryButton
             className="w-full text-white !text-xs lg:!text-sm"
             style={{ background: '#1d4ed8' }}
-            onClick={() => router.visit(route('faturas.index'))}
+            onClick={() => router.visit(route('transacoes.index'))}
           >
             Ver Faturas do Cartão
           </PrimaryButton>

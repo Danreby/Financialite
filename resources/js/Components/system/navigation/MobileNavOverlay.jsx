@@ -5,7 +5,7 @@ import BareButton from '@/Components/common/buttons/BareButton'
 
 const links = [
   { href: () => route('dashboard'), label: 'Dashboard' },
-  { href: () => route('faturas.index'), label: 'Fatura' },
+  { href: () => route('transacoes.index'), label: 'Fatura' },
   { href: () => route('accounts.index'), label: 'Contas' },
   { href: () => route('transactions.index'), label: 'Transações' },
   { href: () => route('reports.index'), label: 'Relatórios' },

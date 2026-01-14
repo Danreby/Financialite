@@ -103,7 +103,7 @@ export default function FaturaForm({ isOpen, onClose, onSuccess, bankAccounts = 
     };
 
     axios
-      .post(route("faturas.store"), payload)
+      .post(route("transacoes.store"), payload)
       .then((response) => {
         toast.dismiss();
         toast.success("Transação criada com sucesso.");

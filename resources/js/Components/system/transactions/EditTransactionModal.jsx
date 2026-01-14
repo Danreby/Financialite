@@ -120,7 +120,7 @@ export default function EditTransactionModal({
         payload.paid_date = null;
       }
 
-      const response = await axios.put(route("faturas.update", transaction.id), payload);
+      const response = await axios.put(route("transacoes.update", transaction.id), payload);
 
       toast.success("Transação atualizada com sucesso.");
       if (onUpdated) onUpdated(response.data);

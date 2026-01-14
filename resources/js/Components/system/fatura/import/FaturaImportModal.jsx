@@ -154,7 +154,7 @@ export default function FaturaImportModal({ isOpen, onClose, onImported }) {
     toast.dismiss();
 
     try {
-      const response = await axios.post(route("faturas.import"), {
+      const response = await axios.post(route("transacoes.import"), {
         rows,
       });
 

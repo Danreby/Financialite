@@ -121,7 +121,7 @@ export default function Fatura({ monthlyGroups = [], bankAccounts = [], categori
 	}, [normalizedMonthlyGroups, selectedMonthKey, currentMonthKey]);
 
 	const handleFiltersChange = (nextFilters) => {
-		router.get(route('faturas.index'), nextFilters, {
+		router.get(route('transacoes.index'), nextFilters, {
 			preserveState: true,
 			preserveScroll: true,
 		});

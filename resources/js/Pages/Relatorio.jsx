@@ -28,13 +28,13 @@ export default function Relatorio({ bankAccounts = [], categories = [] }) {
 			setIsLoading(true);
 			try {
 				const [statsResponse, exportResponse] = await Promise.all([
-					axios.get(route("faturas.stats"), {
+					axios.get(route("transacoes.stats"), {
 						params: {
 							bank_user_id: selectedBankId || undefined,
 							category_id: selectedCategoryId || undefined,
 						},
 					}),
-					axios.get(route("faturas.export_data"), {
+					axios.get(route("transacoes.export_data"), {
 						params: {
 							bank_user_id: selectedBankId || undefined,
 							category_id: selectedCategoryId || undefined,
