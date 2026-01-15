@@ -24,7 +24,7 @@ export default function TopSpendingCategories({ data = [] }) {
 
       {(!prepared || prepared.length === 0) && (
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Ainda não há gastos pagos nos últimos 30 dias.
+          Ainda não há gastos nos últimos 30 dias.
         </p>
       )}
 

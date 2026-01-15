@@ -110,14 +110,20 @@ class FaturaDashboardService
             $paidByMonth
         );
 
-        $recentPaidDebits = (clone $base)
+        $recentExpenses = (clone $base)
             ->with('category')
-            ->where('type', 'debit')
-            ->where('status', 'paid')
             ->whereBetween('created_at', [$last30Start, $last30End])
+            ->where(function ($q) {
+                // Consider paid debit expenses and credit purchases from the last 30 days
+                $q->where(function ($q) {
+                    $q->where('type', 'debit')->where('status', 'paid');
+                })->orWhere(function ($q) {
+                    $q->where('type', 'credit');
+                });
+            })
             ->get();
 
-        $topSpendingCategories = $recentPaidDebits
+        $topSpendingCategories = $recentExpenses
             ->groupBy('category_id')
             ->map(function ($items) {
                 $first = $items->first();
