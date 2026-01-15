@@ -31,6 +31,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
   const [recentFaturas, setRecentFaturas] = useState([])
   const [monthlySummary, setMonthlySummary] = useState([])
   const [topSpendingCategories, setTopSpendingCategories] = useState([])
+  const [topSpendingLabel, setTopSpendingLabel] = useState('Mês vigente')
   const [selectedFaturaItem, setSelectedFaturaItem] = useState(null)
 
   const [stats, setStats] = useState([
@@ -75,6 +76,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
         const topSpendingPayload = Array.isArray(statsPayload.top_spending_categories)
           ? statsPayload.top_spending_categories
           : []
+        const topSpendingLabelPayload = statsPayload.top_spending_label || 'Mês vigente'
 
         const currentMonthPendingBill = Number(statsPayload.current_month_pending_bill || 0)
         const currentMonthLabel = statsPayload.current_month_label || 'Mês atual'
@@ -126,6 +128,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
           : topSpendingPayload
 
         setTopSpendingCategories(normalizedTopSpending)
+        setTopSpendingLabel(topSpendingLabelPayload)
       } catch (error) {
         console.error(error)
         if (error.response?.data?.message) {
@@ -250,7 +253,7 @@ export default function Dashboard({ bankAccounts = [], categories = [] }) {
             <MonthlySummaryChart data={monthlySummary} />
           </div>
 
-          <TopSpendingCategories data={topSpendingCategories} />
+          <TopSpendingCategories data={topSpendingCategories} label={topSpendingLabel} />
         </div>
 
         <FaturaDetailModal

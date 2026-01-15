@@ -91,8 +91,6 @@ class FaturaDashboardService
         $today = Carbon::today();
         $monthStart = $today->copy()->startOfMonth();
         $monthEnd = $today->copy()->endOfMonth();
-        $last30Start = $today->copy()->subDays(29)->startOfDay();
-        $last30End = $today->copy()->endOfDay();
         $seriesStart = $today->copy()->subMonths(5)->startOfMonth();
 
         $paidByMonth = $this->paidByMonthForUser(
@@ -109,35 +107,6 @@ class FaturaDashboardService
             $monthEnd,
             $paidByMonth
         );
-
-        $recentExpenses = (clone $base)
-            ->with('category')
-            ->whereBetween('created_at', [$last30Start, $last30End])
-            ->where(function ($q) {
-                // Consider paid debit expenses and credit purchases from the last 30 days
-                $q->where(function ($q) {
-                    $q->where('type', 'debit')->where('status', 'paid');
-                })->orWhere(function ($q) {
-                    $q->where('type', 'credit');
-                });
-            })
-            ->get();
-
-        $topSpendingCategories = $recentExpenses
-            ->groupBy('category_id')
-            ->map(function ($items) {
-                $first = $items->first();
-
-                return [
-                    'category_id' => $first?->category_id,
-                    'category_name' => $first && $first->category ? $first->category->name : 'Sem categoria',
-                    'total' => (float) $items->sum('amount'),
-                ];
-            })
-            ->sortByDesc('total')
-            ->take(6)
-            ->values()
-            ->all();
 
         $currentMonthDebitTotal = Transacao::forUser($user->id)
             ->forBankUser($bankUserId)
@@ -167,10 +136,73 @@ class FaturaDashboardService
         $effectiveGroup = $effective['group'];
         $effectiveMonthKey = $effective['month_key'];
 
+        $targetMonth = null;
+
+        try {
+            $targetMonth = Carbon::createFromFormat('Y-m', $effectiveMonthKey)->startOfMonth();
+        } catch (\Throwable $e) {
+            $targetMonth = Carbon::today()->startOfMonth();
+        }
+
+        $targetMonthEnd = $targetMonth->copy()->endOfMonth();
+
+        $debitEntriesForMonth = (clone $base)
+            ->with('category')
+            ->where('type', 'debit')
+            ->where('status', 'paid')
+            ->whereBetween('created_at', [$targetMonth, $targetMonthEnd])
+            ->get();
+
+        $creditEntriesForMonth = (clone $base)
+            ->with(['category', 'bankUser'])
+            ->where('type', 'credit')
+            ->get()
+            ->filter(function (Transacao $transacao) use ($targetMonth) {
+                return $this->billing->faturaAppliesToMonth($transacao, $targetMonth);
+            });
+
+        $debitRows = $debitEntriesForMonth->map(function (Transacao $transacao) {
+            return [
+                'category_id' => $transacao->category_id,
+                'category' => $transacao->category,
+                'amount' => (float) $transacao->amount,
+            ];
+        });
+
+        $creditRows = $creditEntriesForMonth->map(function (Transacao $transacao) {
+            $installments = max((int) ($transacao->total_installments ?? 1), 1);
+            $installmentAmount = (float) $transacao->amount / $installments;
+
+            return [
+                'category_id' => $transacao->category_id,
+                'category' => $transacao->category,
+                'amount' => $installmentAmount,
+            ];
+        });
+
+        $topSpendingCategories = $debitRows
+            ->merge($creditRows)
+            ->groupBy('category_id')
+            ->map(function ($items) {
+                $first = $items->first();
+                $category = $first['category'] ?? null;
+
+                return [
+                    'category_id' => $first['category_id'] ?? null,
+                    'category_name' => $category?->name ?? 'Sem categoria',
+                    'total' => (float) $items->sum('amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->take(6)
+            ->values()
+            ->all();
+
         $currentPendingBill = $this->billing->calculatePendingBillFromGroup($effectiveGroup);
 
         $stats['current_month_key'] = $effectiveMonthKey;
         $stats['current_month_label'] = $effectiveGroup['month_label'] ?? null;
+        $stats['top_spending_label'] = $effectiveGroup['month_label'] ?? ucfirst($targetMonth->translatedFormat('F Y'));
         $stats['current_month_pending_bill'] = (float) $currentPendingBill;
         $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
         $stats['monthly_summary'] = $monthlySummary;

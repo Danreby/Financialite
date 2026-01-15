@@ -1,7 +1,7 @@
 import React from 'react'
 import { formatCurrencyBRL } from '@/Lib/formatters'
 
-export default function TopSpendingCategories({ data = [] }) {
+export default function TopSpendingCategories({ data = [], label = 'Mês vigente' }) {
   const topSix = Array.isArray(data)
     ? [...data].sort((a, b) => Number(b.total || 0) - Number(a.total || 0)).slice(0, 6)
     : []
@@ -19,12 +19,12 @@ export default function TopSpendingCategories({ data = [] }) {
   return (
     <div className="rounded-2xl border dark:border-red-950/50 border-gray-50/90 bg-white p-4 shadow-md ring-1 ring-black/5 dark:bg-[#0b0b0b] dark:ring-black/30">
       <h2 className="text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-        Maiores Gastos (últimos 30 dias)
+        Maiores Gastos — {label}
       </h2>
 
       {(!prepared || prepared.length === 0) && (
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Ainda não há gastos nos últimos 30 dias.
+          Ainda não há gastos para este mês.
         </p>
       )}
 
