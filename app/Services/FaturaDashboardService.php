@@ -164,10 +164,10 @@ class FaturaDashboardService
         $debitRows = $debitEntriesForMonth->map(function (Transacao $transacao) {
             return [
                 'category_id' => $transacao->category_id,
-                'category' => $transacao->category,
+                'category_name' => optional($transacao->category)->name,
                 'amount' => (float) $transacao->amount,
             ];
-        });
+        })->values()->all();
 
         $creditRows = $creditEntriesForMonth->map(function (Transacao $transacao) {
             $installments = max((int) ($transacao->total_installments ?? 1), 1);
@@ -175,21 +175,20 @@ class FaturaDashboardService
 
             return [
                 'category_id' => $transacao->category_id,
-                'category' => $transacao->category,
+                'category_name' => optional($transacao->category)->name,
                 'amount' => $installmentAmount,
             ];
-        });
+        })->values()->all();
 
-        $topSpendingCategories = $debitRows
+        $topSpendingCategories = collect($debitRows)
             ->merge($creditRows)
             ->groupBy('category_id')
             ->map(function ($items) {
                 $first = $items->first();
-                $category = $first['category'] ?? null;
 
                 return [
                     'category_id' => $first['category_id'] ?? null,
-                    'category_name' => $category?->name ?? 'Sem categoria',
+                    'category_name' => $first['category_name'] ?? 'Sem categoria',
                     'total' => (float) $items->sum('amount'),
                 ];
             })
