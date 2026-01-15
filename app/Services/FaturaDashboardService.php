@@ -199,9 +199,19 @@ class FaturaDashboardService
 
         $currentPendingBill = $this->billing->calculatePendingBillFromGroup($effectiveGroup);
 
+        $topSpendingLabel = $effectiveGroup['month_label'] ?? null;
+
+        if (!$topSpendingLabel) {
+            $topSpendingLabel = ucfirst(
+                $targetMonth
+                    ->locale(config('app.locale', 'pt_BR'))
+                    ->translatedFormat('F Y')
+            );
+        }
+
         $stats['current_month_key'] = $effectiveMonthKey;
         $stats['current_month_label'] = $effectiveGroup['month_label'] ?? null;
-        $stats['top_spending_label'] = $effectiveGroup['month_label'] ?? ucfirst($targetMonth->translatedFormat('F Y'));
+        $stats['top_spending_label'] = $topSpendingLabel;
         $stats['current_month_pending_bill'] = (float) $currentPendingBill;
         $stats['current_month_debit_total'] = (float) $currentMonthDebitTotal;
         $stats['monthly_summary'] = $monthlySummary;
