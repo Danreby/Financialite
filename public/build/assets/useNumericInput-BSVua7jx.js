@@ -1,0 +1,1 @@
+import{r}from"./app-kfujkipr.js";const t=["Backspace","Tab","ArrowLeft","ArrowRight","Delete","Home","End"],u=/^[0-9]$/;function s(){return r.useCallback(e=>{t.includes(e.key)||u.test(e.key)||e.preventDefault()},[])}function c(){return r.useCallback(e=>{t.includes(e.key)||e.key===","||e.key==="."||u.test(e.key)||e.preventDefault()},[])}export{c as a,s as u};
